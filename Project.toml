@@ -5,6 +5,8 @@ version = "1.0.0-DEV"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+ITensorMPS = "0d1a4710-d33b-49a5-8f18-73bdf49b47e2"
+ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 PauliOperators = "be646426-f34c-4536-b1d4-a45a9633e6db"
@@ -14,6 +16,8 @@ StatProfilerHTML = "a8a75453-ed82-57c9-9e16-4cd1196ecbf5"
 
 [compat]
 BenchmarkTools = "1.6.0"
+ITensorMPS = "0.3.20"
+ITensors = "0.9.11"
 LinearAlgebra = "1.11.0"
 Optim = "1.13.2"
 PauliOperators = "2.0.0"

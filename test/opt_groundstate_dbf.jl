@@ -6,9 +6,13 @@ using LinearAlgebra
 using Test
 
 function run()
-    N = 50 
+    Lx = 3
+    Ly = 3
+    N = Lx * Ly
     Random.seed!(2)
-    H = DBF.heisenberg_1D(N, -1, -1, -1, z=.1)
+    # H = DBF.heisenberg_1D(N, -1, -1, -1, z=.1)
+    H = DBF.heisenberg_2D(Lx, Ly, -0, -0, -1, x=.1)
+
     # H = DBF.heisenberg_2D(2, 2, -1, -1, -1, z=.1)
     # H = DBF.heisenberg_2D(7, 7, -1, -1, -1, z=.1)
     DBF.coeff_clip!(H)
@@ -26,9 +30,9 @@ function run()
 
     display(norm(H))
     display(norm(diag(H)))
-    H, gi, θi = dbf_groundstate(H, ψ, max_iter=120, conv_thresh=1e-3, 
-                                evolve_coeff_thresh=1e-4,
-                                evolve_weight_thresh=3,
+    H, gi, θi = dbf_groundstate(H, ψ, max_iter=1200, conv_thresh=1e-3, 
+                                evolve_coeff_thresh=1e-5,
+                                evolve_weight_thresh=5,
                                 search_n_top=100)
     
     println(" New H:")
