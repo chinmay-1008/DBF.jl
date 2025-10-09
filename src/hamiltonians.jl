@@ -141,11 +141,13 @@ function heisenberg_2D(Nx, Ny, Jx, Jy, Jz; x=0, y=0, z=0, periodic=true)
     for j in 1:Ny        # rows
         for i in 1:Nx    # columns
             current_site = coord_to_index(i, j)
-
             # Right neighbor (i+1, j)
             i_r = right(i)
             if i_r !== nothing
                 right_site = coord_to_index(i_r, j)
+                # display(current_site)
+                # display(right_site)
+                # println("++++++++++")
                 H += -2*Jx * Pauli(N_total, X=[current_site, right_site])
                 H += -2*Jy * Pauli(N_total, Y=[current_site, right_site])
                 H += -2*Jz * Pauli(N_total, Z=[current_site, right_site])
@@ -155,6 +157,9 @@ function heisenberg_2D(Nx, Ny, Jx, Jy, Jz; x=0, y=0, z=0, periodic=true)
             j_u = up(j)
             if j_u !== nothing
                 up_site = coord_to_index(i, j_u)
+                # display(current_site)
+                # display(up_site)
+                # println("==============")
                 H += -2*Jx * Pauli(N_total, X=[current_site, up_site])
                 H += -2*Jy * Pauli(N_total, Y=[current_site, up_site])
                 H += -2*Jz * Pauli(N_total, Z=[current_site, up_site])
@@ -273,7 +278,7 @@ function fermi_hubbard_2D(Lx::Int, Ly::Int, t::Float64, U::Float64)
     up(j) = 2*j - 1
     dn(j) = 2*j
     # linear_index(x,y) = (x - 1) * Ly + y   # x in 1:Lx, y in 1:Ly
-    linear_index(i, j) = isodd(i) ? (i - 1) * Ny + j : i * Ny - j + 1
+    linear_index(i, j) = isodd(i) ? (i - 1) * Ly + j : i * Ly - j + 1
 
     # small tolerance for dropping tiny coeffs
     eps_coeff = 1e-12
@@ -318,12 +323,12 @@ function fermi_hubbard_2D(Lx::Int, Ly::Int, t::Float64, U::Float64)
 end
 
 
-# Test Hubbard 1D
-H = hubbard_model_1D(2, 5.0, 2.0)
-display(H)
-println("Number of terms in Hubbard 1D Hamiltonian: ", length(H))
+# # Test Hubbard 1D
+# H = hubbard_model_1D(2, 5.0, 2.0)
+# display(H)
+# println("Number of terms in Hubbard 1D Hamiltonian: ", length(H))
 
-# Test Hubbard 2D
-H = fermi_hubbard_2D(1, 2, 5.0, 2.0)
-display(H)
-println("Number of terms in Hubbard 2x1 Hamiltonian: ", length(H))
+# # Test Hubbard 2D
+# H = fermi_hubbard_2D(1, 2, 5.0, 2.0)
+# display(H)
+# println("Number of terms in Hubbard 2x1 Hamiltonian: ", length(H))

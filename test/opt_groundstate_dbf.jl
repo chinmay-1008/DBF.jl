@@ -21,10 +21,16 @@ end
 
 
 function run()
-    N = 8 
-    Random.seed!(2)
-    H = DBF.heisenberg_1D(N, -1, -2, -3, x=.1)
-    # H = DBF.heisenberg_2D(2, 2, -1, -1, -1, z=.1)
+    # N = 127 
+    # Random.seed!(2)
+    # H = DBF.heisenberg_1D(N, 0, 0, -1, x=.1)
+
+    # N = 50
+    # H = DBF.heisenberg_1D(N, -1, -1, -1, x=.0)
+
+    L = 3
+    H = DBF.heisenberg_2D(L, L, -1, -1, -1, x=0.0, periodic = false)
+    N = L * L
     # H = DBF.heisenberg_2D(7, 7, -0, -0, -1, x=.1)
     DBF.coeff_clip!(H)
     H0 = deepcopy(H)
@@ -37,16 +43,16 @@ function run()
 
     # kidx = argmin([real(expectation_value(H,Ket{N}(ψi))) for ψi in 1:2^N])
     # ψ = Ket{N}(kidx)
-    display(ψ)
+    display(ψ)  
     e0 = expectation_value(H,ψ)
     
-    @show e1 = minimum(real(eigvals(Matrix(H))))
+    # @show e1 = minimum(real(eigvals(Matrix(H))))
    
     @printf(" E0 = %12.8f\n", e0)
 
     @show norm(H)
     
-    @time H, g, θ = DBF.dbf_groundstate(H, ψ, n_body=1, 
+    @time H, g, θ = DBF.dbf_groundstate(H, ψ, n_body=4, 
                                 verbose=1, 
                                 max_iter=120, conv_thresh=1e-3, 
                                 evolve_coeff_thresh=1e-4,
@@ -60,7 +66,7 @@ function run()
     @time H, g2, θ2 = DBF.dbf_groundstate(H, ψ, n_body=1,
                                 verbose=1, 
                                 max_iter=120, conv_thresh=1e-3, 
-                                evolve_coeff_thresh=1e-3,
+                                evolve_coeff_thresh=1e-4,
                                 evolve_weight_thresh=8,
                                 grad_coeff_thresh=1e-5,
                                 search_n_top=1000)
@@ -71,7 +77,7 @@ function run()
     @time H, g2, θ2 = DBF.dbf_groundstate(H, ψ, n_body=1,
                                 verbose=1, 
                                 max_iter=120, conv_thresh=1e-3, 
-                                evolve_coeff_thresh=1e-3,
+                                evolve_coeff_thresh=1e-4,
                                 evolve_weight_thresh=8,
                                 grad_coeff_thresh=1e-5,
                                 search_n_top=10000)
