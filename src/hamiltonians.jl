@@ -37,49 +37,101 @@ H = Σ_{⟨i,j⟩} [-2Jx σᵢˣσⱼˣ - 2Jy σᵢʸσⱼʸ - 2Jz σᵢᶻσⱼ
 
 Sites are indexed in row-major order: site (i,j) → index = i + j*Nx + 1
 """
+# function heisenberg_2D(Nx, Ny, Jx, Jy, Jz; x=0, y=0, z=0, periodic=true)
+#     N_total = Nx * Ny
+#     H = PauliSum(N_total, Float64)
+    
+#     # Helper function to convert 2D coordinates to 1D index (1-based)
+#     coord_to_index(i, j) = i + j * Nx + 1
+    
+#     # Nearest-neighbor interactions
+#     for j in 0:Ny-1  # Row index
+#         for i in 0:Nx-1  # Column index
+#             current_site = coord_to_index(i, j)
+            
+#             # Right neighbor (i+1, j)
+#             if i < Nx - 1 || periodic
+#                 right_i = periodic ? (i + 1) % Nx : i + 1
+#                 right_site = coord_to_index(right_i, j)
+                
+#                 H += -2*Jx * Pauli(N_total, X=[current_site, right_site])
+#                 H += -2*Jy * Pauli(N_total, Y=[current_site, right_site])
+#                 H += -2*Jz * Pauli(N_total, Z=[current_site, right_site])
+#             end
+            
+#             # Up neighbor (i, j+1)  
+#             if j < Ny - 1 || periodic
+#                 up_j = periodic ? (j + 1) % Ny : j + 1
+#                 up_site = coord_to_index(i, up_j)
+                
+#                 H += -2*Jx * Pauli(N_total, X=[current_site, up_site])
+#                 H += -2*Jy * Pauli(N_total, Y=[current_site, up_site])
+#                 H += -2*Jz * Pauli(N_total, Z=[current_site, up_site])
+#             end
+#         end
+#     end
+    
+#     # External magnetic field terms
+#     for site in 1:N_total
+#         H += x * Pauli(N_total, X=[site])
+#         H += y * Pauli(N_total, Y=[site]) 
+#         H += z * Pauli(N_total, Z=[site])
+#     end
+    
+#     return H
+# end
+
 function heisenberg_2D(Nx, Ny, Jx, Jy, Jz; x=0, y=0, z=0, periodic=true)
     N_total = Nx * Ny
     H = PauliSum(N_total, Float64)
-    
-    # Helper function to convert 2D coordinates to 1D index (1-based)
-    coord_to_index(i, j) = i + j * Nx + 1
-    
+
+    # Zigzag (snake-like) row-major indexing
+    coord_to_index(i, j) = isodd(j) ? (j - 1) * Nx + i : j * Nx - i + 1
+
+    # Helper functions for periodic wrapping
+    right(i) = periodic ? (i % Nx) + 1 : (i < Nx ? i + 1 : nothing)
+    up(j) = periodic ? (j % Ny) + 1 : (j < Ny ? j + 1 : nothing)
+
     # Nearest-neighbor interactions
-    for j in 0:Ny-1  # Row index
-        for i in 0:Nx-1  # Column index
+    for j in 1:Ny        # rows
+        for i in 1:Nx    # columns
             current_site = coord_to_index(i, j)
-            
             # Right neighbor (i+1, j)
-            if i < Nx - 1 || periodic
-                right_i = periodic ? (i + 1) % Nx : i + 1
-                right_site = coord_to_index(right_i, j)
-                
+            i_r = right(i)
+            if i_r !== nothing
+                right_site = coord_to_index(i_r, j)
+                # display(current_site)
+                # display(right_site)
+                # println("++++++++++")
                 H += -2*Jx * Pauli(N_total, X=[current_site, right_site])
                 H += -2*Jy * Pauli(N_total, Y=[current_site, right_site])
                 H += -2*Jz * Pauli(N_total, Z=[current_site, right_site])
             end
-            
-            # Up neighbor (i, j+1)  
-            if j < Ny - 1 || periodic
-                up_j = periodic ? (j + 1) % Ny : j + 1
-                up_site = coord_to_index(i, up_j)
-                
+
+            # Up neighbor (i, j+1)
+            j_u = up(j)
+            if j_u !== nothing
+                up_site = coord_to_index(i, j_u)
+                # display(current_site)
+                # display(up_site)
+                # println("==============")
                 H += -2*Jx * Pauli(N_total, X=[current_site, up_site])
                 H += -2*Jy * Pauli(N_total, Y=[current_site, up_site])
                 H += -2*Jz * Pauli(N_total, Z=[current_site, up_site])
             end
         end
     end
-    
-    # External magnetic field terms
+
+    # External field terms
     for site in 1:N_total
         H += x * Pauli(N_total, X=[site])
-        H += y * Pauli(N_total, Y=[site]) 
+        H += y * Pauli(N_total, Y=[site])
         H += z * Pauli(N_total, Z=[site])
     end
-    
+
     return H
 end
+
 
 # - - - - - - - - - - - - -
 # Fermionic Hamiltonians
@@ -180,6 +232,62 @@ function fermi_hubbard_2D(Lx::Int, Ly::Int, t::Float64, U::Float64)
     up(j) = 2*j - 1
     dn(j) = 2*j
     linear_index(x,y) = (x - 1) * Ly + y   # x in 1:Lx, y in 1:Ly
+
+    # small tolerance for dropping tiny coeffs
+    eps_coeff = 1e-12
+
+    # HOPPING: loop nearest-neighbour pairs once, add c_i^† c_j + c_j^† c_i (both spins)
+    for x in 1:Lx, y in 1:Ly
+        jsite = linear_index(x, y)
+         # neighbor +x (right in x)
+        if x < Lx
+            isite = linear_index(x + 1, y)
+            for spin in (up, dn)
+                m = spin(jsite)   # mode index for j
+                n = spin(isite)   # mode index for i
+                term = JWmapping(N_total, i=m, j=n) + JWmapping(N_total, i=n, j=m)
+                H += -t * term
+            end
+        end
+         # neighbor +y (right in y)
+         if y < Ly
+            isite = linear_index(x, y + 1)
+            for spin in (up, dn)
+                m = spin(jsite)
+                n = spin(isite)
+                term = JWmapping(N_total, i=m, j=n) + JWmapping(N_total, i=n, j=m)
+                H += -t * term
+            end
+        end
+    end
+
+    for i in 1:Nsites
+        a_up = 2*i - 1   # spin-up orbital index
+        a_dn = 2*i       # spin-down orbital index
+        interaction_term = U *JWmapping(N_total, i=a_up, j=a_up) * JWmapping(N_total, i=a_dn, j=a_dn)
+
+        H += interaction_term
+    end
+
+    # Filter zero coefficients
+    DBF.coeff_clip!(H, thresh=eps_coeff)
+
+    return H
+end
+
+function fermi_hubbard_2D(Lx::Int, Ly::Int, t::Float64, U::Float64)
+    Nsites = Lx * Ly
+    N_total = 2 * Nsites   # Total number of fermionic modes (spin up and down)
+    H = PauliSum(N_total, Float64)
+
+    if 2 * Nsites != N_total
+        throw(ArgumentError("Total qubits N must equal 2 * Lx * Ly. Got N=$N_total, Lx*Ly=$Nsites"))
+    end
+
+    up(j) = 2*j - 1
+    dn(j) = 2*j
+    # linear_index(x,y) = (x - 1) * Ly + y   # x in 1:Lx, y in 1:Ly
+    linear_index(i, j) = isodd(i) ? (i - 1) * Ly + j : i * Ly - j + 1
 
     # small tolerance for dropping tiny coeffs
     eps_coeff = 1e-12

@@ -4,13 +4,15 @@ using Printf
 using Random
 using LinearAlgebra
 using Test
-
+using JLD2
 
 function run()
-    N = 6 
+    Lx = 3
+    Ly = 3
+    N = Lx * Ly
     Random.seed!(2)
-    H = DBF.heisenberg_1D(N, -1, -1, -1, x=.1)
-    # H = DBF.heisenberg_2D(2, 2, -1, -1, -1, z=.1)
+    # H = DBF.heisenberg_1D(N, -1, -1, -1, x=.1)
+    H = DBF.heisenberg_2D(Lx, Ly, -1, -1, -1, z=0, periodic = false)
     # H = DBF.heisenberg_2D(7, 7, -0, -0, -1, x=.1)
     DBF.coeff_clip!(H)
    
@@ -34,7 +36,7 @@ function run()
     display(ψ)
     e0 = expectation_value(H,ψ)
     
-    @show e1 = minimum(real(eigvals(Matrix(H))))
+    # @show e1 = minimum(real(eigvals(Matrix(H))))
    
     @printf(" E0 = %12.8f\n", e0)
 
@@ -58,7 +60,7 @@ function run()
                                 # evolve_weight_thresh=8,
                                 grad_coeff_thresh=1e-3,
                                 # grad_weight_thresh=3,
-                                search_n_top=200)
+                                search_n_top=500)
     g = vcat(g,g2)
     θ = vcat(θ,θ2)
     # @show DBF.get_weight_counts(H)
@@ -117,8 +119,9 @@ function run()
     end    
     ecurr = expectation_value(Ht,ψ)
     @printf(" ecurr %12.8f err %12.8f %8i\n", ecurr, err, length(Ht))
-   
-    #
+
+    jldsave("test/heisenberg_1D_x$Lx-y$Ly.jlad2", Ht = Ht, g = g, θ = θ)
+    
     println("\n Now compute GS properties: <GS|ZZ|GS>")
     Ot = PauliSum(Pauli(N,X=[1,3]))
     O0 = deepcopy(Ot)
@@ -152,7 +155,7 @@ function run()
     
     basis_dict = Ht*ψ
     @show length(basis_dict)
-    # DBF.coeff_clip!(basis_dict, thresh=1e-3)
+    DBF.coeff_clip!(basis_dict, thresh=1e-3)
     @show length(basis_dict)
     basis = Vector{Ket{N}}([ψ])
     for (k,c) in basis_dict
@@ -172,7 +175,7 @@ function run()
         basis[i] != ψ || error(" ψ == i")
         e2 += H[1,i]*H[i,1] / (e0 - H[i,i])
     end
-    @show e0, e2
+    @show e0, e2, e0+e2
 
 
     println("\n Compute PT2 correction")
