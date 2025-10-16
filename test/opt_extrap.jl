@@ -43,11 +43,11 @@ function run()
         g = vcat(g,g2)
         θ = vcat(θ,θ2)
        
-        # @save "out_$(i).jld2" N ψ H0 H g θ
+        @save "out_$(i).jld2" N ψ H0 H g θ
     end
     
     
-    # return
+    return
 
 
     println("\n Now reroptimize with higher accuracy:")
