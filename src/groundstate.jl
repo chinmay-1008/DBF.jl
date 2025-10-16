@@ -253,9 +253,9 @@ function dbf_groundstate(Oin::PauliSum{N,T}, ψ::Ket{N};
         
        
         # Create the iteration dependent pool
-        # pool = max_of_commutator2(S, O, n_top=search_n_top)
+        pool = max_of_commutator2(S, O, n_top=search_n_top)
         # pool = S*O - O*S
-        pool = commute_with_Zs(O)
+        # pool = commute_with_Zs(O)
         coeff_clip!(pool, thresh=grad_coeff_thresh)
         weight_clip!(pool, grad_weight_thresh)
         pool = find_top_k(pool, search_n_top)
