@@ -47,8 +47,9 @@ function heisenberg_2D(Nx, Ny, Jx, Jy, Jz; x=0, y=0, z=0, periodic=true)
     # Nearest-neighbor interactions
     for j in 0:Ny-1  # Row index
         for i in 0:Nx-1  # Column index
+
             current_site = coord_to_index(i, j)
-            
+            display(current_site)
             # Right neighbor (i+1, j)
             if i < Nx - 1 || periodic
                 right_i = periodic ? (i + 1) % Nx : i + 1
@@ -98,13 +99,14 @@ function heisenberg_2D_zigzag(Nx, Ny, Jx, Jy, Jz; x=0, y=0, z=0, periodic=true)
     for j in 1:Ny        # rows
         for i in 1:Nx    # columns
             current_site = coord_to_index(i, j)
+            # display(current_site)
             # Right neighbor (i+1, j)
             i_r = right(i)
             if i_r !== nothing
                 right_site = coord_to_index(i_r, j)
-                # display(current_site)
-                # display(right_site)
-                # println("++++++++++")
+                display(current_site)
+                display(right_site)
+                println("++++++++++")
                 H += -2*Jx * Pauli(N_total, X=[current_site, right_site])
                 H += -2*Jy * Pauli(N_total, Y=[current_site, right_site])
                 H += -2*Jz * Pauli(N_total, Z=[current_site, right_site])
@@ -114,9 +116,87 @@ function heisenberg_2D_zigzag(Nx, Ny, Jx, Jy, Jz; x=0, y=0, z=0, periodic=true)
             j_u = up(j)
             if j_u !== nothing
                 up_site = coord_to_index(i, j_u)
-                # display(current_site)
-                # display(up_site)
-                # println("==============")
+                display(current_site)
+                display(up_site)
+                println("==============")
+                H += -2*Jx * Pauli(N_total, X=[current_site, up_site])
+                H += -2*Jy * Pauli(N_total, Y=[current_site, up_site])
+                H += -2*Jz * Pauli(N_total, Z=[current_site, up_site])
+            end
+        end
+    end
+
+    # External field terms
+    for site in 1:N_total
+        H += x * Pauli(N_total, X=[site])
+        H += y * Pauli(N_total, Y=[site])
+        H += z * Pauli(N_total, Z=[site])
+    end
+
+    return H
+end
+"""
+We want the mapping as follows
+
+Example for a 33x3
+1 6 7 12 ... 97
+2 5 8 11 ... 98
+3 4 9 10 ... 99
+
+instead of 
+1 2 3 4 ... 33
+66 65 64 ... 34
+67 68 69 ... 99
+
+This can be done by just flipping the Lx and Ly as for 3x33 we have
+    1 2 3
+    6 5 4
+    7 8 9
+    . . . 
+    . . . 
+    . . . 
+    97 98 99 
+"""
+
+
+function heisenberg_2D_zigzag_new(Nx, Ny, Jx, Jy, Jz; x=0, y=0, z=0, periodic=true)
+    temp = Ny
+    Ny = Nx
+    Nx = temp
+    N_total = Nx * Ny
+    H = PauliSum(N_total, Float64)
+
+    # Zigzag (snake-like) row-major indexing
+    coord_to_index(i, j) = isodd(j) ? (j - 1) * Nx + i : j * Nx - i + 1
+
+    # Helper functions for periodic wrapping
+    right(i) = periodic ? (i % Nx) + 1 : (i < Nx ? i + 1 : nothing)
+    up(j) = periodic ? (j % Ny) + 1 : (j < Ny ? j + 1 : nothing)
+
+    # Nearest-neighbor interactions
+    for j in 1:Ny        # rows
+        for i in 1:Nx    # columns
+            current_site = coord_to_index(i, j)
+            # display(current_site)
+            # Right neighbor (i+1, j)
+            i_r = right(i)
+            if i_r !== nothing
+                right_site = coord_to_index(i_r, j)
+                display(current_site)
+                display(right_site)
+                println("++++++++++")
+                H += -2*Jx * Pauli(N_total, X=[current_site, right_site])
+                H += -2*Jy * Pauli(N_total, Y=[current_site, right_site])
+                H += -2*Jz * Pauli(N_total, Z=[current_site, right_site])
+            end
+
+            # Up neighbor (i, j+1)
+            j_u = up(j)
+            if j_u !== nothing
+                up_site = coord_to_index(i, j_u)
+                display(current_site)
+                display(up_site)
+                println("==============")
                 H += -2*Jx * Pauli(N_total, X=[current_site, up_site])
                 H += -2*Jy * Pauli(N_total, Y=[current_site, up_site])
                 H += -2*Jz * Pauli(N_total, Z=[current_site, up_site])

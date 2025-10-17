@@ -6,11 +6,22 @@ using LinearAlgebra
 using JLD2
 
 function run()
-    N = 12 
+    N = 7
     Random.seed!(2)
-    H = DBF.heisenberg_1D(N, -1, -1, -1)
-    DBF.coeff_clip!(H)
-   
+    H_1 = DBF.heisenberg_2D_zigzag(2,4, -1, -1, -1, periodic= false)
+    println("+_+_+_+_++_+_+_+++_")
+    H_2 = DBF.heisenberg_2D_zigzag_new(2,4, -1, -1, -1, periodic= false)
+
+    # DBF.coeff_clip!(H)
+    # return
+    e0 = (real(eigvals(Matrix(H_1))))
+    # println("Ground State Energy: ", (e0))
+    display(e0)
+
+    e0 = (real(eigvals(Matrix(H_2))))
+    # println("Ground State Energy: ", (e0))
+    display(e0)
+   return
     # Transform H to make |000> the most stable bitstring
     for i in 1:N
         if i%2 == 0
@@ -20,7 +31,7 @@ function run()
     
     H0 = deepcopy(H)
     # display(H)
-    
+
     ψ = Ket([0 for i in 1:N])
     display(ψ)
     e0 = expectation_value(H,ψ)
@@ -34,7 +45,7 @@ function run()
 
         println("\n ########################")
         println(" ", i)
-        @time H, g2, θ2 = DBF.dbf_groundstate(H, ψ, n_body=1, 
+        @time H, g2, θ2 = DBF.dbf_groundstate(H, ψ, n_body=2, 
                                     verbose=1, 
                                     max_iter=120, conv_thresh=1e-3, 
                                     evolve_coeff_thresh=1e-3,
@@ -43,7 +54,7 @@ function run()
         g = vcat(g,g2)
         θ = vcat(θ,θ2)
        
-        @save "out_$(i).jld2" N ψ H0 H g θ
+        #@save "out_$(i).jld2" N ψ H0 H g θ
     end
     
     
