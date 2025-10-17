@@ -81,7 +81,7 @@ Sites are indexed in row-major order: site (i,j) → index = i + j*Nx + 1
 #     return H
 # end
 
-function heisenberg_2D(Nx, Ny, Jx, Jy, Jz; x=0, y=0, z=0, periodic=true)
+function heisenberg_2D_zigzag(Nx, Ny, Jx, Jy, Jz; x=0, y=0, z=0, periodic=true)
     N_total = Nx * Ny
     H = PauliSum(N_total, Float64)
 

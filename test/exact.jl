@@ -11,7 +11,7 @@ function run()
     Lx = 3
     Ly = 3
     N = Lx * Ly
-    H = DBF.heisenberg_2D(Lx, Ly, -1, -1, -1, x=.0, periodic = false)
+    H = DBF.heisenberg_2D_zigzag(Lx, Ly, -1, -1, -1, x=.0, periodic = false)
 #     display(H)
 # return
     # N = 50
