@@ -275,7 +275,7 @@ function fermi_hubbard_2D(Lx::Int, Ly::Int, t::Float64, U::Float64)
     return H
 end
 
-function fermi_hubbard_2D(Lx::Int, Ly::Int, t::Float64, U::Float64)
+function fermi_hubbard_2D_zigzag(Lx::Int, Ly::Int, t::Float64, U::Float64)
     Nsites = Lx * Ly
     N_total = 2 * Nsites   # Total number of fermionic modes (spin up and down)
     H = PauliSum(N_total, Float64)

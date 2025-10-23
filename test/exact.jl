@@ -8,8 +8,8 @@ using DBF
 # println("Number of terms in Hamiltonian: ", length(coeffs))
 
 function run()
-    Lx = 3
-    Ly = 3
+    Lx = 2
+    Ly = 50
     N = Lx * Ly
     H = DBF.heisenberg_2D_zigzag(Lx, Ly, -1, -1, -1, x=.0, periodic = false)
 #     display(H)
@@ -41,7 +41,7 @@ function run()
             os += c, flat_opsites...
         end
     end 
-    display(os)
+    # display(os)
 
     
     H = MPO(os, sites)
