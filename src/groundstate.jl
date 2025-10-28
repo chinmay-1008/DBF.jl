@@ -137,7 +137,7 @@ function dbf_groundstate(Oin::PauliSum{N,T}, ψ::Ket{N};
     
     push!(out["energies_per_grad"], ecurr)
     push!(out["accumulated_error_per_grad"], initial_error)
-    push!(out["pt2_per_grad"], e2)
+    push!(out["pt2_per_grad"], real(e2))
     push!(out["variance_per_grad"], variance(O,ψ))
     push!(out["norms_per_grad"], norm(O))
    
