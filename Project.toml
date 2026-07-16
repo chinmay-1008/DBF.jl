@@ -1,7 +1,7 @@
 name = "DBF"
 uuid = "05a0241d-af54-46e5-a412-7f757969bf0b"
-version = "1.0.0"
 authors = ["Nick Mayhall"]
+version = "1.0.0"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
@@ -32,7 +32,7 @@ LinearAlgebra = "1.11.0"
 LinearMaps = "3.11.4"
 Optim = "1.13.2"
 OrderedCollections = "1.8.1"
-PauliOperators = "3"
+PauliOperators = "3.1.0"
 Polynomials = "4.1.0"
 Printf = "1.11.0"
 Random = "1.11.0"

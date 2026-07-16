@@ -158,8 +158,8 @@ function dbf_groundstate(Oin::PauliSum{N,T}, ψ::Ket{N};
     verbose < 1 || @printf(" %12s", "total_error")
     if compute_pt2_error
         verbose < 1 || @printf(" %12s", "PT_error")
+        verbose < 1 || @printf(" %10s", "E(2)")
     end
-    verbose < 1 || @printf(" %10s", "E(2)")
     verbose < 1 || @printf(" %12s", "norm_err")
     verbose < 1 || @printf(" %9s", "norm(G)")
     verbose < 1 || @printf(" %10s", "len([H,Z])")
@@ -280,18 +280,19 @@ function dbf_groundstate(Oin::PauliSum{N,T}, ψ::Ket{N};
                 break
             end
         end
-        verbose < 2 || println("\n Compute PT2 correction")
-        @timeit to "pt2" e0, e2 = pt2(O, ψ)
-        verbose < 2 || @printf(" E0 = %12.8f E2 = %12.8f EPT2 = %12.8f \n", e0, e2, e0+e2)
-        
+        if compute_pt2_error
+            verbose < 2 || println("\n Compute PT2 correction")
+            @timeit to "pt2" e0, e2 = pt2(O, ψ)
+            verbose < 2 || @printf(" E0 = %12.8f E2 = %12.8f EPT2 = %12.8f \n", e0, e2, e0+e2)
+        end
         @timeit to "variance" var_curr = variance(O,ψ)
         verbose < 1 || @printf("*%6i", iter)
         verbose < 1 || @printf(" %14.8f", ecurr)
         verbose < 1 || @printf(" %12.8f", real(corr.accumulated_energy))
         if compute_pt2_error
             verbose < 1 || @printf(" %12.8f", real(accumulated_pt2_error))
+            verbose < 1 || @printf(" %10.6f", real(e2))
         end
-        verbose < 1 || @printf(" %10.6f", real(e2))
         verbose < 1 || @printf(" %12.8f", accumulated_norm_error)
         verbose < 1 || @printf(" %8.3e", norm(grad_vec))
         verbose < 1 || @printf(" %10i", len_comm)
