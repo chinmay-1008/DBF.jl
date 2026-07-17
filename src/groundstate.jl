@@ -197,7 +197,7 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
     verbose < 1 || @printf(" %8s", "len(G)")
     verbose < 1 || @printf(" %8s", "len(H)")
     verbose < 1 || @printf(" %4s", "#Rot")
-    verbose < 1 || @printf(" %8s", "variance")
+    verbose < 1 || @printf(" %10s", "variance")
     if compute_var_error
         verbose < 1 || @printf(" %12s", "var_error")
     end
@@ -343,7 +343,7 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
         verbose < 1 || @printf(" %8i", length(grad_vec))
         verbose < 1 || @printf(" %8i", length(O))
         verbose < 1 || @printf(" %4i", n_rots)
-        verbose < 1 || @printf(" %8.4f", real(var_curr))
+        verbose < 1 || @printf(" %12.8f", real(var_curr))
         if compute_var_error
             verbose < 1 || @printf(" %12.8f", compute_var_error ? real(corr.accumulated_variance) : 0.0)
         end
