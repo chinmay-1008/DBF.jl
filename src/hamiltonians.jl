@@ -198,21 +198,30 @@ end
  The following functions are designed to perform the Jordan-Wigner mapping.
 """
 function JWmapping(N; i::Int, j::Int)
-    # Compute C^dagger_i term
-    ax_term = Pauli(2^(i-1)-1, 2^(i-1), N)
-    ay_term = Pauli(2^(i)-1, 2^(i-1), N)
-    c_dagg_a = 0.5 * (ax_term - ay_term)
+    # Use bit-shifting instead of powers for performance and clarity
+    # shift = 2^(idx-1)
+    shift_i = Int128(1) << (i - 1)
+    shift_j = Int128(1) << (j - 1)
 
-    # Compute C_j term
-    bx_term = Pauli(2^(j-1)-1, 2^(j-1), N)
-    by_term = Pauli(2^(j)-1, 2^(j-1), N)
-    c_b = 0.5 * (bx_term + by_term)
+    # Construct C_i^dagger terms
+    # X_i string: (Z...Z) X_i, Y_i string: (Z...Z) Y_i
+    # Note: Pauli{N}(phase, z_bits, x_bits)
+    ax = Pauli{N}(1, shift_i - 1, shift_i)
+    ay = Pauli{N}(1, (Int128(1) << i) - 1, shift_i)
 
-    # Build C^dagger_i*C_j
-    term =  c_dagg_a * c_b
+    # Construct C_j terms
+    bx = Pauli{N}(1, shift_j - 1, shift_j)
+    by = Pauli{N}(1, (Int128(1) << j) - 1, shift_j)
 
-    return term
+    # c_i^dagger = 0.5 * (X_i - iY_i)
+    # c_j        = 0.5 * (X_j + iY_j)
+    # We use PauliBasis only at the end to minimize overhead
+    op_i_dag = 0.5 * (PauliBasis(ax) - im * PauliBasis(ay))
+    op_j     = 0.5 * (PauliBasis(bx) + im * PauliBasis(by))
+
+    return op_i_dag * op_j
 end
+
 
 """
  1D Fermi-Hubbard model 
