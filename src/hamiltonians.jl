@@ -342,62 +342,70 @@ function fermi_hubbard_2D(Lx::Int, Ly::Int, t::Float64, U::Float64)
 end
 
 
-function fermi_hubbard_2D_zigzag(Lx::Int, Ly::Int, t::Float64, U::Float64)
-    Nsites = Lx * Ly
-    N_total = 2 * Nsites   # Total number of fermionic modes (spin up and down)
-    H = PauliSum(N_total, Float64)
+_zigzag_site(x, y, Lx) =
+    isodd(y) ? (y - 1) * Lx + x : y * Lx - x + 1
 
-    if 2 * Nsites != N_total
-        throw(ArgumentError("Total qubits N must equal 2 * Lx * Ly. Got N=$N_total, Lx*Ly=$Nsites"))
+function _square_bonds_zigzag(Lx, Ly; periodic=false, diagonal=false)
+    shifts = diagonal ? ((1, 1), (1, -1)) : ((1, 0), (0, 1))
+    bonds = Set{Tuple{Int,Int}}()
+    for y in 1:Ly, x in 1:Lx, (dx, dy) in shifts
+        x2, y2 = x + dx, y + dy
+        if periodic
+            x2, y2 = mod1(x2, Lx), mod1(y2, Ly)
+        elseif !(1 <= x2 <= Lx && 1 <= y2 <= Ly)
+            continue
+        end
+        i, j = _zigzag_site(x, y, Lx), _zigzag_site(x2, y2, Lx)
+        i != j && push!(bonds, minmax(i, j))
     end
+    return sort!(collect(bonds))
+end
+
+function fermi_hubbard_2D_zigzag(
+    Lx::Int, Ly::Int, t::Float64, U::Float64; periodic=false
+)
+    Nsites = Lx * Ly
+    N_total = 2 * Nsites
+    H = PauliSum(N_total, Float64)
 
     up(j) = 2*j - 1
     dn(j) = 2*j
-    # linear_index(x,y) = (x - 1) * Ly + y   # x in 1:Lx, y in 1:Ly
 
-    linear_index(i, j) = isodd(j) ? (j - 1) * Lx + i : j * Lx - i + 1
-
-    # small tolerance for dropping tiny coeffs
-    eps_coeff = 1e-12
-
-    # HOPPING: loop nearest-neighbour pairs once, add c_i^† c_j + c_j^† c_i (both spins)
-    for y in 1:Ly, x in 1:Lx
-        println(x, "  ", y)
-        jsite = linear_index(x, y)
-        display(jsite)
-         # neighbor +x (right in x)
-        if x < Lx
-            isite = linear_index(x + 1, y)
-            for spin in (up, dn)
-                m = spin(jsite)   # mode index for j
-                n = spin(isite)   # mode index for i
-                term = JWmapping(N_total, i=m, j=n) + JWmapping(N_total, i=n, j=m)
-                H += -t * term
-            end
-        end
-         # neighbor +y (right in y)
-         if y < Ly
-            isite = linear_index(x, y + 1)
-            for spin in (up, dn)
-                m = spin(jsite)
-                n = spin(isite)
-                term = JWmapping(N_total, i=m, j=n) + JWmapping(N_total, i=n, j=m)
-                H += -t * term
-            end
+    for (i, j) in _square_bonds_zigzag(Lx, Ly; periodic)
+        for spin in (up, dn)
+            p, q = spin(i), spin(j)
+            H -= t * (
+                JWmapping(N_total; i=p, j=q) +
+                JWmapping(N_total; i=q, j=p)
+            )
         end
     end
 
     for i in 1:Nsites
-        a_up = 2*i - 1   # spin-up orbital index
-        a_dn = 2*i       # spin-down orbital index
-        interaction_term = U *JWmapping(N_total, i=a_up, j=a_up) * JWmapping(N_total, i=a_dn, j=a_dn)
-
-        H += interaction_term
+        nup = JWmapping(N_total; i=up(i), j=up(i))
+        ndown = JWmapping(N_total; i=dn(i), j=dn(i))
+        H += U * nup * ndown
     end
 
-    # Filter zero coefficients
-    coeff_clip!(H, eps_coeff)
+    coeff_clip!(H, 1e-12)
+    return H
+end
 
+function j1j2_2D_zigzag(
+    Lx::Int, Ly::Int, J1::Float64, J2::Float64; periodic=true
+)
+    N = Lx * Ly
+    H = PauliSum(N, Float64)
+    for (J, bonds) in (
+        (J1, _square_bonds_zigzag(Lx, Ly; periodic)),
+        (J2, _square_bonds_zigzag(Lx, Ly; periodic, diagonal=true)),
+    )
+        for (i, j) in bonds
+            H += J * Pauli(N, X=[i, j])
+            H += J * Pauli(N, Y=[i, j])
+            H += J * Pauli(N, Z=[i, j])
+        end
+    end
     return H
 end
 
