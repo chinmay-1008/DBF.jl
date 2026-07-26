@@ -87,6 +87,19 @@ function compute_gradient!(grad_vec::Vector{Float64}, grad_ops::Vector{PauliBasi
     return nothing
 end
 
+function _save_groundstate_checkpoint(path, O, out, mode::Symbol)
+    if mode === :full
+        JLD2.jldsave(path; O=O, out=out)
+    elseif mode === :compact
+        checkpoint_out = copy(out)
+        delete!(checkpoint_out, "H0")
+        JLD2.jldsave(path; out=checkpoint_out)
+    else
+        throw(ArgumentError("checkpoint_mode must be :full or :compact"))
+    end
+    return nothing
+end
+
 """
     dbf_groundstate(Oin::PauliSum{N,T}, ψ::Ket{N};
         operator_truncation=CoeffTruncation(1e-6),
@@ -103,6 +116,13 @@ minimizing `⟨ψ|H|ψ⟩`. Uses an n-body Z-projector approximation as the sour
 
 Both accept any `TruncationStrategy` from PauliOperators (e.g., `CoeffTruncation`,
 `WeightTruncation`, `CompositeTruncation`, etc.).
+
+# Checkpoints
+- `checkfile`: checkpoint path, with or without the `.jld2` extension
+- `checkpoint_interval`: save every N macro-iterations; use 0 for final only
+- `checkpoint_mode=:full`: save the evolving Hamiltonian and all output
+- `checkpoint_mode=:compact`: save histories, generators, and angles, but omit
+  the two large Hamiltonians. Compact files support analysis but not flow restart.
 """
 function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
             n_body=1,
@@ -119,10 +139,23 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
             compute_var_error = true,
             compute_pt2 = false,
             compute_pt2_error = false,
-            checkfile=nothing) where {N,T}
+            checkfile=nothing,
+            checkpoint_interval::Int=1,
+            checkpoint_mode::Symbol=:full) where {N,T}
 
     # the pt2-error probes imply computing pt2
     compute_pt2 |= compute_pt2_error
+
+    checkpoint_interval >= 0 ||
+        throw(ArgumentError("checkpoint_interval must be nonnegative"))
+    checkpoint_mode in (:full, :compact) ||
+        throw(ArgumentError("checkpoint_mode must be :full or :compact"))
+    checkpoint_path = if checkfile === nothing
+        nothing
+    else
+        path = string(checkfile)
+        endswith(path, ".jld2") ? path : path * ".jld2"
+    end
        
 
     O = deepcopy(Oin)
@@ -228,6 +261,12 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
        
         if length(G) == 0
             @warn " No search direction found. Loosen `gradient_truncation`."
+            if checkpoint_path !== nothing
+                save_time = @elapsed @timeit to "checkpoint" _save_groundstate_checkpoint(
+                    checkpoint_path, O, out, checkpoint_mode)
+                verbose < 1 || @printf(" Checkpoint saved in %.2f s: %s\n",
+                                        save_time, checkpoint_path)
+            end
             break
         end
 
@@ -358,8 +397,14 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
         push!(out["accumulated_var_error_per_grad"], compute_var_error ? real(corr.accumulated_variance) : 0.0)
         push!(out["norms_per_grad"], norm(O))
 
-        if checkfile !== nothing
-            @save "$(checkfile).jld2" O out
+        stopping = norm(grad_vec) < conv_thresh || iter == max_iter || n_rots == 0
+        periodic_checkpoint = checkpoint_interval > 0 &&
+                              iter % checkpoint_interval == 0
+        if checkpoint_path !== nothing && (periodic_checkpoint || stopping)
+            save_time = @elapsed @timeit to "checkpoint" _save_groundstate_checkpoint(
+                checkpoint_path, O, out, checkpoint_mode)
+            verbose < 1 || @printf(" Checkpoint saved in %.2f s: %s\n",
+                                    save_time, checkpoint_path)
         end
     
         
