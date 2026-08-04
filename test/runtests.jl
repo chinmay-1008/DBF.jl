@@ -10,6 +10,7 @@ using Test
     include("test_diag_dbf.jl")
     include("test_groundstate_dbf.jl")
     include("test_groundstate_spv.jl")
+    include("test_weight_analysis.jl")
     include("test_adapt.jl")
     include("test_helpers.jl")
 end

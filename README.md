@@ -100,6 +100,38 @@ PT2 corrections along the flow are off by default; pass `compute_pt2=true`
 to compute (and print) them each macro-iteration, or `compute_pt2_error=true`
 to also track the PT2 truncation error per rotation.
 
+#### Pauli and Majorana weight analysis
+
+Weight-distribution tracking is also opt-in. It can sample either every DBF
+macro-iteration (the cheaper default) or every individual rotation:
+
+```julia
+res = dbf_groundstate(SparsePauliVector(H), ψ;
+    max_iter=50,
+    analyze_weights=true,
+    weight_analysis_interval=:iteration,  # or :rotation
+    weight_analysis_file="weight_history.csv")
+
+history = res["weight_analysis"]
+history["pauli_counts"]            # exact term counts per weight
+history["pauli_l2_norms"]          # coefficient L2 norm per weight
+history["pauli_l2_squared"]        # squared L2 contribution per weight
+history["pauli_count_percent"]     # one percentage vector per sample
+history["pauli_l2_percent"]        # ||H_w||₂² / ||H||₂², in percent
+```
+
+The initial Hamiltonian is sample zero. Each count and squared-L2-norm
+distribution sums to 100%, except that a zero operator has an all-zero
+distribution. Tracking adds one pass over the Hamiltonian per sample, so
+`:iteration` is recommended for large runs. Rotation and iteration samples
+describe the Hamiltonian after evolution and truncation.
+
+When `weight_analysis_file` is provided, the completed history is also written
+as a long-form CSV. Every row includes the sample, iteration and rotation
+indices; qubit count; Pauli or Majorana weight; exact count; subspace L2 norm
+and squared norm; count and L2 percentages; and whole-operator norm totals.
+This format is directly suitable for later Python analysis.
+
 ### ADAPT-VQE Optimization
 
 ADAPT-VQE builds a unitary ansatz one operator at a time. At each iteration it:
@@ -292,6 +324,7 @@ For `PauliSum` inputs these use the `XZPauliSum` representation (Pauli terms gro
 | `optimize_rotation_sequence(H, gens, ψ; kwargs...)` | LBFGS optimization of all rotation angles |
 | `extrapolate_energy(out; kwargs...)` | Energy-variance extrapolation to zero variance |
 | `plot_extrapolation(out; kwargs...)` | Plot E vs Var with extrapolation (requires `using Plots`) |
+| `weight_distribution(H)` | Compute one Pauli/Majorana count and L2-weight snapshot |
 | `pack_x_z(H)` | Convert `PauliSum` to X-bitstring-grouped representation |
 | `project(k, basis)` | Project a `KetSum` onto a basis |
 

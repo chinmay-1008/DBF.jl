@@ -123,6 +123,18 @@ Both accept any `TruncationStrategy` from PauliOperators (e.g., `CoeffTruncation
 - `checkpoint_mode=:full`: save the evolving Hamiltonian and all output
 - `checkpoint_mode=:compact`: save histories, generators, and angles, but omit
   the two large Hamiltonians. Compact files support analysis but not flow restart.
+
+# Weight analysis
+- `analyze_weights=false`: collect Pauli- and Majorana-weight distributions
+- `weight_analysis_interval=:iteration`: sample after every macro-iteration;
+  use `:rotation` to sample after every individual rotation
+- `weight_analysis_file=nothing`: optionally write the completed history as a
+  long-form CSV for Python or other post-processing
+
+The initial Hamiltonian is always included as sample zero. Exact counts,
+per-subspace L2 norms and squared norms, totals, and both percentage forms are
+saved under `out["weight_analysis"]` and in the optional CSV. Each later
+sample describes the Hamiltonian after its rotation(s) and truncation.
 """
 function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
             n_body=1,
@@ -141,7 +153,10 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
             compute_pt2_error = false,
             checkfile=nothing,
             checkpoint_interval::Int=1,
-            checkpoint_mode::Symbol=:full) where {N,T}
+            checkpoint_mode::Symbol=:full,
+            analyze_weights::Bool=false,
+            weight_analysis_interval::Symbol=:iteration,
+            weight_analysis_file=nothing) where {N,T}
 
     # the pt2-error probes imply computing pt2
     compute_pt2 |= compute_pt2_error
@@ -150,6 +165,10 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
         throw(ArgumentError("checkpoint_interval must be nonnegative"))
     checkpoint_mode in (:full, :compact) ||
         throw(ArgumentError("checkpoint_mode must be :full or :compact"))
+    weight_analysis_interval in (:iteration, :rotation) ||
+        throw(ArgumentError("weight_analysis_interval must be :iteration or :rotation"))
+    weight_analysis_file === nothing || analyze_weights ||
+        throw(ArgumentError("weight_analysis_file requires analyze_weights=true"))
     checkpoint_path = if checkfile === nothing
         nothing
     else
@@ -201,6 +220,12 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
     out["pt2_per_grad"] = Vector{Float64}([])
     out["variance_per_grad"] = Vector{Float64}([])
     out["accumulated_var_error_per_grad"] = Vector{Float64}([])
+
+    if analyze_weights
+        out["weight_analysis"] = _initialize_weight_analysis(O, weight_analysis_interval)
+        _record_weight_distribution!(out["weight_analysis"], O;
+                                     iteration=0, rotation=0)
+    end
 
     push!(out["energies"], ecurr)
     push!(out["variances"], variance(O,ψ))
@@ -356,6 +381,12 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
             push!(out["generators"], Gi) 
             push!(out["angles"], θi)
 
+            if analyze_weights && weight_analysis_interval === :rotation
+                @timeit to "weight_analysis" _record_weight_distribution!(
+                    out["weight_analysis"], O;
+                    iteration=iter, rotation=length(out["angles"]))
+            end
+
             if n_rots >= max_rots_per_grad
                 break
             end
@@ -397,6 +428,12 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
         push!(out["accumulated_var_error_per_grad"], compute_var_error ? real(corr.accumulated_variance) : 0.0)
         push!(out["norms_per_grad"], norm(O))
 
+        if analyze_weights && weight_analysis_interval === :iteration
+            @timeit to "weight_analysis" _record_weight_distribution!(
+                out["weight_analysis"], O;
+                iteration=iter, rotation=length(out["angles"]))
+        end
+
         stopping = norm(grad_vec) < conv_thresh || iter == max_iter || n_rots == 0
         periodic_checkpoint = checkpoint_interval > 0 &&
                               iter % checkpoint_interval == 0
@@ -425,6 +462,10 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
         
     end
     out["hamiltonian"] = O 
+    if analyze_weights && weight_analysis_file !== nothing
+        out["weight_analysis"]["csv_file"] = _save_weight_analysis_csv(
+            weight_analysis_file, out["weight_analysis"])
+    end
     show(to) 
     println() 
     return out 

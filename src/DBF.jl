@@ -16,6 +16,7 @@ XZPauliSum{T} = Dict{Int128,Vector{Tuple{Int128,T}}}
 include("evolve.jl")
 include("schrodinger_picture.jl")
 include("helpers.jl")
+include("weight_analysis.jl")
 include("hamiltonians.jl")
 include("diagonalization.jl")
 include("groundstate.jl")
@@ -36,6 +37,7 @@ export pack_x_z
 export project
 export extrapolate_energy
 export plot_extrapolation
+export weight_distribution
 export optimize_rotation_sequence
 
 end
