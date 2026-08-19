@@ -39,6 +39,66 @@ using Test
     end
 end
 
+@testset "variance-truncation record alignment" begin
+    N = 3
+    Random.seed!(19)
+    H = DBF.heisenberg_1D(N, 1, 2, 3, z=.17)
+    for i in 1:N
+        H += 0.04 * i * Pauli(N, X=[i])
+        H += 0.03 * i * Pauli(N, Z=[i])
+    end
+    ψ = Ket{N}(0)
+    flow_kwargs = (
+        max_iter=2,
+        verbose=0,
+        conv_thresh=1e-12,
+        operator_truncation=CoeffTruncation(1e-4),
+        gradient_truncation=CoeffTruncation(1e-8),
+        energy_lowering_thresh=1e-10,
+        compute_var_error=true,
+        record_variance_components=true,
+    )
+
+    for max_rots in (1, 3)
+        result = DBF.dbf_groundstate(SparsePauliVector(H), ψ;
+            max_rots_per_grad=max_rots, flow_kwargs...)
+        records = result["variance_truncation_records"]
+        global_rotation = result["variance_truncation_global_rotation"]
+        iterations = result["variance_truncation_iteration"]
+        within_iteration =
+            result["variance_truncation_rotation_in_iteration"]
+
+        @test length(records) == length(result["angles"])
+        @test global_rotation == collect(1:length(records))
+        @test length(iterations) == length(records)
+        @test length(within_iteration) == length(records)
+        @test all(1 .<= within_iteration .<= max_rots)
+        for iteration in unique(iterations)
+            positions = findall(==(iteration), iterations)
+            @test within_iteration[positions] == collect(1:length(positions))
+        end
+        reconstructed = sum(record.delta_variance for record in records)
+        @test reconstructed ≈ result["accumulated_var_error"][end]
+    end
+
+    # On this small system the available pool is smaller than this deliberately
+    # excessive cap, exercising an iteration that accepts fewer than the
+    # configured maximum number of rotations.
+    result = DBF.dbf_groundstate(SparsePauliVector(H), ψ;
+        max_iter=1,
+        max_rots_per_grad=100,
+        verbose=0,
+        conv_thresh=1e-12,
+        operator_truncation=CoeffTruncation(1e-4),
+        gradient_truncation=CoeffTruncation(1e-8),
+        energy_lowering_thresh=1e-10,
+        compute_var_error=true,
+        record_variance_components=true)
+    @test length(result["variance_truncation_records"]) < 100
+    @test length(result["variance_truncation_records"]) ==
+          length(result["angles"])
+end
+
 @testset "test_groundstate_spv" begin
     N = 3
     Random.seed!(2)

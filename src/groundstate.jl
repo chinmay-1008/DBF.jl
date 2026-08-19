@@ -113,6 +113,9 @@ minimizing `⟨ψ|H|ψ⟩`. Uses an n-body Z-projector approximation as the sour
 # Truncation
 - `operator_truncation`: `TruncationStrategy` applied to H after each rotation
 - `gradient_truncation`: `TruncationStrategy` applied to the gradient/commutator
+- `record_variance_components=false`: when enabled, retain one exact
+  discarded-variance/covariance record per accepted rotation (requires
+  `compute_var_error=true`)
 
 Both accept any `TruncationStrategy` from PauliOperators (e.g., `CoeffTruncation`,
 `WeightTruncation`, `CompositeTruncation`, etc.).
@@ -149,6 +152,7 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
             max_rots_per_grad = 100,
             clifford_check = false,
             compute_var_error = true,
+            record_variance_components::Bool=false,
             compute_pt2 = false,
             compute_pt2_error = false,
             checkfile=nothing,
@@ -169,6 +173,9 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
         throw(ArgumentError("weight_analysis_interval must be :iteration or :rotation"))
     weight_analysis_file === nothing || analyze_weights ||
         throw(ArgumentError("weight_analysis_file requires analyze_weights=true"))
+    record_variance_components && !compute_var_error &&
+        throw(ArgumentError(
+            "record_variance_components=true requires compute_var_error=true"))
     checkpoint_path = if checkfile === nothing
         nothing
     else
@@ -186,7 +193,10 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
     ecurr = expectation_value(O, ψ)
 
     # Set up correction accumulator for truncation error tracking
-    corr = compute_var_error ? EnergyVarianceCorrection(ψ) : EnergyCorrection(ψ)
+    corr = compute_var_error ?
+        EnergyVarianceCorrection(ψ;
+            record_components=record_variance_components) :
+        EnergyCorrection(ψ)
     corr.accumulated_energy = Float64(initial_error)
     if compute_var_error
         corr.accumulated_variance = 0.0
@@ -203,6 +213,13 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
     # 
     # Initialize data collection
     out = Dict()
+
+    if record_variance_components
+        out["variance_truncation_records"] = corr.records
+        out["variance_truncation_global_rotation"] = Int[]
+        out["variance_truncation_iteration"] = Int[]
+        out["variance_truncation_rotation_in_iteration"] = Int[]
+    end
 
     out["state"] = ψ
     out["H0"] = Oin
@@ -342,6 +359,8 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
             # documents window = 1 as exactly equivalent to
             # evolve!(O, Gi, θi); truncate!(O, strategy, corr).
             # The pre-truncation pt2 probe needs the unfused path.
+            record_count_before = record_variance_components ?
+                                  length(corr.records) : 0
             if O isa SparsePauliVector && !compute_pt2_error
                 @timeit to "evolve" evolve!(O, [Gi], [θi]; window=1,
                                             truncation=operator_truncation,
@@ -369,6 +388,16 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
             verbose < 2 || @printf(" %12i %12.8f %s", length(O), θi, string(G))
             verbose < 2 || @printf("\n")
             n_rots += 1
+            if record_variance_components
+                length(corr.records) == record_count_before + 1 ||
+                    error("Expected exactly one variance-truncation record " *
+                          "for iteration $iter, rotation $n_rots; got " *
+                          "$(length(corr.records) - record_count_before)")
+                push!(out["variance_truncation_global_rotation"],
+                      length(out["angles"]) + 1)
+                push!(out["variance_truncation_iteration"], iter)
+                push!(out["variance_truncation_rotation_in_iteration"], n_rots)
+            end
             flush(stdout)
             
             push!(out["accumulated_error"], real(corr.accumulated_energy))
