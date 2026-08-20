@@ -150,6 +150,34 @@ function rotation_metadata(boundaries::Vector{Int}, iterations_to_run::Int)
 end
 
 
+"Combine every internal truncation boundary belonging to one rotation."
+function aggregate_rotation_records(records, first_index::Int, rotation::Int)
+    first_index <= length(records) || error(
+        "No truncation record was produced at rotation $rotation",
+    )
+    var_B = 0.0
+    cov_A_B = 0.0
+    two_cov_A_B = 0.0
+    delta_variance = 0.0
+    delta_energy = 0.0
+    for index in first_index:length(records)
+        record = records[index]
+        var_B += record.var_B
+        cov_A_B += record.cov_A_B
+        two_cov_A_B += record.two_cov_A_B
+        delta_variance += record.delta_variance
+        delta_energy += record.delta_energy
+    end
+    return VarianceTruncationRecord(
+        var_B,
+        cov_A_B,
+        two_cov_A_B,
+        delta_variance,
+        delta_energy,
+    )
+end
+
+
 function write_diagnostics(path, result, threshold, max_rots_per_grad)
     records = result["variance_truncation_records"]
     iterations = result["variance_truncation_iteration"]
@@ -288,6 +316,8 @@ function replay_trajectory(
         real(saved["accumulated_var_error"][1]) : 0.0
     correction.accumulated_energy = initial_energy_error
     correction.accumulated_variance = initial_variance_error
+    rotation_records = VarianceTruncationRecord[]
+    extra_internal_boundaries = 0
 
     energies = Vector{Float64}(undef, rotations_to_run + 1)
     variances = Vector{Float64}(undef, rotations_to_run + 1)
@@ -317,10 +347,17 @@ function replay_trajectory(
             truncation=truncation,
             correction=correction,
         )
-        length(correction.records) == record_count_before + 1 || error(
-            "Expected exactly one truncation record at rotation $rotation; got " *
-            "$(length(correction.records) - record_count_before)",
+        number_of_new_records = length(correction.records) - record_count_before
+        number_of_new_records >= 1 || error(
+            "Expected at least one truncation record at rotation $rotation; got " *
+            "$number_of_new_records",
         )
+        push!(rotation_records, aggregate_rotation_records(
+            correction.records,
+            record_count_before + 1,
+            rotation,
+        ))
+        extra_internal_boundaries += number_of_new_records - 1
 
         # Energies were saved per rotation. Variance was generally saved only
         # per macro-iteration, so calculate it from the replayed Hamiltonian.
@@ -344,7 +381,7 @@ function replay_trajectory(
     end
 
     result = Dict{String,Any}(
-        "variance_truncation_records" => correction.records,
+        "variance_truncation_records" => rotation_records,
         "variance_truncation_iteration" => macro_iterations,
         "variance_truncation_rotation_in_iteration" => rotations_in_iteration,
         "iteration_boundaries" => boundaries[1:iterations_to_run],
@@ -352,7 +389,14 @@ function replay_trajectory(
         "variances" => variances,
         "accumulated_error" => accumulated_error,
         "accumulated_var_error" => accumulated_var_error,
+        "extra_internal_truncation_boundaries" => extra_internal_boundaries,
     )
+    if extra_internal_boundaries > 0
+        @printf(
+            "Aggregated %d additional internal truncation boundaries into their parent rotations.\n",
+            extra_internal_boundaries,
+        )
+    end
     return result, iterations_to_run, maximum_rotations_per_iteration
 end
 
