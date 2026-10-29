@@ -41,6 +41,13 @@ for each basis it wrote.
 - The `.jld2` holds `H` (so `@load file H` still works) plus `n_alpha`,
   `n_beta`, `reference_ket`, `reference_energy`, `e_uhf`, `e_fci`, `mu` and
   `energy_offset`.
+- `dbf_groundstate` needs the reference to be `|0...0>`: its generator pool
+  `[I + Σ Z_i, H]` is zero for a number-conserving H otherwise. Conjugate H by
+  X on the occupied qubits first (`to_vacuum_reference` in
+  `../n2_pes/run_dbf_pes.jl`).
+- `uhf_integrals_to_pauli.jl` only runs `run(ARGS)` when executed as a script,
+  so it can also be `include`d and `run([...])` called in a loop
+  (`../n2_pes/build_hamiltonians.jl`).
 
 ## Checks (any failure stops the run before files are written)
 

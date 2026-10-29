@@ -251,4 +251,6 @@ function run(args)
     println("Wrote $output")
 end
 
-@time run(ARGS)
+if abspath(PROGRAM_FILE) == @__FILE__
+    @time run(ARGS)
+end

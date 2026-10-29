@@ -117,6 +117,12 @@ minimizing `⟨ψ|H|ψ⟩`. Uses an n-body Z-projector approximation as the sour
 Both accept any `TruncationStrategy` from PauliOperators (e.g., `CoeffTruncation`,
 `WeightTruncation`, `CompositeTruncation`, etc.).
 
+# Stopping
+- `conv_thresh`: stop when the gradient norm falls below it
+- `plateau_window`, `plateau_thresh`: stop when `⟨ψ|H|ψ⟩` has dropped by less
+  than `plateau_thresh` over the last `plateau_window` macro-iterations;
+  `plateau_window = 0` (default) disables this test
+
 # Checkpoints
 - `checkfile`: checkpoint path, with or without the `.jld2` extension
 - `checkpoint_interval`: save every N macro-iterations; use 0 for final only
@@ -131,6 +137,8 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
             max_iter=10,
             verbose=1,
             conv_thresh=1e-3,
+            plateau_window::Int=0,
+            plateau_thresh=1e-6,
             operator_truncation::TruncationStrategy=CoeffTruncation(1e-6),
             gradient_truncation::TruncationStrategy=CoeffTruncation(1e-6),
             energy_lowering_thresh=1e-6,
@@ -397,7 +405,10 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
         push!(out["accumulated_var_error_per_grad"], compute_var_error ? real(corr.accumulated_variance) : 0.0)
         push!(out["norms_per_grad"], norm(O))
 
-        stopping = norm(grad_vec) < conv_thresh || iter == max_iter || n_rots == 0
+        # energies_per_grad[1] is the reference, so [end - w] is iteration iter - w
+        plateau = plateau_window > 0 && iter >= plateau_window &&
+                  real(out["energies_per_grad"][end-plateau_window] - ecurr) < plateau_thresh
+        stopping = norm(grad_vec) < conv_thresh || iter == max_iter || n_rots == 0 || plateau
         periodic_checkpoint = checkpoint_interval > 0 &&
                               iter % checkpoint_interval == 0
         if checkpoint_path !== nothing && (periodic_checkpoint || stopping)
@@ -410,6 +421,12 @@ function dbf_groundstate(Oin::AnyPauliSum{N,T}, ψ::Ket{N};
         
         if norm(grad_vec) < conv_thresh
             verbose < 1 || @printf(" Converged.\n")
+            break
+        end
+
+        if plateau
+            verbose < 1 || @printf(" Energy plateau: dropped < %.1e over %i iterations.\n",
+                                   plateau_thresh, plateau_window)
             break
         end
 
