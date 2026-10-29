@@ -1,0 +1,83 @@
+
+[74645] signal 15: Terminated: 15
+in expression starting at /private/tmp/claude-1267076362/-Users-cshrikh-Documents-new-DBF/2a0a1771-dfc1-4da3-a9ac-622ed439297f/scratchpad/build_missing_h.jl:4
+__psynch_cvwait at /usr/lib/system/libsystem_kernel.dylib (unknown line)
+unknown function (ip: 0x0) at (unknown file)
+.Lzgemv_t_kernel_F4 at /Users/cshrikh/.julia/juliaup/julia-1.12.7+0.aarch64.apple.darwin14/lib/julia/libopenblas64_.dylib (unknown line)
+unknown function (ip: 0x0) at (unknown file)
+Allocations: 22882678 (Pool: 22882382; Big: 296); GC: 84
+Input:  data_nocore/R_0.80  (basis lno)
+System: N2 sto-3g R=0.80 A, frozen 1s core (nocore: 2 orbitals per spin), 8 orbitals, n_alpha = 5, n_beta = 5
+Building Hamiltonian from separate spin blocks...
+  -> System: 8 spatial orbitals (16 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 4397 Pauli terms.
+  2.961318 seconds (3.29 M allocations: 180.816 MiB, 4.20% gc time, 70.88% compilation time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -106.6807161340
+                        Python      =  -106.6807161340   (diff 3.41e-13)
+ E_UHF (with mu)                    =  -106.6808024566
+ Sector ED ground state (dim  3136) =  -106.7661504545
+                        PySCF FCI   =  -106.7661504545   (diff 2.27e-13)
+ Clipped at 1e-8: 4397 -> 4397 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote data_nocore/R_0.80/hamiltonian_lno.jld2
+Input:  data_nocore/R_0.90  (basis lno)
+System: N2 sto-3g R=0.90 A, frozen 1s core (nocore: 2 orbitals per spin), 8 orbitals, n_alpha = 5, n_beta = 5
+Building Hamiltonian from separate spin blocks...
+  -> System: 8 spatial orbitals (16 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 5173 Pauli terms.
+  1.210710 seconds (33.31 k allocations: 8.299 MiB, 8.94% gc time, 0.32% compilation time: 100% of which was recompilation)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.1870667121
+                        Python      =  -107.1870667121   (diff 1.14e-13)
+ E_UHF (with mu)                    =  -107.1871903010
+ Sector ED ground state (dim  3136) =  -107.2929124917
+                        PySCF FCI   =  -107.2929124917   (diff 2.84e-14)
+ Clipped at 1e-8: 5173 -> 5145 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote data_nocore/R_0.90/hamiltonian_lno.jld2
+Input:  data_nocore/R_1.00  (basis lno)
+System: N2 sto-3g R=1.00 A, frozen 1s core (nocore: 2 orbitals per spin), 8 orbitals, n_alpha = 5, n_beta = 5
+Building Hamiltonian from separate spin blocks...
+  -> System: 8 spatial orbitals (16 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 4441 Pauli terms.
+  1.009824 seconds (22.01 k allocations: 7.510 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4193573473
+                        Python      =  -107.4193573473   (diff -2.98e-13)
+ E_UHF (with mu)                    =  -107.4195324517
+ Sector ED ground state (dim  3136) =  -107.5491465296
+                        PySCF FCI   =  -107.5491465296   (diff -6.54e-13)
+ Clipped at 1e-8: 4441 -> 4397 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote data_nocore/R_1.00/hamiltonian_lno.jld2
+Input:  data_nocore/R_1.20  (basis lno)
+System: N2 sto-3g R=1.20 A, frozen 1s core (nocore: 2 orbitals per spin), 8 orbitals, n_alpha = 5, n_beta = 5
+Building Hamiltonian from separate spin blocks...
+  -> System: 8 spatial orbitals (16 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 4669 Pauli terms.
+  1.002846 seconds (21.54 k allocations: 7.442 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4874004263
+                        Python      =  -107.4874004263   (diff 2.84e-14)
+ E_UHF (with mu)                    =  -107.5012034834

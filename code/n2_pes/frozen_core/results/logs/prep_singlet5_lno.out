@@ -1,0 +1,15 @@
+singlet projection: 600 S^2 ~ 0 states (max |S^2| 5.3e-15), weight of |0> on them 0.2660, next S^2 eigenvalue 2.000
+phi: <H> - FCI = +16.0657 mHa, components above 1e-3: 356, above 1e-5: 660
+      1 rotations: 1 - F = 5.817e-01
+      2 rotations: 1 - F = 5.066e-01
+      5 rotations: 1 - F = 3.089e-01
+     10 rotations: 1 - F = 1.714e-01
+     20 rotations: 1 - F = 1.039e-01
+     50 rotations: 1 - F = 4.230e-02
+    100 rotations: 1 - F = 1.692e-02
+    200 rotations: 1 - F = 6.640e-03
+    500 rotations: 1 - F = 9.761e-04
+   1000 rotations: 1 - F = 1.529e-04
+   2000 rotations: 1 - F = 1.560e-05
+prep circuit: 2219 rotations, 1 - F = 9.996e-06, <H> - FCI = +16.0556 mHa (phi +16.0657), var 1.375e-02 (phi 1.372e-02), <S^2> = 3.21e-05, leak 6.7e-06
+wrote data_nocore/R_2.30/prep_singlet5_lno.jld2

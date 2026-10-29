@@ -1,0 +1,1748 @@
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.80  (basis mo)
+System: N2 sto-3g R=0.80 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 2951 Pauli terms.
+  0.751914 seconds (3.29 M allocations: 178.008 MiB, 1.97% gc time, 98.53% compilation time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -106.6808024566
+                        Python      =  -106.6808024566   (diff -2.27e-13)
+ E_UHF (with mu)                    =  -106.6808024566
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 2951 -> 2951 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.80/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.80  (basis lmo)
+System: N2 sto-3g R=0.80 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 10011 Pauli terms.
+  0.018116 seconds (46.59 k allocations: 11.544 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -106.6808024566
+                        Python      =  -106.6808024566   (diff -1.07e-12)
+ E_UHF (with mu)                    =  -106.6808024566
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 10011 -> 10011 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.80/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.80  (basis no)
+System: N2 sto-3g R=0.80 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 3255 Pauli terms.
+  0.005647 seconds (19.91 k allocations: 4.831 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -106.6807161340
+                        Python      =  -106.6807161340   (diff -9.95e-14)
+ E_UHF (with mu)                    =  -106.6808024566
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 3255 -> 3255 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.80/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.80  (basis lno)
+System: N2 sto-3g R=0.80 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 10045 Pauli terms.
+  0.013500 seconds (46.59 k allocations: 11.544 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -106.6807161340
+                        Python      =  -106.6807161340   (diff -1.85e-13)
+ E_UHF (with mu)                    =  -106.6808024566
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 10045 -> 10011 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.80/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.90  (basis mo)
+System: N2 sto-3g R=0.90 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 2951 Pauli terms.
+  0.006317 seconds (18.99 k allocations: 4.706 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.1871903010
+                        Python      =  -107.1871903010   (diff -6.82e-13)
+ E_UHF (with mu)                    =  -107.1871903010
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 2951 -> 2951 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.90/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.90  (basis lmo)
+System: N2 sto-3g R=0.90 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 11979 Pauli terms.
+  0.090373 seconds (62.38 k allocations: 12.948 MiB, 77.12% gc time, 3.94% compilation time: 100% of which was recompilation)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.1871903010
+                        Python      =  -107.1871903010   (diff 1.01e-12)
+ E_UHF (with mu)                    =  -107.1871903010
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 11979 -> 11939 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.90/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.90  (basis no)
+System: N2 sto-3g R=0.90 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 3255 Pauli terms.
+  0.005299 seconds (19.91 k allocations: 4.831 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.1870667121
+                        Python      =  -107.1870667121   (diff -8.53e-13)
+ E_UHF (with mu)                    =  -107.1871903010
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 3255 -> 3255 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.90/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.90  (basis lno)
+System: N2 sto-3g R=0.90 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 12007 Pauli terms.
+  0.015261 seconds (53.96 k allocations: 12.550 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.1870667121
+                        Python      =  -107.1870667121   (diff -3.69e-13)
+ E_UHF (with mu)                    =  -107.1871903010
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 12007 -> 11939 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_0.90/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.00  (basis mo)
+System: N2 sto-3g R=1.00 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 2951 Pauli terms.
+  0.006164 seconds (18.99 k allocations: 4.706 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4195324517
+                        Python      =  -107.4195324517   (diff -9.81e-13)
+ E_UHF (with mu)                    =  -107.4195324517
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 2951 -> 2951 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.00/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.00  (basis lmo)
+System: N2 sto-3g R=1.00 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 10011 Pauli terms.
+  0.013503 seconds (46.59 k allocations: 11.544 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4195324517
+                        Python      =  -107.4195324517   (diff 5.83e-13)
+ E_UHF (with mu)                    =  -107.4195324517
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 10011 -> 10011 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.00/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.00  (basis no)
+System: N2 sto-3g R=1.00 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 3255 Pauli terms.
+  0.010418 seconds (19.91 k allocations: 4.831 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4193573473
+                        Python      =  -107.4193573473   (diff 4.12e-13)
+ E_UHF (with mu)                    =  -107.4195324517
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 3255 -> 3255 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.00/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.00  (basis lno)
+System: N2 sto-3g R=1.00 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 10131 Pauli terms.
+  0.016107 seconds (46.59 k allocations: 11.544 MiB, 19.98% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4193573473
+                        Python      =  -107.4193573473   (diff -4.69e-13)
+ E_UHF (with mu)                    =  -107.4195324517
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 10131 -> 10011 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.00/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.10  (basis mo)
+System: N2 sto-3g R=1.10 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 2951 Pauli terms.
+  0.006464 seconds (18.99 k allocations: 4.706 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4965005118
+                        Python      =  -107.4965005118   (diff -7.25e-13)
+ E_UHF (with mu)                    =  -107.4965005118
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 2951 -> 2951 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.10/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.10  (basis lmo)
+System: N2 sto-3g R=1.10 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 10031 Pauli terms.
+  0.014559 seconds (46.59 k allocations: 11.544 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4965005118
+                        Python      =  -107.4965005118   (diff -2.98e-13)
+ E_UHF (with mu)                    =  -107.4965005118
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 10031 -> 10011 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.10/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.10  (basis no)
+System: N2 sto-3g R=1.10 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 3255 Pauli terms.
+  0.006066 seconds (19.91 k allocations: 4.831 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4962534210
+                        Python      =  -107.4962534210   (diff -8.67e-13)
+ E_UHF (with mu)                    =  -107.4965005118
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 3255 -> 3255 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.10/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.10  (basis lno)
+System: N2 sto-3g R=1.10 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 10031 Pauli terms.
+  0.013842 seconds (46.59 k allocations: 11.544 MiB, 4.58% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4962534210
+                        Python      =  -107.4962534210   (diff 5.54e-13)
+ E_UHF (with mu)                    =  -107.4965005118
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 10031 -> 10011 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.10/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.20  (basis mo)
+System: N2 sto-3g R=1.20 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6635 Pauli terms.
+  0.009450 seconds (32.35 k allocations: 9.587 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.5012034834
+                        Python      =  -107.5012034834   (diff -2.42e-13)
+ E_UHF (with mu)                    =  -107.5012034834
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6635 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.20/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.20  (basis lmo)
+System: N2 sto-3g R=1.20 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 11647 Pauli terms.
+  0.013335 seconds (51.42 k allocations: 12.197 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.5012034834
+                        Python      =  -107.5012034834   (diff 8.53e-14)
+ E_UHF (with mu)                    =  -107.5012034834
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 11647 -> 6569 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.20/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.20  (basis no)
+System: N2 sto-3g R=1.20 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.008991 seconds (31.80 k allocations: 9.517 MiB, 4.11% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4874004263
+                        Python      =  -107.4874004263   (diff -2.98e-13)
+ E_UHF (with mu)                    =  -107.5012034834
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.20/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.20  (basis lno)
+System: N2 sto-3g R=1.20 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 11115 Pauli terms.
+  0.012510 seconds (47.49 k allocations: 11.661 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4874004263
+                        Python      =  -107.4874004263   (diff -2.84e-13)
+ E_UHF (with mu)                    =  -107.5012034834
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 11115 -> 9971 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.20/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.30  (basis mo)
+System: N2 sto-3g R=1.30 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.014359 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4923260503
+                        Python      =  -107.4923260503   (diff 4.26e-13)
+ E_UHF (with mu)                    =  -107.4923260503
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.30/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.30  (basis lmo)
+System: N2 sto-3g R=1.30 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7953 Pauli terms.
+  0.010379 seconds (37.29 k allocations: 10.265 MiB, 3.04% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4923260503
+                        Python      =  -107.4923260503   (diff 2.84e-14)
+ E_UHF (with mu)                    =  -107.4923260503
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7953 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.30/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.30  (basis no)
+System: N2 sto-3g R=1.30 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.008934 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4332956546
+                        Python      =  -107.4332956546   (diff -3.27e-13)
+ E_UHF (with mu)                    =  -107.4923260503
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.30/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.30  (basis lno)
+System: N2 sto-3g R=1.30 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 10889 Pauli terms.
+  0.013033 seconds (46.80 k allocations: 11.570 MiB, 1.83% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4332956546
+                        Python      =  -107.4332956546   (diff 2.84e-13)
+ E_UHF (with mu)                    =  -107.4923260503
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 10889 -> 10035 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.30/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.40  (basis mo)
+System: N2 sto-3g R=1.40 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.009596 seconds (31.80 k allocations: 9.517 MiB, 3.18% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4776337999
+                        Python      =  -107.4776337999   (diff -5.40e-13)
+ E_UHF (with mu)                    =  -107.4776337999
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.40/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.40  (basis lmo)
+System: N2 sto-3g R=1.40 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7421 Pauli terms.
+  0.013300 seconds (35.22 k allocations: 9.982 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4776337999
+                        Python      =  -107.4776337999   (diff -4.97e-13)
+ E_UHF (with mu)                    =  -107.4776337999
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7421 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.40/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.40  (basis no)
+System: N2 sto-3g R=1.40 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.012574 seconds (31.80 k allocations: 9.517 MiB, 1.78% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.3580357442
+                        Python      =  -107.3580357442   (diff 1.85e-13)
+ E_UHF (with mu)                    =  -107.4776337999
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.40/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.40  (basis lno)
+System: N2 sto-3g R=1.40 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 11013 Pauli terms.
+  0.012793 seconds (47.13 k allocations: 11.612 MiB, 2.89% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.3580357442
+                        Python      =  -107.3580357442   (diff -4.83e-13)
+ E_UHF (with mu)                    =  -107.4776337999
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 11013 -> 9971 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.40/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.50  (basis mo)
+System: N2 sto-3g R=1.50 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.009615 seconds (31.80 k allocations: 9.517 MiB, 1.95% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4606413272
+                        Python      =  -107.4606413272   (diff -1.85e-13)
+ E_UHF (with mu)                    =  -107.4606413272
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6395 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.50/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.50  (basis lmo)
+System: N2 sto-3g R=1.50 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 8409 Pauli terms.
+  0.010434 seconds (38.71 k allocations: 10.456 MiB, 1.85% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4606413272
+                        Python      =  -107.4606413272   (diff 2.98e-13)
+ E_UHF (with mu)                    =  -107.4606413272
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 8409 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.50/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.50  (basis no)
+System: N2 sto-3g R=1.50 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.011799 seconds (31.80 k allocations: 9.517 MiB, 1.71% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.2866340727
+                        Python      =  -107.2866340727   (diff 4.26e-14)
+ E_UHF (with mu)                    =  -107.4606413272
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.50/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.50  (basis lno)
+System: N2 sto-3g R=1.50 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 11439 Pauli terms.
+  0.014991 seconds (52.32 k allocations: 12.324 MiB, 1.30% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.2866340727
+                        Python      =  -107.2866340727   (diff 7.53e-13)
+ E_UHF (with mu)                    =  -107.4606413272
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 11439 -> 11439 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.50/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.60  (basis mo)
+System: N2 sto-3g R=1.60 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.009300 seconds (31.80 k allocations: 9.517 MiB, 3.73% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4451878683
+                        Python      =  -107.4451878683   (diff -1.42e-13)
+ E_UHF (with mu)                    =  -107.4451878683
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6435 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.60/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.60  (basis lmo)
+System: N2 sto-3g R=1.60 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7557 Pauli terms.
+  0.024726 seconds (35.82 k allocations: 10.064 MiB, 36.53% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4451878683
+                        Python      =  -107.4451878683   (diff 5.26e-13)
+ E_UHF (with mu)                    =  -107.4451878683
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7557 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.60/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.60  (basis no)
+System: N2 sto-3g R=1.60 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.074503 seconds (31.80 k allocations: 9.517 MiB, 88.59% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.2699577780
+                        Python      =  -107.2699577780   (diff -5.54e-13)
+ E_UHF (with mu)                    =  -107.4451878683
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.60/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.60  (basis lno)
+System: N2 sto-3g R=1.60 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6147 Pauli terms.
+  0.008039 seconds (30.92 k allocations: 9.395 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.2699577780
+                        Python      =  -107.2699577780   (diff -2.98e-13)
+ E_UHF (with mu)                    =  -107.4451878683
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6147 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.60/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.70  (basis mo)
+System: N2 sto-3g R=1.70 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.010414 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4353814532
+                        Python      =  -107.4353814532   (diff -8.67e-13)
+ E_UHF (with mu)                    =  -107.4353814532
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.70/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.70  (basis lmo)
+System: N2 sto-3g R=1.70 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 8091 Pauli terms.
+  0.013844 seconds (37.77 k allocations: 10.332 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4353814532
+                        Python      =  -107.4353814532   (diff -1.42e-13)
+ E_UHF (with mu)                    =  -107.4353814532
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 8091 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.70/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.70  (basis no)
+System: N2 sto-3g R=1.70 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.016237 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.3208891780
+                        Python      =  -107.3208891780   (diff 5.97e-13)
+ E_UHF (with mu)                    =  -107.4353814532
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.70/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.70  (basis lno)
+System: N2 sto-3g R=1.70 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 8485 Pauli terms.
+  0.010964 seconds (39.01 k allocations: 10.499 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.3208891780
+                        Python      =  -107.3208891780   (diff -4.55e-13)
+ E_UHF (with mu)                    =  -107.4353814532
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 8485 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.70/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.80  (basis mo)
+System: N2 sto-3g R=1.80 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.009357 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4314084996
+                        Python      =  -107.4314084996   (diff -2.84e-14)
+ E_UHF (with mu)                    =  -107.4314084996
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.80/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.80  (basis lmo)
+System: N2 sto-3g R=1.80 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7933 Pauli terms.
+  0.009615 seconds (37.09 k allocations: 10.238 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4314084996
+                        Python      =  -107.4314084996   (diff -3.55e-13)
+ E_UHF (with mu)                    =  -107.4314084996
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7933 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.80/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.80  (basis no)
+System: N2 sto-3g R=1.80 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.010850 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.3623155461
+                        Python      =  -107.3623155461   (diff -3.27e-13)
+ E_UHF (with mu)                    =  -107.4314084996
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.80/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.80  (basis lno)
+System: N2 sto-3g R=1.80 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7457 Pauli terms.
+  0.014439 seconds (35.21 k allocations: 9.981 MiB, 6.14% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.3623155461
+                        Python      =  -107.3623155461   (diff 9.95e-14)
+ E_UHF (with mu)                    =  -107.4314084996
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7457 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.80/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.90  (basis mo)
+System: N2 sto-3g R=1.90 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.008459 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4309369772
+                        Python      =  -107.4309369772   (diff -3.13e-13)
+ E_UHF (with mu)                    =  -107.4309369772
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.90/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.90  (basis lmo)
+System: N2 sto-3g R=1.90 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7729 Pauli terms.
+  0.010890 seconds (36.33 k allocations: 10.133 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4309369772
+                        Python      =  -107.4309369772   (diff 1.85e-13)
+ E_UHF (with mu)                    =  -107.4309369772
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7729 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.90/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.90  (basis no)
+System: N2 sto-3g R=1.90 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.008760 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.3820366002
+                        Python      =  -107.3820366002   (diff -7.25e-13)
+ E_UHF (with mu)                    =  -107.4309369772
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.90/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.90  (basis lno)
+System: N2 sto-3g R=1.90 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7515 Pauli terms.
+  0.012383 seconds (35.25 k allocations: 9.982 MiB, 4.47% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.3820366002
+                        Python      =  -107.3820366002   (diff -3.27e-13)
+ E_UHF (with mu)                    =  -107.4309369772
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7515 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_1.90/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.00  (basis mo)
+System: N2 sto-3g R=2.00 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.012737 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4320291628
+                        Python      =  -107.4320291628   (diff 8.67e-13)
+ E_UHF (with mu)                    =  -107.4320291628
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6419 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.00/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.00  (basis lmo)
+System: N2 sto-3g R=2.00 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6147 Pauli terms.
+  0.008373 seconds (30.92 k allocations: 9.395 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4320291628
+                        Python      =  -107.4320291628   (diff 5.26e-13)
+ E_UHF (with mu)                    =  -107.4320291628
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6147 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.00/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.00  (basis no)
+System: N2 sto-3g R=2.00 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.008630 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.3961711933
+                        Python      =  -107.3961711933   (diff 1.42e-13)
+ E_UHF (with mu)                    =  -107.4320291628
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.00/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.00  (basis lno)
+System: N2 sto-3g R=2.00 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 8289 Pauli terms.
+  0.012954 seconds (37.96 k allocations: 10.353 MiB, 4.26% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.3961711933
+                        Python      =  -107.3961711933   (diff -9.95e-14)
+ E_UHF (with mu)                    =  -107.4320291628
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 8289 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.00/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.10  (basis mo)
+System: N2 sto-3g R=2.10 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.007713 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4335789087
+                        Python      =  -107.4335789087   (diff -5.97e-13)
+ E_UHF (with mu)                    =  -107.4335789087
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.10/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.10  (basis lmo)
+System: N2 sto-3g R=2.10 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7999 Pauli terms.
+  0.018590 seconds (37.29 k allocations: 10.267 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4335789087
+                        Python      =  -107.4335789087   (diff 7.67e-13)
+ E_UHF (with mu)                    =  -107.4335789087
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7999 -> 6203 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.10/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.10  (basis no)
+System: N2 sto-3g R=2.10 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.008525 seconds (31.80 k allocations: 9.517 MiB, 4.22% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4086158287
+                        Python      =  -107.4086158287   (diff -3.84e-13)
+ E_UHF (with mu)                    =  -107.4335789087
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.10/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.10  (basis lno)
+System: N2 sto-3g R=2.10 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7953 Pauli terms.
+  0.009675 seconds (36.76 k allocations: 10.189 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4086158287
+                        Python      =  -107.4086158287   (diff -2.42e-13)
+ E_UHF (with mu)                    =  -107.4335789087
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7953 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.10/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.20  (basis mo)
+System: N2 sto-3g R=2.20 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.008312 seconds (31.80 k allocations: 9.517 MiB, 3.24% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4350482326
+                        Python      =  -107.4350482326   (diff -4.55e-13)
+ E_UHF (with mu)                    =  -107.4350482326
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.20/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.20  (basis lmo)
+System: N2 sto-3g R=2.20 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7861 Pauli terms.
+  0.010221 seconds (36.77 k allocations: 10.194 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4350482326
+                        Python      =  -107.4350482326   (diff 7.11e-14)
+ E_UHF (with mu)                    =  -107.4350482326
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7861 -> 6187 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.20/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.20  (basis no)
+System: N2 sto-3g R=2.20 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.008980 seconds (31.80 k allocations: 9.517 MiB, 2.74% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4184583374
+                        Python      =  -107.4184583374   (diff 4.69e-13)
+ E_UHF (with mu)                    =  -107.4350482326
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.20/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.20  (basis lno)
+System: N2 sto-3g R=2.20 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7683 Pauli terms.
+  0.009883 seconds (35.86 k allocations: 10.067 MiB, 2.23% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4184583374
+                        Python      =  -107.4184583374   (diff 1.09e-12)
+ E_UHF (with mu)                    =  -107.4350482326
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7683 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.20/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.30  (basis mo)
+System: N2 sto-3g R=2.30 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.008821 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4362236835
+                        Python      =  -107.4362236835   (diff -4.26e-14)
+ E_UHF (with mu)                    =  -107.4362236835
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.30/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.30  (basis lmo)
+System: N2 sto-3g R=2.30 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7789 Pauli terms.
+  0.010602 seconds (36.45 k allocations: 10.151 MiB, 2.19% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4362236835
+                        Python      =  -107.4362236835   (diff 4.83e-13)
+ E_UHF (with mu)                    =  -107.4362236835
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7789 -> 6175 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.30/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.30  (basis no)
+System: N2 sto-3g R=2.30 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.010018 seconds (31.80 k allocations: 9.517 MiB, 3.54% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4254361306
+                        Python      =  -107.4254361306   (diff 7.11e-14)
+ E_UHF (with mu)                    =  -107.4362236835
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.30/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.30  (basis lno)
+System: N2 sto-3g R=2.30 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7369 Pauli terms.
+  0.009676 seconds (34.82 k allocations: 9.924 MiB, 1.84% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4254361306
+                        Python      =  -107.4254361306   (diff -3.69e-13)
+ E_UHF (with mu)                    =  -107.4362236835
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7369 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.30/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.40  (basis mo)
+System: N2 sto-3g R=2.40 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.018766 seconds (31.80 k allocations: 9.517 MiB, 46.34% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4370633543
+                        Python      =  -107.4370633543   (diff 3.69e-13)
+ E_UHF (with mu)                    =  -107.4370633543
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.40/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.40  (basis lmo)
+System: N2 sto-3g R=2.40 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7685 Pauli terms.
+  0.096756 seconds (36.04 k allocations: 10.094 MiB, 89.24% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4370633543
+                        Python      =  -107.4370633543   (diff -7.11e-14)
+ E_UHF (with mu)                    =  -107.4370633543
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7685 -> 6175 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.40/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.40  (basis no)
+System: N2 sto-3g R=2.40 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.008517 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4300980234
+                        Python      =  -107.4300980234   (diff -3.41e-13)
+ E_UHF (with mu)                    =  -107.4370633543
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.40/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.40  (basis lno)
+System: N2 sto-3g R=2.40 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6967 Pauli terms.
+  0.014208 seconds (33.50 k allocations: 9.746 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4300980234
+                        Python      =  -107.4300980234   (diff -7.39e-13)
+ E_UHF (with mu)                    =  -107.4370633543
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6967 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.40/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.50  (basis mo)
+System: N2 sto-3g R=2.50 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.009336 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4376068667
+                        Python      =  -107.4376068667   (diff 1.42e-14)
+ E_UHF (with mu)                    =  -107.4376068667
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6435 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.50/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.50  (basis lmo)
+System: N2 sto-3g R=2.50 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6543 Pauli terms.
+  0.009064 seconds (32.10 k allocations: 9.554 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4376068667
+                        Python      =  -107.4376068667   (diff 2.56e-13)
+ E_UHF (with mu)                    =  -107.4376068667
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6543 -> 6139 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.50/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.50  (basis no)
+System: N2 sto-3g R=2.50 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.009821 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4331268080
+                        Python      =  -107.4331268080   (diff 6.39e-13)
+ E_UHF (with mu)                    =  -107.4376068667
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.50/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.50  (basis lno)
+System: N2 sto-3g R=2.50 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6839 Pauli terms.
+  0.009126 seconds (33.08 k allocations: 9.687 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4331268080
+                        Python      =  -107.4331268080   (diff 1.99e-13)
+ E_UHF (with mu)                    =  -107.4376068667
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6839 -> 6115 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.50/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.60  (basis mo)
+System: N2 sto-3g R=2.60 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.018632 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4379235573
+                        Python      =  -107.4379235573   (diff -6.82e-13)
+ E_UHF (with mu)                    =  -107.4379235573
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.60/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.60  (basis lmo)
+System: N2 sto-3g R=2.60 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7095 Pauli terms.
+  0.009131 seconds (33.96 k allocations: 9.808 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4379235573
+                        Python      =  -107.4379235573   (diff -4.97e-13)
+ E_UHF (with mu)                    =  -107.4379235573
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7095 -> 6139 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.60/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.60  (basis no)
+System: N2 sto-3g R=2.60 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.010094 seconds (31.80 k allocations: 9.517 MiB, 6.66% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4350578916
+                        Python      =  -107.4350578916   (diff -2.98e-13)
+ E_UHF (with mu)                    =  -107.4379235573
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.60/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.60  (basis lno)
+System: N2 sto-3g R=2.60 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6767 Pauli terms.
+  0.008546 seconds (32.81 k allocations: 9.651 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4350578916
+                        Python      =  -107.4350578916   (diff -1.38e-12)
+ E_UHF (with mu)                    =  -107.4379235573
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6767 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.60/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.70  (basis mo)
+System: N2 sto-3g R=2.70 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.008654 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4380842462
+                        Python      =  -107.4380842462   (diff -4.97e-13)
+ E_UHF (with mu)                    =  -107.4380842462
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6395 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.70/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.70  (basis lmo)
+System: N2 sto-3g R=2.70 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6147 Pauli terms.
+  0.014729 seconds (30.92 k allocations: 9.395 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4380842462
+                        Python      =  -107.4380842462   (diff -1.56e-13)
+ E_UHF (with mu)                    =  -107.4380842462
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6147 -> 6047 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.70/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.70  (basis no)
+System: N2 sto-3g R=2.70 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.009796 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4362695360
+                        Python      =  -107.4362695360   (diff 5.68e-13)
+ E_UHF (with mu)                    =  -107.4380842462
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.70/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.70  (basis lno)
+System: N2 sto-3g R=2.70 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6753 Pauli terms.
+  0.008362 seconds (32.77 k allocations: 9.645 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4362695360
+                        Python      =  -107.4362695360   (diff -1.99e-13)
+ E_UHF (with mu)                    =  -107.4380842462
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6753 -> 6119 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.70/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.80  (basis mo)
+System: N2 sto-3g R=2.80 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.009548 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4381479465
+                        Python      =  -107.4381479465   (diff -3.69e-13)
+ E_UHF (with mu)                    =  -107.4381479465
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6407 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.80/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.80  (basis lmo)
+System: N2 sto-3g R=2.80 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 7721 Pauli terms.
+  0.012809 seconds (36.21 k allocations: 10.118 MiB, 4.93% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4381479465
+                        Python      =  -107.4381479465   (diff 5.12e-13)
+ E_UHF (with mu)                    =  -107.4381479465
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 7721 -> 6165 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.80/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.80  (basis no)
+System: N2 sto-3g R=2.80 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.013130 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4370163869
+                        Python      =  -107.4370163869   (diff -2.13e-13)
+ E_UHF (with mu)                    =  -107.4381479465
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6435 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.80/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.80  (basis lno)
+System: N2 sto-3g R=2.80 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 8871 Pauli terms.
+  0.011515 seconds (40.62 k allocations: 10.723 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4370163869
+                        Python      =  -107.4370163869   (diff -8.24e-13)
+ E_UHF (with mu)                    =  -107.4381479465
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 8871 -> 6387 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.80/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.90  (basis mo)
+System: N2 sto-3g R=2.90 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.008736 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4381577957
+                        Python      =  -107.4381577957   (diff -4.55e-13)
+ E_UHF (with mu)                    =  -107.4381577957
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6395 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.90/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.90  (basis lmo)
+System: N2 sto-3g R=2.90 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 11055 Pauli terms.
+  0.014600 seconds (49.57 k allocations: 11.946 MiB, 3.24% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4381577957
+                        Python      =  -107.4381577957   (diff -6.11e-13)
+ E_UHF (with mu)                    =  -107.4381577957
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 11055 -> 8135 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.90/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.90  (basis no)
+System: N2 sto-3g R=2.90 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.008854 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4374649755
+                        Python      =  -107.4374649755   (diff 6.68e-13)
+ E_UHF (with mu)                    =  -107.4381577957
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6403 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.90/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.90  (basis lno)
+System: N2 sto-3g R=2.90 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 8665 Pauli terms.
+  0.015992 seconds (39.78 k allocations: 10.608 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4374649755
+                        Python      =  -107.4374649755   (diff 4.26e-14)
+ E_UHF (with mu)                    =  -107.4381577957
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 8665 -> 6363 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_2.90/hamiltonian_lno.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_3.00  (basis mo)
+System: N2 sto-3g R=3.00 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.009408 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4381420948
+                        Python      =  -107.4381420948   (diff -4.69e-13)
+ E_UHF (with mu)                    =  -107.4381420948
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6427 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_3.00/hamiltonian_mo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_3.00  (basis lmo)
+System: N2 sto-3g R=3.00 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 10967 Pauli terms.
+  0.014244 seconds (49.14 k allocations: 11.887 MiB, 4.02% gc time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4381420948
+                        Python      =  -107.4381420948   (diff 2.27e-13)
+ E_UHF (with mu)                    =  -107.4381420948
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 10967 -> 7973 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_3.00/hamiltonian_lmo.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_3.00  (basis no)
+System: N2 sto-3g R=3.00 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6443 Pauli terms.
+  0.008749 seconds (31.80 k allocations: 9.517 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4377296433
+                        Python      =  -107.4377296433   (diff -5.54e-13)
+ E_UHF (with mu)                    =  -107.4381420948
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6443 -> 6443 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_3.00/hamiltonian_no.jld2
+Input:  /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_3.00  (basis lno)
+System: N2 sto-3g R=3.00 A, 10 orbitals, n_alpha = 7, n_beta = 7
+Building Hamiltonian from separate spin blocks...
+  -> System: 10 spatial orbitals (20 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 6147 Pauli terms.
+  0.012724 seconds (30.92 k allocations: 9.395 MiB)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4377296433
+                        Python      =  -107.4377296433   (diff -3.84e-13)
+ E_UHF (with mu)                    =  -107.4381420948
+ (sector dimension 14400 > --ed-max-dim; skipping exact diagonalization)
+ Clipped at 1e-8: 6147 -> 6147 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/n2_pes/data/R_3.00/hamiltonian_lno.jld2

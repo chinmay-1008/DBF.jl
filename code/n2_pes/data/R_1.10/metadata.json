@@ -1,0 +1,267 @@
+{
+  "model": "N2 sto-3g R=1.10 A",
+  "R_angstrom": 1.1,
+  "basis_set": "sto-3g",
+  "n_orbitals": 10,
+  "n_alpha": 7,
+  "n_beta": 7,
+  "constant": 23.572439395527272,
+  "constant_meaning": "nuclear repulsion",
+  "mu": 0.0,
+  "energy_offset": 0.0,
+  "E_UHF_with_mu": -131.06893990732516,
+  "E_FCI_with_mu": -131.2265618430521,
+  "references": {
+    "E_RHF": -107.49650051179783,
+    "RHF_external_unstable": false,
+    "E_UHF": -107.49650051179789,
+    "S2_UHF": -1.7763568394002505e-15,
+    "UHF_sweep": "forward",
+    "E_RCCSD": -107.65019739948858,
+    "E_RCCSD_T": -107.6519215228471,
+    "RCCSD_converged": true,
+    "E_UCCSD": -107.65019739723071,
+    "E_UCCSD_T": -107.6519215207319,
+    "UCCSD_converged": true,
+    "E_FCI": -107.65412244752484,
+    "S2_FCI": 1.7423959725969527e-13
+  },
+  "bases": {
+    "mo": {
+      "files": {
+        "h1_alpha": "mo_h1_a.npy",
+        "h1_beta": "mo_h1_b.npy",
+        "eri_aa": "mo_eri_aa.npy",
+        "eri_bb": "mo_eri_bb.npy",
+        "eri_ab": "mo_eri_ab.npy"
+      },
+      "coefficients": [
+        "mo_coeff_a.npy",
+        "mo_coeff_b.npy"
+      ],
+      "occupied_alpha": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "occupied_beta": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "occupied_indexing": "0-based orbital index within each spin block",
+      "reference_determinant_energy": -131.0689399073251,
+      "fci_energy": -131.2265618430521
+    },
+    "lmo": {
+      "files": {
+        "h1_alpha": "lmo_h1_a.npy",
+        "h1_beta": "lmo_h1_b.npy",
+        "eri_aa": "lmo_eri_aa.npy",
+        "eri_bb": "lmo_eri_bb.npy",
+        "eri_ab": "lmo_eri_ab.npy"
+      },
+      "coefficients": [
+        "lmo_coeff_a.npy",
+        "lmo_coeff_b.npy"
+      ],
+      "occupied_alpha": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "occupied_beta": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "occupied_indexing": "0-based orbital index within each spin block",
+      "reference_determinant_energy": -131.0689399073251,
+      "fci_energy": -131.2265618430521
+    },
+    "no": {
+      "files": {
+        "h1_alpha": "no_h1_a.npy",
+        "h1_beta": "no_h1_b.npy",
+        "eri_aa": "no_eri_aa.npy",
+        "eri_bb": "no_eri_bb.npy",
+        "eri_ab": "no_eri_ab.npy"
+      },
+      "coefficients": [
+        "no_coeff_a.npy",
+        "no_coeff_b.npy"
+      ],
+      "occupied_alpha": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "occupied_beta": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "occupied_indexing": "0-based orbital index within each spin block",
+      "reference_determinant_energy": -131.06869281652854,
+      "fci_energy": -131.22656184305205
+    },
+    "lno": {
+      "files": {
+        "h1_alpha": "lno_h1_a.npy",
+        "h1_beta": "lno_h1_b.npy",
+        "eri_aa": "lno_eri_aa.npy",
+        "eri_bb": "lno_eri_bb.npy",
+        "eri_ab": "lno_eri_ab.npy"
+      },
+      "coefficients": [
+        "lno_coeff_a.npy",
+        "lno_coeff_b.npy"
+      ],
+      "occupied_alpha": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "occupied_beta": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "occupied_indexing": "0-based orbital index within each spin block",
+      "reference_determinant_energy": -131.06869281652857,
+      "fci_energy": -131.22656184305205
+    }
+  },
+  "no_occupations_alpha": [
+    0.9999985480745895,
+    0.9999981213352807,
+    0.9980222659035974,
+    0.9946450892466359,
+    0.9918210779745518,
+    0.967610205483045,
+    0.9676102054830444,
+    0.035575891289926595,
+    0.035575891289926574,
+    0.009142703919400984
+  ],
+  "no_occupations_beta": [
+    0.9999985480745908,
+    0.999998121335281,
+    0.998022265903598,
+    0.994645089246636,
+    0.9918210779745519,
+    0.9676102054830444,
+    0.9676102054830442,
+    0.03557589128992659,
+    0.035575891289926505,
+    0.009142703919400563
+  ],
+  "localization_lmo": {
+    "alpha_occupied": {
+      "score_before": 5.401235549118818,
+      "score_after": 11.849095153948333,
+      "gradient_norm": 7.758085450388576e-15,
+      "projector_error": 4.440892098500626e-16,
+      "orthogonality_error": 8.881784197001252e-16,
+      "selected_start": 0,
+      "starts_agreeing": 4
+    },
+    "alpha_virtual": {
+      "score_before": 3.240741329471309,
+      "score_after": 3.4678408081655565,
+      "gradient_norm": 4.285353529793079e-10,
+      "projector_error": 5.070311812814258e-16,
+      "orthogonality_error": 1.7763568394002505e-15,
+      "selected_start": 2,
+      "starts_agreeing": 2
+    },
+    "beta_occupied": {
+      "score_before": 5.401235549118818,
+      "score_after": 11.849095153948333,
+      "gradient_norm": 7.758085450388576e-15,
+      "projector_error": 4.440892098500626e-16,
+      "orthogonality_error": 8.881784197001252e-16,
+      "selected_start": 0,
+      "starts_agreeing": 4
+    },
+    "beta_virtual": {
+      "score_before": 3.240741329471309,
+      "score_after": 3.4678408081655565,
+      "gradient_norm": 4.285353529793079e-10,
+      "projector_error": 5.070311812814258e-16,
+      "orthogonality_error": 1.7763568394002505e-15,
+      "selected_start": 2,
+      "starts_agreeing": 2
+    }
+  },
+  "localization_lno": {
+    "alpha_occupied": {
+      "score_before": 5.401235549118831,
+      "score_after": 11.81849430833585,
+      "gradient_norm": 3.014625252985612e-14,
+      "projector_error": 8.881784197001252e-16,
+      "orthogonality_error": 2.220446049250313e-15,
+      "selected_start": 0,
+      "starts_agreeing": 4
+    },
+    "alpha_virtual": {
+      "score_before": 3.240741329471291,
+      "score_after": 3.458318117357778,
+      "gradient_norm": 4.106205731336151e-10,
+      "projector_error": 2.220446049250313e-16,
+      "orthogonality_error": 1.245567908248817e-15,
+      "selected_start": 2,
+      "starts_agreeing": 2
+    },
+    "beta_occupied": {
+      "score_before": 5.40123554911883,
+      "score_after": 11.81849430833588,
+      "gradient_norm": 4.9031902810903855e-14,
+      "projector_error": 1.5543122344752192e-15,
+      "orthogonality_error": 1.3322676295501878e-15,
+      "selected_start": 3,
+      "starts_agreeing": 4
+    },
+    "beta_virtual": {
+      "score_before": 3.2407413294712892,
+      "score_after": 3.458318117357778,
+      "gradient_norm": 4.105841640826177e-10,
+      "projector_error": 4.440892098500626e-16,
+      "orthogonality_error": 1.3322676295501878e-15,
+      "selected_start": 2,
+      "starts_agreeing": 2
+    }
+  }
+}

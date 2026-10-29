@@ -1,0 +1,23 @@
+singlet projection: 600 S^2 ~ 0 states (max |S^2| 5.3e-15), weight of |0> on them 0.2660, next S^2 eigenvalue 2.000
+phi: <H> - FCI = +16.0657 mHa, components above 1e-3: 356, above 1e-5: 660
+      1 rotations: 1 - F = 5.817e-01
+      2 rotations: 1 - F = 5.066e-01
+      5 rotations: 1 - F = 3.089e-01
+     10 rotations: 1 - F = 1.714e-01
+     20 rotations: 1 - F = 1.039e-01
+     50 rotations: 1 - F = 4.230e-02
+    100 rotations: 1 - F = 1.692e-02
+    200 rotations: 1 - F = 6.640e-03
+prep circuit: 496 rotations, 1 - F = 9.979e-04, <H> - FCI = +17.1052 mHa (phi +16.0657), <S^2> = 2.89e-03, leak 4.0e-04
+wrote data_nocore/R_2.30/prep_singlet_lno.jld2
+  folded    50 / 496: 926803 terms, <0|O|0> - FCI = +40.1083 mHa (3 s)
+  folded   100 / 496: 1364672 terms, <0|O|0> - FCI = +29.2906 mHa (10 s)
+  folded   150 / 496: 1735552 terms, <0|O|0> - FCI = +27.2675 mHa (21 s)
+  folded   200 / 496: 1940118 terms, <0|O|0> - FCI = +25.1598 mHa (33 s)
+  folded   250 / 496: 2056717 terms, <0|O|0> - FCI = +23.9339 mHa (46 s)
+  folded   300 / 496: 2151322 terms, <0|O|0> - FCI = +21.8920 mHa (60 s)
+  folded   350 / 496: 2183546 terms, <0|O|0> - FCI = +20.6793 mHa (74 s)
+  folded   400 / 496: 2189798 terms, <0|O|0> - FCI = +20.2681 mHa (87 s)
+  folded   450 / 496: 2195600 terms, <0|O|0> - FCI = +19.9190 mHa (101 s)
+  folded   496 / 496: 2200367 terms, <0|O|0> - FCI = +19.7145 mHa (114 s)
+folded H (cutoff 1e-05): 2200367 Pauli terms (H had 2465), <0|O_0|0> - <psi|H|psi> = +2.6093 mHa  (113.9 s)

@@ -1,0 +1,19 @@
+singlet projection: 1176 S^2 ~ 0 states (max |S^2| 1.5e-14), weight of |0> on them 0.2551, next S^2 eigenvalue 2.000
+phi: <H> - FCI = +1.7826 mHa, components above 1e-3: 273, above 1e-5: 620
+      1 rotations: 1 - F = 5.304e-01
+      2 rotations: 1 - F = 4.705e-01
+      5 rotations: 1 - F = 3.096e-01
+     10 rotations: 1 - F = 1.696e-01
+     20 rotations: 1 - F = 7.615e-02
+     50 rotations: 1 - F = 1.887e-02
+    100 rotations: 1 - F = 6.683e-03
+    200 rotations: 1 - F = 2.112e-03
+prep circuit: 296 rotations, 1 - F = 9.976e-04, <H> - FCI = +2.9751 mHa (phi +1.7826), <S^2> = 2.74e-03, leak 3.9e-04
+wrote data_uhfcore/R_2.30/prep_singlet_lmo.jld2
+  folded    50 / 296: 309310 terms, <0|O|0> - FCI = +16.6190 mHa (1 s)
+  folded   100 / 296: 525519 terms, <0|O|0> - FCI = +7.2582 mHa (4 s)
+  folded   150 / 296: 711878 terms, <0|O|0> - FCI = +5.2817 mHa (8 s)
+  folded   200 / 296: 799219 terms, <0|O|0> - FCI = +4.2024 mHa (12 s)
+  folded   250 / 296: 871821 terms, <0|O|0> - FCI = +3.6869 mHa (18 s)
+  folded   296 / 296: 886766 terms, <0|O|0> - FCI = +3.2128 mHa (23 s)
+folded H (cutoff 1e-05): 886766 Pauli terms (H had 2485), <0|O_0|0> - <psi|H|psi> = +0.2378 mHa  (23.3 s)

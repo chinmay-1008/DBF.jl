@@ -1,0 +1,8 @@
+
+[74947] signal 15: Terminated: 15
+in expression starting at /Users/cshrikh/Documents/new_DBF/qual_exam/DBF.jl/code/integrals/uhf_integrals_to_pauli.jl:41
+__psynch_cvwait at /usr/lib/system/libsystem_kernel.dylib (unknown line)
+unknown function (ip: 0x0) at (unknown file)
+__open at /usr/lib/system/libsystem_kernel.dylib (unknown line)
+unknown function (ip: 0x0) at (unknown file)
+Allocations: 1307690 (Pool: 1307611; Big: 79); GC: 2

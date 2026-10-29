@@ -4,3 +4,7 @@
 /Manifest.toml
 /docs/Manifest.toml
 /docs/build/
+
+# staged copy of the repo, rebuilt by code/n2_pes/cluster_pes/stage.sh
+/code/n2_pes/cluster_pes/DBF.jl/
+.DS_Store

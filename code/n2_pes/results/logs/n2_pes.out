@@ -1,0 +1,570 @@
+N2 / sto-3g, 23 points R = 0.8 .. 3.0 A
+========================================================================
+RHF sweep (ascending R)
+========================================================================
+  R=0.80  E_RHF = -106.6808024566   RHF->UHF unstable: False
+  R=0.90  E_RHF = -107.1871903010   RHF->UHF unstable: False
+  R=1.00  E_RHF = -107.4195324517   RHF->UHF unstable: False
+  R=1.10  E_RHF = -107.4965005118   RHF->UHF unstable: False
+  R=1.20  E_RHF = -107.4877839280   RHF->UHF unstable: True
+  R=1.30  E_RHF = -107.4338706900   RHF->UHF unstable: True
+  R=1.40  E_RHF = -107.3578154453   RHF->UHF unstable: True
+    RHF R=1.50: internal instability, rotated  E -107.2724485012 -> -107.2827634728
+    RHF R=1.50: stable after 1 rotation(s), E = -107.2827634728
+  R=1.50  E_RHF = -107.2827634728   RHF->UHF unstable: True
+  R=1.60  E_RHF = -107.2256692254   RHF->UHF unstable: True
+  R=1.70  E_RHF = -107.1789776435   RHF->UHF unstable: True
+  R=1.80  E_RHF = -107.1382459896   RHF->UHF unstable: True
+  R=1.90  E_RHF = -107.1013171527   RHF->UHF unstable: True
+  R=2.00  E_RHF = -107.0672946170   RHF->UHF unstable: True
+  R=2.10  E_RHF = -107.0358652728   RHF->UHF unstable: True
+  R=2.20  E_RHF = -107.0069203146   RHF->UHF unstable: True
+  R=2.30  E_RHF = -106.9803892927   RHF->UHF unstable: True
+  R=2.40  E_RHF = -106.9561949302   RHF->UHF unstable: True
+  R=2.50  E_RHF = -106.9342554341   RHF->UHF unstable: True
+  R=2.60  E_RHF = -106.9144919762   RHF->UHF unstable: True
+  R=2.70  E_RHF = -106.8968266679   RHF->UHF unstable: True
+  R=2.80  E_RHF = -106.8811728648   RHF->UHF unstable: True
+  R=2.90  E_RHF = -106.8674249498   RHF->UHF unstable: True
+  R=3.00  E_RHF = -106.8554531200   RHF->UHF unstable: True
+========================================================================
+UHF sweep (forward)
+========================================================================
+  R=0.80  E_UHF = -106.6808024566   <S^2> = -0.000000
+  R=0.90  E_UHF = -107.1871903010   <S^2> = -0.000000
+  R=1.00  E_UHF = -107.4195324517   <S^2> = -0.000000
+  R=1.10  E_UHF = -107.4965005118   <S^2> = -0.000000
+    UHF[forward] R=1.20: followed the RHF->UHF instability  E -107.4877839280 -> -107.5012034834
+  R=1.20  E_UHF = -107.5012034834   <S^2> = 0.631622
+  R=1.30  E_UHF = -107.4923260503   <S^2> = 1.173330
+  R=1.40  E_UHF = -107.4776337999   <S^2> = 1.522186
+  R=1.50  E_UHF = -107.4606413272   <S^2> = 1.776339
+  R=1.60  E_UHF = -107.4451878683   <S^2> = 2.032926
+  R=1.70  E_UHF = -107.4353814532   <S^2> = 2.308406
+  R=1.80  E_UHF = -107.4314084996   <S^2> = 2.532527
+  R=1.90  E_UHF = -107.4309369772   <S^2> = 2.689153
+  R=2.00  E_UHF = -107.4320291628   <S^2> = 2.793799
+  R=2.10  E_UHF = -107.4335789087   <S^2> = 2.863010
+  R=2.20  E_UHF = -107.4350482326   <S^2> = 2.908831
+  R=2.30  E_UHF = -107.4362236835   <S^2> = 2.939311
+  R=2.40  E_UHF = -107.4370633543   <S^2> = 2.959692
+  R=2.50  E_UHF = -107.4376068667   <S^2> = 2.973367
+  R=2.60  E_UHF = -107.4379235573   <S^2> = 2.982544
+  R=2.70  E_UHF = -107.4380842462   <S^2> = 2.988680
+  R=2.80  E_UHF = -107.4381479465   <S^2> = 2.992750
+  R=2.90  E_UHF = -107.4381577957   <S^2> = 2.995420
+  R=3.00  E_UHF = -107.4381420948   <S^2> = 2.997148
+========================================================================
+UHF sweep (backward)
+========================================================================
+  R=3.00  E_UHF = -107.4381420948   <S^2> = 2.997148
+  R=2.90  E_UHF = -107.4381577957   <S^2> = 2.995420
+  R=2.80  E_UHF = -107.4381479465   <S^2> = 2.992750
+  R=2.70  E_UHF = -107.4380842462   <S^2> = 2.988680
+  R=2.60  E_UHF = -107.4379235573   <S^2> = 2.982544
+  R=2.50  E_UHF = -107.4376068667   <S^2> = 2.973367
+  R=2.40  E_UHF = -107.4370633543   <S^2> = 2.959692
+  R=2.30  E_UHF = -107.4362236835   <S^2> = 2.939311
+  R=2.20  E_UHF = -107.4350482326   <S^2> = 2.908831
+  R=2.10  E_UHF = -107.4335789087   <S^2> = 2.863010
+  R=2.00  E_UHF = -107.4320291628   <S^2> = 2.793799
+  R=1.90  E_UHF = -107.4309369772   <S^2> = 2.689153
+  R=1.80  E_UHF = -107.4314084996   <S^2> = 2.532527
+  R=1.70  E_UHF = -107.4353814532   <S^2> = 2.308406
+  R=1.60  E_UHF = -107.4451878683   <S^2> = 2.032926
+  R=1.50  E_UHF = -107.4606413272   <S^2> = 1.776339
+  R=1.40  E_UHF = -107.4776337999   <S^2> = 1.522186
+  R=1.30  E_UHF = -107.4923260503   <S^2> = 1.173330
+  R=1.20  E_UHF = -107.5012034834   <S^2> = 0.631622
+  R=1.10  E_UHF = -107.4965005118   <S^2> = 0.000000
+  R=1.00  E_UHF = -107.4195324517   <S^2> = 0.000000
+  R=0.90  E_UHF = -107.1871903010   <S^2> = 0.000000
+  R=0.80  E_UHF = -106.6808024566   <S^2> = -0.000000
+========================================================================
+UHF solution choice
+========================================================================
+  R=0.80  forward -106.6808024566  backward -106.6808024566  keep forward
+  R=0.90  forward -107.1871903010  backward -107.1871903010  keep forward
+  R=1.00  forward -107.4195324517  backward -107.4195324517  keep forward
+  R=1.10  forward -107.4965005118  backward -107.4965005118  keep forward
+  R=1.20  forward -107.5012034834  backward -107.5012034834  keep forward
+  R=1.30  forward -107.4923260503  backward -107.4923260503  keep backward
+  R=1.40  forward -107.4776337999  backward -107.4776337999  keep forward
+  R=1.50  forward -107.4606413272  backward -107.4606413272  keep backward
+  R=1.60  forward -107.4451878683  backward -107.4451878683  keep forward
+  R=1.70  forward -107.4353814532  backward -107.4353814532  keep forward
+  R=1.80  forward -107.4314084996  backward -107.4314084996  keep forward
+  R=1.90  forward -107.4309369772  backward -107.4309369772  keep forward
+  R=2.00  forward -107.4320291628  backward -107.4320291628  keep forward
+  R=2.10  forward -107.4335789087  backward -107.4335789087  keep forward
+  R=2.20  forward -107.4350482326  backward -107.4350482326  keep backward
+  R=2.30  forward -107.4362236835  backward -107.4362236835  keep forward
+  R=2.40  forward -107.4370633543  backward -107.4370633543  keep forward
+  R=2.50  forward -107.4376068667  backward -107.4376068667  keep backward
+  R=2.60  forward -107.4379235573  backward -107.4379235573  keep backward
+  R=2.70  forward -107.4380842462  backward -107.4380842462  keep forward
+  R=2.80  forward -107.4381479465  backward -107.4381479465  keep forward
+  R=2.90  forward -107.4381577957  backward -107.4381577957  keep forward
+  R=3.00  forward -107.4381420948  backward -107.4381420948  keep forward
+========================================================================
+R = 0.80 A
+========================================================================
+  RHF -106.6808024566  UHF -106.6808024566 (<S^2> -0.0000)
+  RCCSD -106.7651747490  RCCSD(T) -106.7659509077  converged True
+  UCCSD -106.7651747486  UCCSD(T) -106.7659509073  converged True
+  FCI   -106.7663079156  <S^2> 0.0000  roots -106.76630792 -106.27039435 -106.27039435
+    lmo alpha-occ: Boys score 2.856852 -> 8.051658 (start 0, 4/4 starts agree), grad 1.2e-13, projector err 7.8e-16, ortho err 1.3e-15
+    lmo alpha-vir: Boys score 1.714111 -> 2.077532 (start 2, 2/4 starts agree), grad 6.9e-10, projector err 1.8e-15, ortho err 7.8e-16
+    lmo beta-occ: Boys score 2.856852 -> 8.051658 (start 0, 4/4 starts agree), grad 1.2e-13, projector err 7.8e-16, ortho err 1.3e-15
+    lmo beta-vir: Boys score 1.714111 -> 2.077532 (start 2, 2/4 starts agree), grad 6.9e-10, projector err 1.8e-15, ortho err 7.8e-16
+    lno alpha-occ: Boys score 2.856852 -> 8.051867 (start 0, 4/4 starts agree), grad 1.0e-13, projector err 7.8e-16, ortho err 7.8e-16
+    lno alpha-vir: Boys score 1.714111 -> 2.072320 (start 2, 2/4 starts agree), grad 6.8e-10, projector err 1.8e-15, ortho err 1.6e-15
+    lno beta-occ: Boys score 2.856852 -> 8.051867 (start 0, 4/4 starts agree), grad 1.0e-13, projector err 6.7e-16, ortho err 8.9e-16
+    lno beta-vir: Boys score 1.714111 -> 2.072320 (start 1, 2/4 starts agree), grad 3.0e-12, projector err 8.9e-16, ortho err 1.4e-15
+     mo: E_ref = -106.6808024566  E_FCI = -106.7663079156  (rebuild err 8.5e-14)
+    lmo: E_ref = -106.6808024566  E_FCI = -106.7663079156  (rebuild err 2.8e-14)
+     no: E_ref = -106.6807161340  E_FCI = -106.7663079156  (rebuild err 1.1e-13)
+    lno: E_ref = -106.6807161340  E_FCI = -106.7663079156  (rebuild err 2.8e-14)
+========================================================================
+R = 0.90 A
+========================================================================
+  RHF -107.1871903010  UHF -107.1871903010 (<S^2> -0.0000)
+  RCCSD -107.2913740309  RCCSD(T) -107.2924173535  converged True
+  UCCSD -107.2913740312  UCCSD(T) -107.2924173538  converged True
+  FCI   -107.2930757685  <S^2> 0.0000  roots -107.29307577 -106.87697774 -106.87697774
+    lmo alpha-occ: Boys score 3.615703 -> 6.663497 (start 2, 4/4 starts agree), grad 9.7e-12, projector err 7.8e-16, ortho err 1.1e-15
+    lmo alpha-vir: Boys score 2.169422 -> 2.480927 (start 2, 2/4 starts agree), grad 5.9e-10, projector err 1.8e-15, ortho err 6.7e-16
+    lmo beta-occ: Boys score 3.615703 -> 6.663497 (start 2, 4/4 starts agree), grad 9.7e-12, projector err 7.8e-16, ortho err 1.1e-15
+    lmo beta-vir: Boys score 2.169422 -> 2.480927 (start 2, 2/4 starts agree), grad 5.9e-10, projector err 1.8e-15, ortho err 6.7e-16
+    lno alpha-occ: Boys score 3.615703 -> 6.662934 (start 3, 4/4 starts agree), grad 1.1e-10, projector err 7.8e-16, ortho err 1.0e-15
+    lno alpha-vir: Boys score 2.169422 -> 2.474439 (start 2, 2/4 starts agree), grad 5.8e-10, projector err 8.9e-16, ortho err 7.2e-16
+    lno beta-occ: Boys score 3.615703 -> 6.662934 (start 3, 4/4 starts agree), grad 6.7e-11, projector err 3.3e-16, ortho err 1.0e-15
+    lno beta-vir: Boys score 2.169422 -> 2.474439 (start 2, 2/4 starts agree), grad 5.8e-10, projector err 8.9e-16, ortho err 4.4e-16
+     mo: E_ref = -107.1871903010  E_FCI = -107.2930757685  (rebuild err 0.0e+00)
+    lmo: E_ref = -107.1871903010  E_FCI = -107.2930757685  (rebuild err 5.7e-14)
+     no: E_ref = -107.1870667121  E_FCI = -107.2930757685  (rebuild err 5.7e-14)
+    lno: E_ref = -107.1870667121  E_FCI = -107.2930757685  (rebuild err 2.6e-13)
+========================================================================
+R = 1.00 A
+========================================================================
+  RHF -107.4195324517  UHF -107.4195324517 (<S^2> -0.0000)
+  RCCSD -107.5467229190  RCCSD(T) -107.5480839368  converged True
+  UCCSD -107.5467229194  UCCSD(T) -107.5480839372  converged True
+  FCI   -107.5493009579  <S^2> 0.0000  roots -107.54930096 -107.19897377 -107.19897377
+    lmo alpha-occ: Boys score 4.463831 -> 10.498310 (start 3, 4/4 starts agree), grad 2.0e-14, projector err 6.7e-16, ortho err 2.0e-15
+    lmo alpha-vir: Boys score 2.678299 -> 2.945543 (start 2, 2/4 starts agree), grad 5.0e-10, projector err 8.9e-16, ortho err 8.7e-16
+    lmo beta-occ: Boys score 4.463831 -> 10.498310 (start 3, 4/4 starts agree), grad 2.0e-14, projector err 6.7e-16, ortho err 2.0e-15
+    lmo beta-vir: Boys score 2.678299 -> 2.945543 (start 2, 2/4 starts agree), grad 5.0e-10, projector err 8.9e-16, ortho err 8.7e-16
+    lno alpha-occ: Boys score 4.463831 -> 10.481734 (start 0, 4/4 starts agree), grad 7.2e-10, projector err 5.6e-16, ortho err 2.0e-15
+    lno alpha-vir: Boys score 2.678299 -> 2.937610 (start 2, 2/4 starts agree), grad 4.9e-10, projector err 5.6e-16, ortho err 1.0e-15
+    lno beta-occ: Boys score 4.463831 -> 10.481734 (start 3, 4/4 starts agree), grad 7.2e-10, projector err 1.7e-15, ortho err 9.6e-16
+    lno beta-vir: Boys score 2.678299 -> 2.937610 (start 2, 2/4 starts agree), grad 4.9e-10, projector err 4.4e-16, ortho err 1.5e-15
+     mo: E_ref = -107.4195324517  E_FCI = -107.5493009579  (rebuild err 5.7e-14)
+    lmo: E_ref = -107.4195324517  E_FCI = -107.5493009579  (rebuild err 8.5e-14)
+     no: E_ref = -107.4193573473  E_FCI = -107.5493009579  (rebuild err 2.8e-14)
+    lno: E_ref = -107.4193573473  E_FCI = -107.5493009579  (rebuild err 1.4e-13)
+========================================================================
+R = 1.10 A
+========================================================================
+  RHF -107.4965005118  UHF -107.4965005118 (<S^2> -0.0000)
+  RCCSD -107.6501973995  RCCSD(T) -107.6519215228  converged True
+  UCCSD -107.6501973972  UCCSD(T) -107.6519215207  converged True
+  FCI   -107.6541224475  <S^2> 0.0000  roots -107.65412245 -107.35694300 -107.35694300
+    lmo alpha-occ: Boys score 5.401236 -> 11.849095 (start 0, 4/4 starts agree), grad 7.8e-15, projector err 4.4e-16, ortho err 8.9e-16
+    lmo alpha-vir: Boys score 3.240741 -> 3.467841 (start 2, 2/4 starts agree), grad 4.3e-10, projector err 5.1e-16, ortho err 1.8e-15
+    lmo beta-occ: Boys score 5.401236 -> 11.849095 (start 0, 4/4 starts agree), grad 7.8e-15, projector err 4.4e-16, ortho err 8.9e-16
+    lmo beta-vir: Boys score 3.240741 -> 3.467841 (start 2, 2/4 starts agree), grad 4.3e-10, projector err 5.1e-16, ortho err 1.8e-15
+    lno alpha-occ: Boys score 5.401236 -> 11.818494 (start 0, 4/4 starts agree), grad 3.0e-14, projector err 8.9e-16, ortho err 2.2e-15
+    lno alpha-vir: Boys score 3.240741 -> 3.458318 (start 2, 2/4 starts agree), grad 4.1e-10, projector err 2.2e-16, ortho err 1.2e-15
+    lno beta-occ: Boys score 5.401236 -> 11.818494 (start 3, 4/4 starts agree), grad 4.9e-14, projector err 1.6e-15, ortho err 1.3e-15
+    lno beta-vir: Boys score 3.240741 -> 3.458318 (start 2, 2/4 starts agree), grad 4.1e-10, projector err 4.4e-16, ortho err 1.3e-15
+     mo: E_ref = -107.4965005118  E_FCI = -107.6541224475  (rebuild err 2.8e-14)
+    lmo: E_ref = -107.4965005118  E_FCI = -107.6541224475  (rebuild err 2.8e-14)
+     no: E_ref = -107.4962534210  E_FCI = -107.6541224475  (rebuild err 0.0e+00)
+    lno: E_ref = -107.4962534210  E_FCI = -107.6541224475  (rebuild err 1.7e-13)
+========================================================================
+R = 1.20 A
+========================================================================
+  RHF -107.4877839280  UHF -107.5012034834 (<S^2> 0.6316)
+  RCCSD -107.6714389839  RCCSD(T) -107.6735505264  converged True
+  UCCSD -107.6733364535  UCCSD(T) -107.6743469461  converged True
+  FCI   -107.6773397492  <S^2> 0.0000  roots -107.67733975 -107.44617949 -107.38034497
+    lmo alpha-occ: Boys score 4.660863 -> 10.476865 (start 0, 4/4 starts agree), grad 8.4e-07, projector err 1.3e-15, ortho err 2.0e-15
+    lmo alpha-vir: Boys score 7.753002 -> 7.753002 (start 0, 4/4 starts agree), grad 8.3e-12, projector err 2.2e-16, ortho err 6.7e-16
+    lmo beta-occ: Boys score 10.751080 -> 16.567083 (start 2, 4/4 starts agree), grad 8.5e-07, projector err 1.1e-15, ortho err 8.9e-16
+    lmo beta-vir: Boys score 1.663114 -> 1.663114 (start 0, 4/4 starts agree), grad 8.3e-12, projector err 2.2e-16, ortho err 6.7e-16
+    lno alpha-occ: Boys score 6.419318 -> 13.214420 (start 2, 4/4 starts agree), grad 1.3e-07, projector err 1.1e-15, ortho err 1.1e-15
+    lno alpha-vir: Boys score 3.867801 -> 4.001501 (start 0, 4/4 starts agree), grad 3.0e-13, projector err 2.2e-16, ortho err 5.1e-16
+    lno beta-occ: Boys score 6.441442 -> 13.236544 (start 3, 4/4 starts agree), grad 1.3e-07, projector err 1.1e-15, ortho err 8.2e-16
+    lno beta-vir: Boys score 3.845715 -> 3.979415 (start 1, 4/4 starts agree), grad 3.8e-14, projector err 1.0e-15, ortho err 1.8e-15
+     mo: E_ref = -107.5012034834  E_FCI = -107.6773397492  (rebuild err 0.0e+00)
+    lmo: E_ref = -107.5012034834  E_FCI = -107.6773397492  (rebuild err 2.8e-14)
+     no: E_ref = -107.4874004263  E_FCI = -107.6773397492  (rebuild err 1.7e-13)
+    lno: E_ref = -107.4874004263  E_FCI = -107.6773397492  (rebuild err 0.0e+00)
+========================================================================
+R = 1.30 A
+========================================================================
+  RHF -107.4338706900  UHF -107.4923260503 (<S^2> 1.1733)
+  RCCSD -107.6508280996  RCCSD(T) -107.6533131365  converged True
+  UCCSD -107.6546918387  UCCSD(T) -107.6559253665  converged True
+  FCI   -107.6593696653  <S^2> 0.0000  roots -107.65936967 -107.49200150 -107.42387079
+    lmo alpha-occ: Boys score 4.951550 -> 11.134382 (start 3, 4/4 starts agree), grad 8.0e-08, projector err 1.0e-15, ortho err 1.3e-15
+    lmo alpha-vir: Boys score 11.234864 -> 11.234864 (start 2, 4/4 starts agree), grad 2.9e-08, projector err 3.3e-16, ortho err 4.4e-16
+    lmo beta-occ: Boys score 14.730701 -> 20.913533 (start 0, 4/4 starts agree), grad 8.0e-08, projector err 6.7e-16, ortho err 1.3e-15
+    lmo beta-vir: Boys score 1.456124 -> 1.456124 (start 1, 4/4 starts agree), grad 2.0e-15, projector err 4.4e-16, ortho err 8.9e-16
+    lno alpha-occ: Boys score 7.486784 -> 14.638174 (start 3, 4/4 starts agree), grad 4.2e-06, projector err 8.9e-16, ortho err 1.8e-15
+    lno alpha-vir: Boys score 4.591024 -> 4.697719 (start 1, 4/4 starts agree), grad 8.0e-17, projector err 1.3e-15, ortho err 1.6e-15
+    lno beta-occ: Boys score 7.615719 -> 14.767108 (start 0, 4/4 starts agree), grad 4.2e-06, projector err 4.4e-16, ortho err 2.0e-15
+    lno beta-vir: Boys score 4.462103 -> 4.568797 (start 3, 4/4 starts agree), grad 1.7e-16, projector err 5.6e-16, ortho err 1.6e-15
+     mo: E_ref = -107.4923260503  E_FCI = -107.6593696653  (rebuild err 1.4e-14)
+    lmo: E_ref = -107.4923260503  E_FCI = -107.6593696653  (rebuild err 1.4e-14)
+     no: E_ref = -107.4332956546  E_FCI = -107.6593696653  (rebuild err 7.1e-14)
+    lno: E_ref = -107.4332956546  E_FCI = -107.6593696653  (rebuild err 5.7e-14)
+========================================================================
+R = 1.40 A
+========================================================================
+  RHF -107.3578154453  UHF -107.4776337999 (<S^2> 1.5222)
+  RCCSD -107.6116438637  RCCSD(T) -107.6144350259  converged True
+  UCCSD -107.6157193470  UCCSD(T) -107.6176044198  converged True
+  FCI   -107.6231741781  <S^2> 0.0000  roots -107.62317418 -107.50610458 -107.43505725
+    lmo alpha-occ: Boys score 5.354078 -> 11.953014 (start 2, 4/4 starts agree), grad 1.6e-07, projector err 8.9e-16, ortho err 1.3e-15
+    lmo alpha-vir: Boys score 14.507755 -> 14.507755 (start 1, 4/4 starts agree), grad 3.4e-08, projector err 5.6e-16, ortho err 2.2e-16
+    lmo beta-occ: Boys score 18.478224 -> 25.077160 (start 0, 4/4 starts agree), grad 1.6e-07, projector err 8.9e-16, ortho err 1.6e-15
+    lmo beta-vir: Boys score 1.384032 -> 1.384032 (start 0, 4/4 starts agree), grad 6.3e-11, projector err 1.1e-16, ortho err 6.7e-16
+    lno alpha-occ: Boys score 8.281970 -> 15.755418 (start 3, 4/4 starts agree), grad 3.7e-07, projector err 4.4e-16, ortho err 1.0e-15
+    lno alpha-vir: Boys score 5.778701 -> 5.859804 (start 1, 4/4 starts agree), grad 2.0e-16, projector err 7.8e-16, ortho err 1.1e-15
+    lno beta-occ: Boys score 9.309704 -> 16.783153 (start 2, 4/4 starts agree), grad 3.7e-07, projector err 6.7e-16, ortho err 8.9e-16
+    lno beta-vir: Boys score 4.750902 -> 4.832005 (start 2, 4/4 starts agree), grad 8.6e-17, projector err 1.2e-15, ortho err 2.2e-15
+     mo: E_ref = -107.4776337999  E_FCI = -107.6231741781  (rebuild err 4.3e-14)
+    lmo: E_ref = -107.4776337999  E_FCI = -107.6231741781  (rebuild err 5.7e-14)
+     no: E_ref = -107.3580357442  E_FCI = -107.6231741781  (rebuild err 7.1e-14)
+    lno: E_ref = -107.3580357442  E_FCI = -107.6231741781  (rebuild err 1.4e-13)
+========================================================================
+R = 1.50 A
+========================================================================
+  RHF -107.2827634728  UHF -107.4606413272 (<S^2> 1.7763)
+  RCCSD -107.5682217354  RCCSD(T) -107.6024556293  converged True
+  UCCSD -107.5706395410  UCCSD(T) -107.5728913215  converged True
+  FCI   -107.5816349222  <S^2> 0.0000  roots -107.58163492 -107.50314245 -107.42840795
+    lmo alpha-occ: Boys score 5.785886 -> 12.670391 (start 2, 4/4 starts agree), grad 1.7e-10, projector err 8.9e-16, ortho err 1.3e-15
+    lmo alpha-vir: Boys score 17.982497 -> 17.982497 (start 1, 4/4 starts agree), grad 3.6e-08, projector err 5.6e-16, ortho err 2.6e-16
+    lmo beta-occ: Boys score 22.570562 -> 29.455068 (start 0, 4/4 starts agree), grad 1.7e-10, projector err 8.9e-16, ortho err 8.9e-16
+    lmo beta-vir: Boys score 1.198231 -> 1.198231 (start 1, 4/4 starts agree), grad 3.6e-08, projector err 6.7e-16, ortho err 8.9e-16
+    lno alpha-occ: Boys score 8.448507 -> 15.669991 (start 2, 4/4 starts agree), grad 8.5e-10, projector err 1.3e-15, ortho err 1.6e-15
+    lno alpha-vir: Boys score 8.207711 -> 8.249907 (start 2, 2/4 starts agree), grad 8.0e-11, projector err 2.2e-16, ortho err 8.7e-16
+    lno beta-occ: Boys score 12.402396 -> 19.623881 (start 2, 4/4 starts agree), grad 8.5e-10, projector err 8.0e-16, ortho err 1.6e-15
+    lno beta-vir: Boys score 4.253694 -> 4.295890 (start 2, 2/4 starts agree), grad 8.0e-11, projector err 2.2e-16, ortho err 6.7e-16
+     mo: E_ref = -107.4606413272  E_FCI = -107.5816349222  (rebuild err 2.8e-14)
+    lmo: E_ref = -107.4606413272  E_FCI = -107.5816349222  (rebuild err 0.0e+00)
+     no: E_ref = -107.2866340727  E_FCI = -107.5816349222  (rebuild err 8.5e-14)
+    lno: E_ref = -107.2866340727  E_FCI = -107.5816349222  (rebuild err 1.7e-13)
+========================================================================
+R = 1.60 A
+========================================================================
+  RHF -107.2256692254  UHF -107.4451878683 (<S^2> 2.0329)
+  RCCSD -107.5296192622  RCCSD(T) -107.6168238679  converged True
+  UCCSD -107.5291581879  UCCSD(T) -107.5311412905  converged True
+  FCI   -107.5420857660  <S^2> 0.0000  roots -107.54208577 -107.49184602 -107.42914163
+    lmo alpha-occ: Boys score 6.147571 -> 13.145397 (start 3, 4/4 starts agree), grad 4.9e-08, projector err 1.1e-15, ortho err 1.3e-15
+    lmo alpha-vir: Boys score 22.061245 -> 22.061245 (start 2, 4/4 starts agree), grad 3.3e-08, projector err 2.2e-16, ortho err 5.6e-16
+    lmo beta-occ: Boys score 27.400542 -> 34.398369 (start 0, 4/4 starts agree), grad 4.9e-08, projector err 6.7e-16, ortho err 8.9e-16
+    lmo beta-vir: Boys score 0.808658 -> 0.808658 (start 0, 4/4 starts agree), grad 4.8e-11, projector err 1.1e-16, ortho err 2.2e-16
+    lno alpha-occ: Boys score 8.120788 -> 15.358466 (start 3, 4/4 starts agree), grad 1.6e-12, projector err 1.8e-15, ortho err 2.4e-15
+    lno alpha-vir: Boys score 13.011228 -> 13.011228 (start 1, 4/4 starts agree), grad 7.3e-15, projector err 4.4e-16, ortho err 4.4e-16
+    lno beta-occ: Boys score 18.139921 -> 25.377598 (start 3, 4/4 starts agree), grad 1.5e-12, projector err 2.2e-15, ortho err 2.4e-15
+    lno beta-vir: Boys score 2.991854 -> 2.991854 (start 0, 4/4 starts agree), grad 2.0e-11, projector err 1.1e-16, ortho err 8.9e-16
+     mo: E_ref = -107.4451878683  E_FCI = -107.5420857660  (rebuild err 5.7e-14)
+    lmo: E_ref = -107.4451878683  E_FCI = -107.5420857660  (rebuild err 8.5e-14)
+     no: E_ref = -107.2699577780  E_FCI = -107.5420857660  (rebuild err 8.5e-14)
+    lno: E_ref = -107.2699577780  E_FCI = -107.5420857660  (rebuild err 8.5e-14)
+========================================================================
+R = 1.70 A
+========================================================================
+    RCCSD: CCSD not converged (level shift 0.0)
+    RCCSD: CCSD not converged (level shift 0.2)
+  RHF -107.1789776435  UHF -107.4353814532 (<S^2> 2.3084)
+  RCCSD -107.2884294624  RCCSD(T) -107.2966571773  converged False
+  UCCSD -107.4968128828  UCCSD(T) -107.4980909435  converged True
+  FCI   -107.5087287276  <S^2> 0.0000  roots -107.50872873 -107.47773487 -107.43327178
+    lmo alpha-occ: Boys score 6.646495 -> 13.583853 (start 2, 4/4 starts agree), grad 8.6e-07, projector err 1.2e-15, ortho err 1.8e-15
+    lmo alpha-vir: Boys score 26.702859 -> 26.702859 (start 3, 4/4 starts agree), grad 6.0e-08, projector err 2.2e-16, ortho err 6.7e-16
+    lmo beta-occ: Boys score 32.920538 -> 39.857896 (start 0, 4/4 starts agree), grad 8.6e-07, projector err 1.1e-15, ortho err 7.8e-16
+    lmo beta-vir: Boys score 0.429154 -> 0.429154 (start 1, 4/4 starts agree), grad 5.5e-15, projector err 3.5e-16, ortho err 3.4e-16
+    lno alpha-occ: Boys score 8.009075 -> 15.256815 (start 3, 4/4 starts agree), grad 1.2e-08, projector err 6.7e-16, ortho err 1.4e-15
+    lno alpha-vir: Boys score 19.701199 -> 19.701199 (start 1, 4/4 starts agree), grad 2.9e-08, projector err 5.6e-16, ortho err 2.4e-15
+    lno beta-occ: Boys score 25.798717 -> 33.046457 (start 2, 4/4 starts agree), grad 1.2e-08, projector err 1.7e-15, ortho err 2.0e-15
+    lno beta-vir: Boys score 1.911000 -> 1.911000 (start 1, 4/4 starts agree), grad 2.9e-08, projector err 5.6e-16, ortho err 3.3e-16
+     mo: E_ref = -107.4353814532  E_FCI = -107.5087287276  (rebuild err 5.7e-14)
+    lmo: E_ref = -107.4353814532  E_FCI = -107.5087287276  (rebuild err 7.1e-14)
+     no: E_ref = -107.3208891780  E_FCI = -107.5087287276  (rebuild err 1.4e-14)
+    lno: E_ref = -107.3208891780  E_FCI = -107.5087287276  (rebuild err 4.3e-14)
+========================================================================
+R = 1.80 A
+========================================================================
+    RCCSD: CCSD not converged (level shift 0.0)
+    RCCSD: CCSD not converged (level shift 0.2)
+  RHF -107.1382459896  UHF -107.4314084996 (<S^2> 2.5325)
+  RCCSD -107.2762290562  RCCSD(T) -107.2867690091  converged False
+  UCCSD -107.4743602852  UCCSD(T) -107.4750470679  converged True
+  FCI   -107.4834573507  <S^2> 0.0000  roots -107.48345735 -107.46441963 -107.43243516
+    lmo alpha-occ: Boys score 7.530432 -> 14.240926 (start 1, 4/4 starts agree), grad 3.8e-09, projector err 1.6e-15, ortho err 1.6e-15
+    lmo alpha-vir: Boys score 31.487123 -> 31.487123 (start 3, 4/4 starts agree), grad 3.0e-08, projector err 4.4e-16, ortho err 6.7e-16
+    lmo beta-occ: Boys score 38.807132 -> 45.517626 (start 0, 4/4 starts agree), grad 3.8e-09, projector err 8.9e-16, ortho err 6.7e-16
+    lmo beta-vir: Boys score 0.210701 -> 0.210701 (start 0, 4/4 starts agree), grad 1.3e-11, projector err 2.2e-16, ortho err 1.6e-15
+    lno alpha-occ: Boys score 8.282643 -> 15.619841 (start 3, 4/4 starts agree), grad 2.4e-07, projector err 1.8e-15, ortho err 1.6e-15
+    lno alpha-vir: Boys score 26.055160 -> 26.055160 (start 0, 4/4 starts agree), grad 6.3e-11, projector err 1.1e-16, ortho err 4.4e-16
+    lno beta-occ: Boys score 33.062490 -> 40.399688 (start 3, 4/4 starts agree), grad 2.4e-07, projector err 8.1e-16, ortho err 8.9e-16
+    lno beta-vir: Boys score 1.274282 -> 1.274282 (start 1, 4/4 starts agree), grad 3.4e-08, projector err 5.6e-16, ortho err 1.6e-15
+     mo: E_ref = -107.4314084996  E_FCI = -107.4834573507  (rebuild err 2.8e-14)
+    lmo: E_ref = -107.4314084996  E_FCI = -107.4834573507  (rebuild err 4.3e-14)
+     no: E_ref = -107.3623155461  E_FCI = -107.4834573507  (rebuild err 2.8e-14)
+    lno: E_ref = -107.3623155461  E_FCI = -107.4834573507  (rebuild err 2.8e-14)
+========================================================================
+R = 1.90 A
+========================================================================
+  RHF -107.1013171527  UHF -107.4309369772 (<S^2> 2.6892)
+  RCCSD -107.2630501227  RCCSD(T) -107.2710754529  converged True
+  UCCSD -107.4597531609  UCCSD(T) -107.4601039853  converged True
+  FCI   -107.4661128541  <S^2> 0.0000  roots -107.46611285 -107.43054016 -107.35533496
+    lmo alpha-occ: Boys score 8.787958 -> 13.920279 (start 0, 4/4 starts agree), grad 3.8e-08, projector err 8.9e-16, ortho err 1.9e-15
+    lmo alpha-vir: Boys score 36.275058 -> 36.275058 (start 3, 4/4 starts agree), grad 1.5e-08, projector err 6.7e-16, ortho err 6.7e-16
+    lmo beta-occ: Boys score 44.960793 -> 50.093114 (start 1, 4/4 starts agree), grad 3.8e-08, projector err 1.4e-15, ortho err 1.6e-15
+    lmo beta-vir: Boys score 0.102442 -> 0.102442 (start 0, 4/4 starts agree), grad 6.3e-12, projector err 1.4e-17, ortho err 1.1e-15
+    lno alpha-occ: Boys score 8.699064 -> 16.167430 (start 2, 4/4 starts agree), grad 1.9e-10, projector err 1.0e-15, ortho err 1.6e-15
+    lno alpha-vir: Boys score 31.896922 -> 31.896922 (start 1, 3/4 starts agree), grad 6.8e-09, projector err 6.7e-16, ortho err 1.3e-15
+    lno beta-occ: Boys score 39.804089 -> 47.272455 (start 3, 4/4 starts agree), grad 1.9e-10, projector err 1.3e-15, ortho err 1.8e-15
+    lno beta-vir: Boys score 0.790112 -> 0.790112 (start 1, 3/4 starts agree), grad 6.8e-09, projector err 8.9e-16, ortho err 2.7e-15
+     mo: E_ref = -107.4309369772  E_FCI = -107.4661128541  (rebuild err 1.4e-14)
+    lmo: E_ref = -107.4309369772  E_FCI = -107.4661128541  (rebuild err 0.0e+00)
+     no: E_ref = -107.3820366002  E_FCI = -107.4661128541  (rebuild err 8.5e-14)
+    lno: E_ref = -107.3820366002  E_FCI = -107.4661128541  (rebuild err 2.7e-13)
+========================================================================
+R = 2.00 A
+========================================================================
+  RHF -107.0672946170  UHF -107.4320291628 (<S^2> 2.7938)
+  RCCSD -107.2468170333  RCCSD(T) -107.2511611763  converged True
+  UCCSD -107.4507823882  UCCSD(T) -107.4509620977  converged True
+  FCI   -107.4551555978  <S^2> 0.0000  roots -107.45515560 -107.42974783 -107.34168826
+    lmo alpha-occ: Boys score 10.357134 -> 15.030641 (start 2, 4/4 starts agree), grad 7.3e-11, projector err 7.8e-16, ortho err 8.9e-16
+    lmo alpha-vir: Boys score 41.080774 -> 41.080774 (start 0, 4/4 starts agree), grad 3.1e-12, projector err 1.4e-17, ortho err 4.4e-16
+    lmo beta-occ: Boys score 51.388169 -> 56.061676 (start 2, 4/4 starts agree), grad 7.3e-11, projector err 8.9e-16, ortho err 1.8e-15
+    lmo beta-vir: Boys score 0.049907 -> 0.049907 (start 0, 4/4 starts agree), grad 3.1e-12, projector err 2.2e-16, ortho err 4.5e-16
+    lno alpha-occ: Boys score 9.274289 -> 16.903624 (start 3, 4/4 starts agree), grad 2.5e-08, projector err 1.8e-15, ortho err 1.8e-15
+    lno alpha-vir: Boys score 37.665300 -> 37.665300 (start 3, 3/4 starts agree), grad 2.7e-08, projector err 4.4e-16, ortho err 8.9e-16
+    lno beta-occ: Boys score 46.504839 -> 54.134174 (start 3, 4/4 starts agree), grad 2.5e-08, projector err 1.3e-15, ortho err 8.9e-16
+    lno beta-vir: Boys score 0.431632 -> 0.431632 (start 1, 3/4 starts agree), grad 4.0e-09, projector err 4.4e-16, ortho err 8.9e-16
+     mo: E_ref = -107.4320291628  E_FCI = -107.4551555978  (rebuild err 4.3e-14)
+    lmo: E_ref = -107.4320291628  E_FCI = -107.4551555978  (rebuild err 9.9e-14)
+     no: E_ref = -107.3961711933  E_FCI = -107.4551555978  (rebuild err 0.0e+00)
+    lno: E_ref = -107.3961711933  E_FCI = -107.4551555978  (rebuild err 8.5e-14)
+========================================================================
+R = 2.10 A
+========================================================================
+  RHF -107.0358652728  UHF -107.4335789087 (<S^2> 2.8630)
+  RCCSD -107.2334580607  RCCSD(T) -107.2357061441  converged True
+  UCCSD -107.4456084321  UCCSD(T) -107.4457040881  converged True
+  FCI   -107.4486324231  <S^2> 0.0000  roots -107.44863242 -107.44292167 -107.43043780
+    lmo alpha-occ: Boys score 12.180857 -> 16.286579 (start 0, 4/4 starts agree), grad 2.8e-12, projector err 8.9e-16, ortho err 8.9e-16
+    lmo alpha-vir: Boys score 45.943586 -> 45.943586 (start 1, 4/4 starts agree), grad 2.6e-08, projector err 4.4e-16, ortho err 6.7e-16
+    lmo beta-occ: Boys score 58.100204 -> 62.205926 (start 1, 4/4 starts agree), grad 2.8e-12, projector err 7.5e-16, ortho err 1.3e-15
+    lmo beta-vir: Boys score 0.024363 -> 0.024363 (start 0, 4/4 starts agree), grad 1.5e-12, projector err 1.3e-17, ortho err 1.1e-15
+    lno alpha-occ: Boys score 10.061560 -> 17.880067 (start 3, 4/4 starts agree), grad 2.6e-13, projector err 1.1e-15, ortho err 8.9e-16
+    lno alpha-vir: Boys score 43.413105 -> 43.413105 (start 3, 3/4 starts agree), grad 1.4e-08, projector err 5.6e-16, ortho err 1.0e-15
+    lno beta-occ: Boys score 53.255529 -> 61.074036 (start 3, 4/4 starts agree), grad 2.3e-13, projector err 1.2e-15, ortho err 1.8e-15
+    lno beta-vir: Boys score 0.213934 -> 0.213934 (start 1, 3/4 starts agree), grad 2.1e-09, projector err 2.2e-16, ortho err 1.3e-15
+     mo: E_ref = -107.4335789087  E_FCI = -107.4486324231  (rebuild err 1.4e-14)
+    lmo: E_ref = -107.4335789087  E_FCI = -107.4486324231  (rebuild err 1.4e-14)
+     no: E_ref = -107.4086158287  E_FCI = -107.4486324231  (rebuild err 2.8e-14)
+    lno: E_ref = -107.4086158287  E_FCI = -107.4486324231  (rebuild err 1.7e-13)
+========================================================================
+R = 2.20 A
+========================================================================
+    RCCSD: CCSD not converged (level shift 0.0)
+    RCCSD: CCSD not converged (level shift 0.2)
+  RHF -107.0069203146  UHF -107.4350482326 (<S^2> 2.9088)
+  RCCSD -107.2120321246  RCCSD(T) -107.2131293153  converged False
+  UCCSD -107.4427605926  UCCSD(T) -107.4428153106  converged True
+  FCI   -107.4448585490  <S^2> 0.0000  roots -107.44485855 -107.44082218 -107.43197465
+    lmo alpha-occ: Boys score 14.198392 -> 17.668664 (start 3, 4/4 starts agree), grad 1.0e-05, projector err 2.0e-15, ortho err 1.1e-15
+    lmo alpha-vir: Boys score 50.900415 -> 50.900415 (start 1, 4/4 starts agree), grad 1.3e-08, projector err 4.4e-16, ortho err 8.9e-16
+    lmo beta-occ: Boys score 65.087010 -> 68.557282 (start 0, 4/4 starts agree), grad 1.0e-05, projector err 7.8e-16, ortho err 6.7e-16
+    lmo beta-vir: Boys score 0.011888 -> 0.011888 (start 0, 4/4 starts agree), grad 7.5e-13, projector err 5.1e-19, ortho err 6.7e-16
+    lno alpha-occ: Boys score 11.052904 -> 17.893244 (start 0, 4/4 starts agree), grad 1.1e-06, projector err 1.3e-15, ortho err 8.9e-16
+    lno alpha-vir: Boys score 49.088814 -> 49.088814 (start 3, 3/4 starts agree), grad 6.6e-09, projector err 5.6e-16, ortho err 6.7e-16
+    lno beta-occ: Boys score 60.032806 -> 66.873146 (start 1, 4/4 starts agree), grad 1.1e-06, projector err 6.7e-16, ortho err 1.1e-15
+    lno beta-vir: Boys score 0.100955 -> 0.100955 (start 1, 3/4 starts agree), grad 1.0e-09, projector err 6.1e-16, ortho err 8.9e-16
+     mo: E_ref = -107.4350482326  E_FCI = -107.4448585490  (rebuild err 5.7e-14)
+    lmo: E_ref = -107.4350482326  E_FCI = -107.4448585490  (rebuild err 5.7e-14)
+     no: E_ref = -107.4184583374  E_FCI = -107.4448585490  (rebuild err 0.0e+00)
+    lno: E_ref = -107.4184583374  E_FCI = -107.4448585490  (rebuild err 1.7e-13)
+========================================================================
+R = 2.30 A
+========================================================================
+    RCCSD: CCSD not converged (level shift 0.0)
+    RCCSD: CCSD not converged (level shift 0.2)
+  RHF -106.9803892927  UHF -107.4362236835 (<S^2> 2.9393)
+  RCCSD -107.2010273561  RCCSD(T) -107.2016153139  converged False
+  UCCSD -107.4412027521  UCCSD(T) -107.4412368790  converged True
+  FCI   -107.4426555207  <S^2> 0.0000  roots -107.44265552 -107.43981255 -107.43365905
+    lmo alpha-occ: Boys score 16.344266 -> 19.162956 (start 0, 4/4 starts agree), grad 6.0e-06, projector err 8.9e-16, ortho err 1.8e-15
+    lmo alpha-vir: Boys score 55.981224 -> 55.981224 (start 1, 4/4 starts agree), grad 6.3e-09, projector err 3.8e-16, ortho err 5.6e-16
+    lmo beta-occ: Boys score 72.319780 -> 75.138469 (start 2, 4/4 starts agree), grad 6.0e-06, projector err 1.8e-15, ortho err 1.8e-15
+    lmo beta-vir: Boys score 0.005775 -> 0.005775 (start 0, 4/4 starts agree), grad 3.7e-13, projector err 2.2e-16, ortho err 6.7e-16
+    lno alpha-occ: Boys score 12.221173 -> 19.304910 (start 2, 4/4 starts agree), grad 1.4e-07, projector err 8.9e-16, ortho err 1.3e-15
+    lno alpha-vir: Boys score 54.704769 -> 54.704769 (start 3, 3/4 starts agree), grad 3.1e-09, projector err 6.7e-16, ortho err 1.2e-15
+    lno beta-occ: Boys score 66.868082 -> 73.951819 (start 2, 4/4 starts agree), grad 1.4e-07, projector err 1.3e-15, ortho err 1.6e-15
+    lno beta-vir: Boys score 0.046800 -> 0.046800 (start 1, 3/4 starts agree), grad 4.7e-10, projector err 4.4e-16, ortho err 1.6e-15
+     mo: E_ref = -107.4362236835  E_FCI = -107.4426555207  (rebuild err 5.7e-14)
+    lmo: E_ref = -107.4362236835  E_FCI = -107.4426555207  (rebuild err 4.3e-14)
+     no: E_ref = -107.4254361306  E_FCI = -107.4426555207  (rebuild err 9.9e-14)
+    lno: E_ref = -107.4254361306  E_FCI = -107.4426555207  (rebuild err 1.4e-14)
+========================================================================
+R = 2.40 A
+========================================================================
+    RCCSD: CCSD not converged (level shift 0.0)
+    RCCSD: CCSD not converged (level shift 0.2)
+  RHF -106.9561949302  UHF -107.4370633543 (<S^2> 2.9597)
+  RCCSD -107.1960859090  RCCSD(T) -107.1964402180  converged False
+  UCCSD -107.4403055804  UCCSD(T) -107.4403285670  converged True
+  FCI   -107.4413062851  <S^2> 0.0000  roots -107.44130629 -107.43932419 -107.43510536
+    lmo alpha-occ: Boys score 18.557491 -> 20.759217 (start 3, 4/4 starts agree), grad 6.9e-06, projector err 2.0e-15, ortho err 3.3e-15
+    lmo alpha-vir: Boys score 61.208993 -> 61.208993 (start 1, 4/4 starts agree), grad 3.2e-09, projector err 6.7e-16, ortho err 2.3e-16
+    lmo beta-occ: Boys score 79.763751 -> 81.965476 (start 0, 4/4 starts agree), grad 6.9e-06, projector err 1.8e-15, ortho err 2.0e-15
+    lmo beta-vir: Boys score 0.002779 -> 0.002779 (start 0, 4/4 starts agree), grad 1.8e-13, projector err 2.9e-17, ortho err 6.7e-16
+    lno alpha-occ: Boys score 13.550827 -> 20.849515 (start 2, 4/4 starts agree), grad 3.6e-06, projector err 5.5e-16, ortho err 2.0e-15
+    lno alpha-vir: Boys score 60.315889 -> 60.315889 (start 3, 3/4 starts agree), grad 1.5e-09, projector err 2.2e-16, ortho err 1.3e-15
+    lno beta-occ: Boys score 73.831141 -> 81.129828 (start 1, 4/4 starts agree), grad 3.6e-06, projector err 1.6e-15, ortho err 2.7e-15
+    lno beta-vir: Boys score 0.021550 -> 0.021550 (start 0, 3/4 starts agree), grad 1.3e-11, projector err 2.2e-16, ortho err 1.1e-15
+     mo: E_ref = -107.4370633543  E_FCI = -107.4413062851  (rebuild err 2.8e-14)
+    lmo: E_ref = -107.4370633543  E_FCI = -107.4413062851  (rebuild err 2.8e-14)
+     no: E_ref = -107.4300980234  E_FCI = -107.4413062851  (rebuild err 8.5e-14)
+    lno: E_ref = -107.4300980234  E_FCI = -107.4413062851  (rebuild err 8.5e-14)
+========================================================================
+R = 2.50 A
+========================================================================
+    RCCSD: CCSD not converged (level shift 0.0)
+    RCCSD: CCSD not converged (level shift 0.2)
+  RHF -106.9342554341  UHF -107.4376068667 (<S^2> 2.9734)
+  RCCSD -107.1963340857  RCCSD(T) -107.1965994515  converged False
+  UCCSD -107.4397322779  UCCSD(T) -107.4397486456  converged True
+  FCI   -107.4404165012  <S^2> 0.0000  roots -107.44041650 -107.43905256 -107.43619510
+    lmo alpha-occ: Boys score 20.792014 -> 22.449784 (start 3, 4/4 starts agree), grad 3.2e-07, projector err 1.1e-15, ortho err 2.0e-15
+    lmo alpha-vir: Boys score 66.600827 -> 66.600827 (start 3, 4/4 starts agree), grad 4.2e-11, projector err 2.2e-16, ortho err 1.1e-15
+    lmo beta-occ: Boys score 87.391554 -> 89.049325 (start 3, 4/4 starts agree), grad 3.2e-07, projector err 8.5e-16, ortho err 8.9e-16
+    lmo beta-vir: Boys score 0.001317 -> 0.001317 (start 0, 4/4 starts agree), grad 8.7e-14, projector err 2.2e-16, ortho err 4.4e-16
+    lno alpha-occ: Boys score 15.044541 -> 22.507358 (start 2, 4/4 starts agree), grad 1.5e-06, projector err 1.3e-15, ortho err 1.7e-15
+    lno alpha-vir: Boys score 65.979755 -> 65.979755 (start 3, 3/4 starts agree), grad 6.7e-10, projector err 4.4e-16, ortho err 1.3e-15
+    lno beta-occ: Boys score 80.998214 -> 88.461031 (start 3, 4/4 starts agree), grad 1.5e-06, projector err 1.8e-15, ortho err 1.6e-15
+    lno beta-vir: Boys score 0.009840 -> 0.009840 (start 0, 3/4 starts agree), grad 6.1e-12, projector err 1.1e-16, ortho err 8.9e-16
+     mo: E_ref = -107.4376068667  E_FCI = -107.4404165012  (rebuild err 5.7e-14)
+    lmo: E_ref = -107.4376068667  E_FCI = -107.4404165012  (rebuild err 7.1e-14)
+     no: E_ref = -107.4331268080  E_FCI = -107.4404165012  (rebuild err 3.0e-13)
+    lno: E_ref = -107.4331268080  E_FCI = -107.4404165012  (rebuild err 3.1e-13)
+========================================================================
+R = 2.60 A
+========================================================================
+    RCCSD: CCSD not converged (level shift 0.0)
+    RCCSD: CCSD not converged (level shift 0.2)
+  RHF -106.9144919762  UHF -107.4379235573 (<S^2> 2.9825)
+  RCCSD -107.1970625642  RCCSD(T) -107.1972564031  converged False
+  UCCSD -107.4393218573  UCCSD(T) -107.4393339355  converged True
+  FCI   -107.4397853337  <S^2> 0.0000  roots -107.43978533 -107.43886051 -107.43694828
+    lmo alpha-occ: Boys score 23.021709 -> 24.228845 (start 2, 4/4 starts agree), grad 5.1e-08, projector err 1.1e-15, ortho err 2.0e-15
+    lmo alpha-vir: Boys score 72.169301 -> 72.169301 (start 2, 4/4 starts agree), grad 1.6e-10, projector err 6.7e-16, ortho err 3.3e-16
+    lmo beta-occ: Boys score 95.190419 -> 96.397555 (start 1, 4/4 starts agree), grad 5.1e-08, projector err 8.9e-16, ortho err 8.9e-16
+    lmo beta-vir: Boys score 0.000612 -> 0.000612 (start 0, 4/4 starts agree), grad 4.1e-14, projector err 1.7e-18, ortho err 4.4e-16
+    lno alpha-occ: Boys score 16.719969 -> 24.265438 (start 0, 4/4 starts agree), grad 1.8e-05, projector err 7.8e-16, ortho err 8.9e-16
+    lno alpha-vir: Boys score 71.740976 -> 71.740976 (start 3, 3/4 starts agree), grad 3.0e-10, projector err 3.0e-16, ortho err 1.1e-15
+    lno beta-occ: Boys score 88.439604 -> 95.985074 (start 3, 4/4 starts agree), grad 1.8e-05, projector err 1.6e-15, ortho err 1.8e-15
+    lno beta-vir: Boys score 0.004429 -> 0.004429 (start 0, 3/4 starts agree), grad 2.8e-12, projector err 4.4e-16, ortho err 5.6e-16
+     mo: E_ref = -107.4379235573  E_FCI = -107.4397853337  (rebuild err 2.8e-14)
+    lmo: E_ref = -107.4379235573  E_FCI = -107.4397853337  (rebuild err 1.4e-14)
+     no: E_ref = -107.4350578916  E_FCI = -107.4397853337  (rebuild err 1.4e-14)
+    lno: E_ref = -107.4350578916  E_FCI = -107.4397853337  (rebuild err 1.7e-13)
+========================================================================
+R = 2.70 A
+========================================================================
+    RCCSD: CCSD not converged (level shift 0.0)
+    RCCSD: CCSD not converged (level shift 0.2)
+  RHF -106.8968266679  UHF -107.4380842462 (<S^2> 2.9887)
+  RCCSD -107.1957931640  RCCSD(T) -107.1959310746  converged False
+  UCCSD -107.4390045640  UCCSD(T) -107.4390136674  converged True
+  FCI   -107.4393154335  <S^2> 0.0000  roots -107.43931543 -107.43869824 -107.43743498
+    lmo alpha-occ: Boys score 25.238805 -> 26.091948 (start 2, 4/4 starts agree), grad 1.0e-08, projector err 1.1e-15, ortho err 1.1e-15
+    lmo alpha-vir: Boys score 77.923713 -> 77.923713 (start 0, 4/4 starts agree), grad 1.9e-14, projector err 2.2e-16, ortho err 1.3e-15
+    lmo beta-occ: Boys score 103.162255 -> 104.015398 (start 3, 4/4 starts agree), grad 1.0e-08, projector err 1.0e-15, ortho err 1.1e-15
+    lmo beta-vir: Boys score 0.000277 -> 0.000277 (start 0, 4/4 starts agree), grad 1.9e-14, projector err 2.2e-16, ortho err 8.9e-16
+    lno alpha-occ: Boys score 18.605615 -> 26.115033 (start 3, 4/4 starts agree), grad 1.7e-06, projector err 1.3e-15, ortho err 2.4e-15
+    lno alpha-vir: Boys score 77.631870 -> 77.631870 (start 3, 3/4 starts agree), grad 1.4e-10, projector err 3.3e-16, ortho err 1.7e-15
+    lno beta-occ: Boys score 96.220440 -> 103.729858 (start 2, 4/4 starts agree), grad 1.7e-06, projector err 4.4e-16, ortho err 1.6e-15
+    lno beta-vir: Boys score 0.001950 -> 0.001950 (start 0, 3/4 starts agree), grad 1.2e-12, projector err 2.2e-16, ortho err 1.1e-15
+     mo: E_ref = -107.4380842462  E_FCI = -107.4393154335  (rebuild err 7.1e-14)
+    lmo: E_ref = -107.4380842462  E_FCI = -107.4393154335  (rebuild err 9.9e-14)
+     no: E_ref = -107.4362695360  E_FCI = -107.4393154335  (rebuild err 1.7e-13)
+    lno: E_ref = -107.4362695360  E_FCI = -107.4393154335  (rebuild err 4.3e-14)
+========================================================================
+R = 2.80 A
+========================================================================
+    RCCSD: CCSD not converged (level shift 0.0)
+    RCCSD: CCSD not converged (level shift 0.2)
+  RHF -106.8811728648  UHF -107.4381479465 (<S^2> 2.9928)
+  RCCSD -107.1933724034  RCCSD(T) -107.1934765793  converged False
+  UCCSD -107.4387526085  UCCSD(T) -107.4387595503  converged True
+  FCI   -107.4389591862  <S^2> 0.0000  roots -107.43895919 -107.43855407 -107.43773108
+    lmo alpha-occ: Boys score 27.448439 -> 28.035677 (start 0, 4/4 starts agree), grad 2.5e-09, projector err 8.9e-16, ortho err 1.6e-15
+    lmo alpha-vir: Boys score 83.871058 -> 83.871058 (start 1, 4/4 starts agree), grad 2.6e-10, projector err 2.2e-16, ortho err 1.1e-15
+    lmo beta-occ: Boys score 111.319384 -> 111.906622 (start 0, 4/4 starts agree), grad 2.5e-09, projector err 8.9e-16, ortho err 8.9e-16
+    lmo beta-vir: Boys score 0.000122 -> 0.000122 (start 0, 4/4 starts agree), grad 8.4e-15, projector err 1.9e-17, ortho err 1.1e-15
+    lno alpha-occ: Boys score 20.733756 -> 28.050125 (start 0, 4/4 starts agree), grad 2.2e-07, projector err 8.9e-16, ortho err 2.2e-15
+    lno alpha-vir: Boys score 83.675403 -> 83.675403 (start 1, 3/4 starts agree), grad 8.2e-09, projector err 4.4e-16, ortho err 1.8e-15
+    lno beta-occ: Boys score 104.398015 -> 111.714385 (start 0, 4/4 starts agree), grad 2.2e-07, projector err 6.7e-16, ortho err 1.6e-15
+    lno beta-vir: Boys score 0.000835 -> 0.000835 (start 0, 3/4 starts agree), grad 5.3e-13, projector err 2.2e-16, ortho err 1.3e-15
+     mo: E_ref = -107.4381479465  E_FCI = -107.4389591862  (rebuild err 2.8e-14)
+    lmo: E_ref = -107.4381479465  E_FCI = -107.4389591862  (rebuild err 1.4e-14)
+     no: E_ref = -107.4370163869  E_FCI = -107.4389591862  (rebuild err 5.7e-14)
+    lno: E_ref = -107.4370163869  E_FCI = -107.4389591862  (rebuild err 5.7e-14)
+========================================================================
+R = 2.90 A
+========================================================================
+    RCCSD: CCSD not converged (level shift 0.0)
+    RCCSD: CCSD not converged (level shift 0.2)
+  RHF -106.8674249498  UHF -107.4381577957 (<S^2> 2.9954)
+  RCCSD -107.1925057640  RCCSD(T) -107.1925854340  converged False
+  UCCSD -107.4385544895  UCCSD(T) -107.4385598264  converged True
+  FCI   -107.4386903198  <S^2> 0.0000  roots -107.43869032 -107.43842883 -107.43789779
+    lmo alpha-occ: Boys score 29.662581 -> 30.057427 (start 1, 4/4 starts agree), grad 7.1e-10, projector err 1.1e-15, ortho err 1.6e-15
+    lmo alpha-vir: Boys score 90.016700 -> 90.016700 (start 3, 4/4 starts agree), grad 2.7e-08, projector err 4.4e-16, ortho err 8.9e-16
+    lmo beta-occ: Boys score 119.679234 -> 120.074080 (start 3, 4/4 starts agree), grad 7.1e-10, projector err 8.9e-16, ortho err 1.6e-15
+    lmo beta-vir: Boys score 0.000052 -> 0.000052 (start 3, 4/4 starts agree), grad 2.7e-08, projector err 7.8e-17, ortho err 1.8e-15
+    lno alpha-occ: Boys score 23.127354 -> 30.066431 (start 1, 4/4 starts agree), grad 4.1e-08, projector err 1.1e-15, ortho err 2.9e-15
+    lno alpha-vir: Boys score 89.887923 -> 89.887923 (start 1, 3/4 starts agree), grad 3.4e-09, projector err 3.6e-16, ortho err 8.3e-16
+    lno beta-occ: Boys score 113.011009 -> 119.950086 (start 2, 4/4 starts agree), grad 4.1e-08, projector err 8.9e-16, ortho err 1.6e-15
+    lno beta-vir: Boys score 0.000346 -> 0.000346 (start 0, 3/4 starts agree), grad 2.2e-13, projector err 1.1e-16, ortho err 1.6e-15
+     mo: E_ref = -107.4381577957  E_FCI = -107.4386903237  (rebuild err 5.7e-14)
+    lmo: E_ref = -107.4381577957  E_FCI = -107.4386903237  (rebuild err 1.4e-14)
+     no: E_ref = -107.4374649755  E_FCI = -107.4386903237  (rebuild err 1.1e-13)
+    lno: E_ref = -107.4374649755  E_FCI = -107.4386903237  (rebuild err 8.5e-14)
+========================================================================
+R = 3.00 A
+========================================================================
+    RCCSD: CCSD not converged (level shift 0.0)
+    RCCSD: CCSD not converged (level shift 0.2)
+  RHF -106.8554531200  UHF -107.4381420948 (<S^2> 2.9971)
+  RCCSD -107.1921477778  RCCSD(T) -107.1922086164  converged False
+  UCCSD -107.4384022850  UCCSD(T) -107.4384064019  converged True
+  FCI   -107.4384908527  <S^2> 0.0000  roots -107.43849085 -107.43832487 -107.43799069
+    lmo alpha-occ: Boys score 31.895282 -> 32.155234 (start 0, 4/4 starts agree), grad 2.9e-10, projector err 6.7e-16, ortho err 7.8e-16
+    lmo alpha-vir: Boys score 96.364797 -> 96.364797 (start 3, 4/4 starts agree), grad 1.1e-08, projector err 2.2e-16, ortho err 1.1e-15
+    lmo beta-occ: Boys score 128.260060 -> 128.520013 (start 1, 4/4 starts agree), grad 2.9e-10, projector err 1.0e-15, ortho err 1.3e-15
+    lmo beta-vir: Boys score 0.000022 -> 0.000022 (start 3, 4/4 starts agree), grad 1.1e-08, projector err 2.2e-16, ortho err 1.3e-15
+    lno alpha-occ: Boys score 25.798702 -> 32.160777 (start 3, 4/4 starts agree), grad 8.9e-09, projector err 1.0e-15, ortho err 1.8e-15
+    lno alpha-vir: Boys score 96.282116 -> 96.282116 (start 0, 3/4 starts agree), grad 8.8e-14, projector err 2.2e-16, ortho err 1.6e-15
+    lno beta-occ: Boys score 122.080656 -> 128.442731 (start 3, 4/4 starts agree), grad 8.9e-09, projector err 6.7e-16, ortho err 2.2e-15
+    lno beta-vir: Boys score 0.000138 -> 0.000138 (start 0, 3/4 starts agree), grad 8.8e-14, projector err 4.4e-16, ortho err 2.0e-15
+     mo: E_ref = -107.4381420948  E_FCI = -107.4384908527  (rebuild err 4.3e-14)
+    lmo: E_ref = -107.4381420948  E_FCI = -107.4384908527  (rebuild err 5.7e-14)
+     no: E_ref = -107.4377296433  E_FCI = -107.4384908527  (rebuild err 1.6e-13)
+    lno: E_ref = -107.4377296433  E_FCI = -107.4384908527  (rebuild err 9.9e-14)
+
+Wrote results/references.csv and 23 points under data/
+Next:  for d in data/R_*; do for b in mo lmo no lno; do julia --project=../integrals ../integrals/uhf_integrals_to_pauli.jl $d --basis $b; done; done

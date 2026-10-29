@@ -1,0 +1,86 @@
+{
+ "R_angstrom": 2.3,
+ "basis_set": "sto-3g",
+ "mu": 0.0,
+ "energy_offset": 0.0,
+ "references": {
+  "E_RHF": -106.98038929271203,
+  "RHF_external_unstable": true,
+  "E_UHF": -107.43622368350864,
+  "S2_UHF": 2.939310900313849,
+  "UHF_sweep": "forward",
+  "E_RCCSD": -107.20102735611057,
+  "E_RCCSD_T": -107.20161531389083,
+  "RCCSD_converged": false,
+  "E_UCCSD": -107.44120275210112,
+  "E_UCCSD_T": -107.44123687896915,
+  "UCCSD_converged": true,
+  "E_FCI": -107.44265552066082,
+  "S2_FCI": 3.425152277515219e-14
+ },
+ "model": "N2 sto-3g R=2.30 A, frozen 1s core (nocore: 2 orbitals per spin)",
+ "n_orbitals": 8,
+ "n_alpha": 5,
+ "n_beta": 5,
+ "constant": -82.66342218082724,
+ "constant_meaning": "nuclear repulsion + frozen-core energy",
+ "E_nuc": 11.273775363078265,
+ "E_core": -93.93719754390551,
+ "E_UHF_with_mu": -24.772801502681403,
+ "E_FCI_with_mu": -24.779227605210448,
+ "E_FCI_full_electrons": -107.44265552066082,
+ "bases": {
+  "no": {
+   "files": {
+    "h1_alpha": "no_h1_a.npy",
+    "h1_beta": "no_h1_b.npy",
+    "eri_aa": "no_eri_aa.npy",
+    "eri_ab": "no_eri_ab.npy",
+    "eri_bb": "no_eri_bb.npy"
+   },
+   "occupied_alpha": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "occupied_beta": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "occupied_indexing": "0-based orbital index within each spin block (active space)",
+   "reference_determinant_energy": -24.7620139497442,
+   "fci_energy": -24.779227605210448
+  },
+  "lno": {
+   "files": {
+    "h1_alpha": "lno_h1_a.npy",
+    "h1_beta": "lno_h1_b.npy",
+    "eri_aa": "lno_eri_aa.npy",
+    "eri_ab": "lno_eri_ab.npy",
+    "eri_bb": "lno_eri_bb.npy"
+   },
+   "occupied_alpha": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "occupied_beta": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "occupied_indexing": "0-based orbital index within each spin block (active space)",
+   "reference_determinant_energy": -24.762013949744208,
+   "fci_energy": -24.77922760520709
+  }
+ }
+}

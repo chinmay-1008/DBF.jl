@@ -1,0 +1,69 @@
+R=0.80  UNO occupations: 2.0000 2.0000 2.0000 2.0000 2.0000 2.0000 2.0000 0.0000 -0.0000 -0.0000
+        semicanonical energies of the near-2 block: -15.740 -15.706 -1.735 -0.834 -0.834 -0.693 -0.623
+  uno  E_ref -106.68080246 (+85.51 mHa vs FCI; UHF +85.51)  FCI(fc) -106.76593466
+R=0.90  UNO occupations: 2.0000 2.0000 2.0000 2.0000 2.0000 2.0000 2.0000 -0.0000 -0.0000 -0.0000
+        semicanonical energies of the near-2 block: -15.626 -15.614 -1.643 -0.733 -0.733 -0.700 -0.593
+  uno  E_ref -107.18719030 (+105.89 mHa vs FCI; UHF +105.89)  FCI(fc) -107.29271238
+R=1.00  UNO occupations: 2.0000 2.0000 2.0000 2.0000 2.0000 2.0000 2.0000 0.0000 0.0000 -0.0000
+        semicanonical energies of the near-2 block: -15.559 -15.554 -1.540 -0.710 -0.646 -0.646 -0.565
+  uno  E_ref -107.41953245 (+129.77 mHa vs FCI; UHF +129.77)  FCI(fc) -107.54896650
+R=1.10  UNO occupations: 2.0000 2.0000 2.0000 2.0000 2.0000 2.0000 2.0000 0.0000 0.0000 -0.0000
+        semicanonical energies of the near-2 block: -15.517 -15.515 -1.440 -0.723 -0.571 -0.571 -0.539
+  uno  E_ref -107.49650051 (+157.62 mHa vs FCI; UHF +157.62)  FCI(fc) -107.65382719
+R=1.20  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.9974 1.8287 1.8287 0.1713 0.1713 0.0026
+        semicanonical energies of the near-2 block: -15.475 -15.475 -1.345 -0.734 -0.508
+  uno  E_ref -107.48776097 (+189.58 mHa vs FCI; UHF +176.14)  FCI(fc) -107.67708461
+R=1.30  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.9929 1.6484 1.6484 0.3516 0.3516 0.0071
+        semicanonical energies of the near-2 block: -15.442 -15.442 -1.260 -0.747 -0.478
+  uno  E_ref -107.43378716 (+225.58 mHa vs FCI; UHF +167.04)  FCI(fc) -107.65915121
+R=1.40  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.9837 1.5050 1.5050 0.4950 0.4950 0.0163
+        semicanonical energies of the near-2 block: -15.417 -15.415 -0.797 -0.761
+  uno  E_ref -107.35766193 (+265.51 mHa vs FCI; UHF +145.54)  FCI(fc) -107.62292278
+R=1.50  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.9581 1.3909 1.3909 0.6091 0.6091 0.0419
+        semicanonical energies of the near-2 block: -15.396 -15.395 -0.923 -0.774
+  uno  E_ref -107.27217544 (+309.46 mHa vs FCI; UHF +120.99)  FCI(fc) -107.58145052
+R=1.60  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.8871 1.3002 1.3002 0.6998 0.6998 0.1129
+        semicanonical energies of the near-2 block: -15.376 -15.375 -0.979 -0.786
+  uno  E_ref -107.18420618 (+357.88 mHa vs FCI; UHF +96.90)  FCI(fc) -107.54195439
+R=1.70  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.7656 1.2296 1.2296 0.7704 0.7704 0.2344
+        semicanonical energies of the near-2 block: -15.356 -15.355 -0.980 -0.796
+  uno  E_ref -107.09751962 (+411.21 mHa vs FCI; UHF +73.35)  FCI(fc) -107.50863428
+R=1.80  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.6369 1.1759 1.1759 0.8241 0.8241 0.3631
+        semicanonical energies of the near-2 block: -15.340 -15.339 -0.963 -0.804
+  uno  E_ref -107.01476452 (+468.69 mHa vs FCI; UHF +52.05)  FCI(fc) -107.48339081
+R=1.90  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.5238 1.1351 1.1351 0.8649 0.8649 0.4762
+        semicanonical energies of the near-2 block: -15.330 -15.329 -0.944 -0.812
+  uno  E_ref -106.93779887 (+528.31 mHa vs FCI; UHF +35.18)  FCI(fc) -107.46606732
+R=2.00  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.4297 1.1039 1.1039 0.8961 0.8961 0.5703
+        semicanonical energies of the near-2 block: -15.323 -15.322 -0.927 -0.819
+  uno  E_ref -106.86758888 (+587.57 mHa vs FCI; UHF +23.13)  FCI(fc) -107.45512503
+R=2.10  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.3524 1.0800 1.0800 0.9200 0.9200 0.6476
+        semicanonical energies of the near-2 block: -15.319 -15.318 -0.913 -0.826
+  uno  E_ref -106.80439562 (+644.24 mHa vs FCI; UHF +15.05)  FCI(fc) -107.44861206
+R=2.20  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.2891 1.0615 1.0615 0.9385 0.9385 0.7109
+        semicanonical energies of the near-2 block: -15.316 -15.316 -0.902 -0.832
+  uno  E_ref -106.74800602 (+696.85 mHa vs FCI; UHF +9.81)  FCI(fc) -107.44484500
+R=2.30  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.2371 1.0473 1.0473 0.9527 0.9527 0.7629
+        semicanonical energies of the near-2 block: -15.314 -15.314 -0.894 -0.837
+  uno  E_ref -106.69793924 (+744.72 mHa vs FCI; UHF +6.43)  FCI(fc) -107.44264649
+R=2.40  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.1941 1.0362 1.0362 0.9638 0.9638 0.8059
+        semicanonical energies of the near-2 block: -15.313 -15.313 -0.887 -0.842
+  uno  E_ref -106.65360908 (+787.70 mHa vs FCI; UHF +4.24)  FCI(fc) -107.44130027
+R=2.50  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.1584 1.0276 1.0276 0.9724 0.9724 0.8416
+        semicanonical energies of the near-2 block: -15.313 -15.312 -0.881 -0.846
+  uno  E_ref -106.61442959 (+825.99 mHa vs FCI; UHF +2.81)  FCI(fc) -107.44041250
+R=2.60  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.1287 1.0210 1.0210 0.9790 0.9790 0.8713
+        semicanonical energies of the near-2 block: -15.312 -15.312 -0.877 -0.849
+  uno  E_ref -106.57986588 (+859.92 mHa vs FCI; UHF +1.86)  FCI(fc) -107.43978265
+R=2.70  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.1040 1.0159 1.0159 0.9841 0.9841 0.8960
+        semicanonical energies of the near-2 block: -15.312 -15.312 -0.874 -0.852
+  uno  E_ref -106.54944436 (+889.87 mHa vs FCI; UHF +1.23)  FCI(fc) -107.43931345
+R=2.80  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.0835 1.0119 1.0119 0.9881 0.9881 0.9165
+        semicanonical energies of the near-2 block: -15.312 -15.311 -0.871 -0.854
+  uno  E_ref -106.52274152 (+916.22 mHa vs FCI; UHF +0.81)  FCI(fc) -107.43894435
+R=2.90  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.0665 1.0089 1.0089 0.9911 0.9911 0.9335
+        semicanonical energies of the near-2 block: -15.311 -15.311 -0.869 -0.856
+  uno  E_ref -106.49936751 (+939.32 mHa vs FCI; UHF +0.53)  FCI(fc) -107.43868749
+R=3.00  UNO occupations: 2.0000 2.0000 2.0000 2.0000 1.0526 1.0066 1.0066 0.9934 0.9934 0.9474
+        semicanonical energies of the near-2 block: -15.311 -15.311 -0.868 -0.857
+  uno  E_ref -106.47895391 (+959.54 mHa vs FCI; UHF +0.35)  FCI(fc) -107.43848610
