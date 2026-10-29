@@ -17,9 +17,10 @@
 # The max RSS (in practice the vDBF process) is appended to
 # results/logs/maxrss.txt, as in the SPP showcase.
 
-# Julia project for vDBF: your DBF.jl checkout (as in the old vDBF submit
-# script).  Comment out to use the bundled copy instead (see config.sh).
-export DBF_ENV=/N/u/cshrikh/BigRed200/Projects/trunc_DBF/DBF.jl
+# Julia project for vDBF: a clone of chinmay-1008/DBF.jl, branch qual_exam,
+# with nmayhall/PauliOperators.jl cloned next to it (README, step 3).
+# Comment out to use the bundled copy instead (see config.sh).
+export DBF_ENV=/N/u/cshrikh/BigRed200/Projects/n2_dbf/DBF.jl
 
 hostname
 module reset

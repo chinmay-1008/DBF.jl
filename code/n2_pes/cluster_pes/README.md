@@ -64,18 +64,21 @@ DBF.jl/            the code and inputs, laid out as in the repo
    scp -r cluster_pes/* cshrikh@bigred200.uits.iu.edu:/N/u/cshrikh/BigRed200/v_DBF/n2_pes/
    ```
 2. **Check the job settings.** The job scripts already follow the SPP showcase (`spp_showcase/cluster/submit_spp.sh`): partition `general`, account `r01859`, `module reset`, then Julia from `~/.juliaup/bin`.
-   - **vDBF Julia project:** `run_task.slurm` sets `DBF_ENV=/N/u/cshrikh/BigRed200/Projects/trunc_DBF/DBF.jl`, your existing checkout. Comment that line out to use the bundled DBF copy, the exact code behind the 2.3 Å results.
+   - **vDBF Julia project:** `run_task.slurm` sets `DBF_ENV=/N/u/cshrikh/BigRed200/Projects/n2_dbf/DBF.jl`, a clone of the `qual_exam` branch (see step 3). Comment that line out to use the bundled DBF copy instead. Both are the same DBF code.
    - **Prepare and replay:** these always use the bundled `DBF.jl/code/integrals` environment, because they need NPZ.
    - **Time:** `--time` is in `prepare.slurm` and `run_task.slurm`. Memory is set per array in `submit.sh` (see Resources below).
-3. **Install the environments, once, on a login node.**
+3. **Clone DBF and install the environments, once, on a login node.** PauliOperators must sit next to `DBF.jl`, because DBF's `Project.toml` points to it at `../PauliOperators.jl`:
    ```bash
-   bash setup.sh
+   mkdir -p /N/u/cshrikh/BigRed200/Projects/n2_dbf && cd /N/u/cshrikh/BigRed200/Projects/n2_dbf
+   git clone -b qual_exam https://github.com/chinmay-1008/DBF.jl.git
+   git clone https://github.com/nmayhall/PauliOperators.jl.git
+   cd /N/u/cshrikh/BigRed200/v_DBF/n2_pes && bash setup.sh
    ```
    It also checks the `DBF_ENV` from `run_task.slurm`. That environment needs JSON, `SparsePauliVector`, and the `dbf_groundstate` keywords the script uses. If anything is missing, it says what. Packages go to the default depot, `~/.julia`, as for the SPP runs. PauliOperators is pinned to a commit of `nmayhall/PauliOperators.jl` `main`, so the login node needs GitHub access. The environments were resolved with Julia 1.12.7; check `julia --version` there.
 4. **Smoke test, a few minutes, in an interactive session.**
    ```bash
    bash prepare_one.sh 1.20
-   DBF_ENV=/N/u/cshrikh/BigRed200/Projects/trunc_DBF/DBF.jl EXTRA_ARGS="--max-iter 3" bash run_one.sh 1.20 uno_s2pen
+   DBF_ENV=/N/u/cshrikh/BigRed200/Projects/n2_dbf/DBF.jl EXTRA_ARGS="--max-iter 3" bash run_one.sh 1.20 uno_s2pen
    rm DBF.jl/code/n2_pes/frozen_core/data_unocore/R_1.20/dbf_uno_* DBF.jl/code/n2_pes/frozen_core/replay_results/uno_1.20_*
    ```
    Keep the prepared inputs: the prepare job skips files that already exist. Delete the 3-iteration run outputs as shown, or the real run will skip that point.
