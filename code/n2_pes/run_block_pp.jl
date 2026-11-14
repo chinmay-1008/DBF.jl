@@ -15,16 +15,21 @@
 #  3. angle     theta minimises C(theta) = sum_y <y|U' O U|y> = a + b cos + c sin,
 #               the sum of optimize_theta_expval's three per-state costs; solved
 #               in closed form.
-#  4. truncation correction  BlockCorrection, a PauliOperators CorrectionAccumulator
-#               (the documented _measure / _accumulate! extension point), records
-#               the 3x3 block matrix M before and after every truncation and
-#               accumulates the change.  Corrected block = M - accumulated, the
-#               block version of dbf_groundstate's "E - accumulated error".
-#  5. convergence and output  the block variance V_S (from PauliOperators.variance
-#               per block state) and the eigenvalues of M, raw and corrected.
+#  4. truncation correction  for the 3x3 energy matrix M = <y|O|y'> and the 3x3
+#               variance matrix V = <y|O(1 - Π_S)O|y'> = A - M², A = <y|O²|y'>.
+#               Coefficient truncation only drops terms (O_before = O_kept + B), so
+#               the exact changes follow from the dropped terms alone, as in
+#               PauliOperators' fast path for EnergyVarianceCorrection:
+#                   ΔM = -<y|B|y'>,   ΔA = -<O y|B y'> - <B y|O y'> - <B y|B y'>,
+#               needing B|y> (on #dropped kets) and O|y> on that support.  The
+#               changes accumulate; corrected M = M - ΔM_acc and V = V - ΔV_acc,
+#               the block version of "E - accumulated error", "Var - var error".
+#  5. convergence and output  each eigenstate φ_i of M has energy λ_i and its own
+#               energy variance var_i = φ_i' V φ_i (raw from M, V; corrected from
+#               the corrected M, V); they sum to the block variance V_S = tr V.
 #
-# Truncation is applied after every rotation (evolve! then truncate!, the
-# unfused path of dbf_groundstate, since the correction is a custom one).
+# Truncation is applied after every rotation (evolve!, then the drop-based
+# correction, then truncate! with the same cutoff).
 #
 #     julia --project=. run_block_pp.jl <point dir> <basis> <label>
 #         [--coeff 1e-5] [--grad 1e-6] [--max-iter 200] [--max-rots 50]
@@ -66,34 +71,88 @@ function to_vacuum_reference(H::PauliSum{N,T}, ψ::Ket{N}) where {N,T}
 end
 
 # ---------------------------------------------------------------- block pieces
-# M_ij = <k_i|O|k_j>; only Paulis whose x string is k_i xor k_j contribute
-function block_matrix(O, kets::Vector{Ket{N}}) where N
-    n = length(kets)
-    xs = unique([kets[i].v ⊻ kets[j].v for i in 1:n, j in 1:n])
-    M = zeros(ComplexF64, n, n)
-    for (p, c) in O
-        p.x in xs || continue
-        for i in 1:n, j in 1:n
-            (kets[i].v ⊻ kets[j].v) == p.x || continue
-            M[i, j] += c * matrix_element(kets[i]', p, kets[j])
+# <u|v> for ket amplitudes stored by ket bits
+ip(u::AbstractDict, v::AbstractDict) = sum((conj(get(u, s, zero(ComplexF64))) * x for (s, x) in v); init=zero(ComplexF64))
+
+# A_ij = <k_i|O²|k_j> = <O k_i|O k_j> from the vectors O|k>
+function block_A(σvs)
+    n = length(σvs)
+    A = [real(ip(σvs[i], σvs[j])) for i in 1:n, j in 1:n]
+    return (A + A') / 2
+end
+
+# swap 4: drop |c| <= thresh and accumulate the exact change of M and V = A - M²
+mutable struct BlockAccumulator
+    M::Matrix{Float64}
+    V::Matrix{Float64}
+    dropped::Int
+    a::Matrix{ComplexF64}       # O_kept|k_j> as dense columns over the 2^N kets (zero between uses)
+    b::Matrix{ComplexF64}       # B|k_j>, likewise
+    inU::BitVector              # kets where B|k_j> lives or that are block kets
+end
+BlockAccumulator(n, N) = BlockAccumulator(zeros(n, n), zeros(n, n), 0, zeros(ComplexF64, 1 << N, n),
+                                          zeros(ComplexF64, 1 << N, n), falses(1 << N))
+
+# Both passes read the SparsePauliVector's flat sorted arrays (z, x, c, n) and use
+# PauliOperators' raw-word ket action, so the work per term is a few bit operations;
+# amplitudes go into dense columns indexed by ket bits (16 qubits: 2^16 entries).
+function truncate_block!(O::SparsePauliVector{N,W}, kets::Vector{Ket{N}}, strategy::CoeffTruncation,
+                         acc::BlockAccumulator) where {N,W}
+    n, thr = length(kets), strategy.thresh
+    kv = [k.v % Int128 for k in kets]
+    a, b, inU = acc.a, acc.b, acc.inU
+    U = Int[]                                                 # touched kets (0-based bits)
+    for k in kv
+        inU[k+1] || (inU[k+1] = true; push!(U, k))
+    end
+    nd = 0
+    @inbounds for i in 1:O.n
+        c = O.c[i]
+        abs(c) <= thr || continue
+        nd += 1
+        z, x = O.z[i] % Int128, O.x[i] % Int128
+        for j in 1:n
+            ph, σ = PauliOperators._ket_action(z, x, kv[j])
+            b[σ+1, j] += ph * c
+            inU[σ+1] || (inU[σ+1] = true; push!(U, σ))
         end
     end
-    maximum(abs, imag(M)) < 1e-10 || @warn "complex block matrix" maximum(abs, imag(M))
-    R = real(M)
-    return (R + R') / 2
+    truncate!(O, strategy)                                    # same criterion, PauliOperators' fast path
+    if nd > 0
+        acc.dropped += nd
+        @inbounds for i in 1:O.n
+            x = O.x[i] % Int128
+            for j in 1:n
+                σ = kv[j] ⊻ x
+                inU[σ+1] || continue
+                ph, _ = PauliOperators._ket_action(O.z[i] % Int128, x, kv[j])
+                a[σ+1, j] += ph * O.c[i]
+            end
+        end
+        ip(u, i, v, j) = sum(conj(u[s+1, i]) * v[s+1, j] for s in U)    # <u_i|v_j> over the touched kets
+        Mafter = [real(a[kv[i]+1, j]) for i in 1:n, j in 1:n]
+        ΔM = [-real(b[kv[i]+1, j]) for i in 1:n, j in 1:n]
+        ΔA = [real(-ip(a, i, b, j) - ip(b, i, a, j) - ip(b, i, b, j)) for i in 1:n, j in 1:n]
+        Mbefore = Mafter - ΔM
+        ΔV = ΔA - (Mafter * Mafter - Mbefore * Mbefore)
+        acc.M .+= (ΔM + ΔM') / 2
+        acc.V .+= (ΔV + ΔV') / 2
+    end
+    @inbounds for s in U                                      # reset the scratch columns
+        inU[s+1] = false
+        for j in 1:n
+            a[s+1, j] = 0
+            b[s+1, j] = 0
+        end
+    end
+    return O
 end
 
-# swap 4: the change truncation makes to the whole 3x3 block
-mutable struct BlockCorrection{N} <: PauliOperators.CorrectionAccumulator
-    kets::Vector{Ket{N}}
-    accumulated::Matrix{Float64}
+# eigenvalues of M and each eigenvector's variance under V
+function states_of(M, V)
+    F = eigen(Symmetric(M))
+    return F.values, [dot(F.vectors[:, i], V * F.vectors[:, i]) for i in axes(F.vectors, 2)]
 end
-BlockCorrection(kets::Vector{Ket{N}}) where N = BlockCorrection{N}(kets, zeros(length(kets), length(kets)))
-PauliOperators._measure(O::PauliOperators.AnyPauliSum{N}, corr::BlockCorrection{N}) where N = block_matrix(O, corr.kets)
-PauliOperators._accumulate!(corr::BlockCorrection, before, after) = (corr.accumulated .+= after .- before; nothing)
-
-# V_S = sum_y <y|O^2|y> - sum_{y,y'} |M_y'y|^2, with <y|O^2|y> = Var_y + M_yy^2
-block_variance(O, kets, M) = sum(real(variance(O, k)) + M[i, i]^2 for (i, k) in enumerate(kets)) - sum(abs2, M)
 
 # swap 2: score of each Pauli in G, summed over the block states
 function block_gradient(G, σvs, kets::Vector{Ket{N}}, thresh) where N
@@ -146,23 +205,31 @@ end
 function dbf_block(Oin, kets::Vector{Ket{N}}, D; operator_truncation, gradient_truncation, max_iter, max_rots_per_grad,
                    conv_thresh, grad_thresh=1e-6, e_ref=0.0, verbose=1) where N
     O = deepcopy(Oin)
-    corr = BlockCorrection(kets)
-    hist = Dict{String,Any}(k => Any[] for k in ("lam", "lam_corr", "VS", "C", "C_corr", "terms", "grad_norm",
-                                                  "len_G", "n_rots", "time"))
+    acc = BlockAccumulator(length(kets), N)
+    hist = Dict{String,Any}(k => Any[] for k in ("lam", "lam_corr", "var", "var_corr", "VS", "VS_corr", "C", "C_corr",
+                                                  "terms", "dropped", "grad_norm", "len_G", "n_rots", "time"))
     generators, angles = PauliBasis{N}[], Float64[]
+    σvs = Any[]                                               # O|k> for the block kets, reused by the next gradient
     function record!(gnorm, lenG, nrot, t)
-        M = block_matrix(O, kets)
-        push!(hist["lam"], eigvals(Symmetric(M)))
-        push!(hist["lam_corr"], eigvals(Symmetric(M - corr.accumulated)))
-        push!(hist["VS"], block_variance(O, kets, M))
-        push!(hist["C"], tr(M)); push!(hist["C_corr"], tr(M - corr.accumulated))
-        push!(hist["terms"], length(O)); push!(hist["grad_norm"], gnorm)
+        empty!(σvs); append!(σvs, [matvec(O, k) for k in kets])
+        sv = [Dict{Int128,ComplexF64}(s.v => x for (s, x) in v) for v in σvs]
+        M = [real(get(sv[j], kets[i].v, zero(ComplexF64))) for i in eachindex(kets), j in eachindex(kets)]
+        M = (M + M') / 2
+        V = block_A(sv) - M * M
+        Mc, Vc = M - acc.M, V - acc.V
+        lam, var = states_of(M, V)
+        lamc, varc = states_of(Mc, Vc)
+        push!(hist["lam"], lam); push!(hist["var"], var)
+        push!(hist["lam_corr"], lamc); push!(hist["var_corr"], varc)
+        push!(hist["VS"], tr(V)); push!(hist["VS_corr"], tr(Vc))
+        push!(hist["C"], tr(M)); push!(hist["C_corr"], tr(Mc))
+        push!(hist["terms"], length(O)); push!(hist["dropped"], acc.dropped); push!(hist["grad_norm"], gnorm)
         push!(hist["len_G"], lenG); push!(hist["n_rots"], nrot); push!(hist["time"], t)
         if verbose > 0
-            @printf("%5d  λ-E_ref(mHa) %s  corrected %s  V_S %.3e  |g| %.2e  len(O) %8d  len(G) %7d  rots %3d  %7.1f s\n",
-                    length(hist["lam"]) - 1, join([@sprintf("%9.3f", 1e3 * (x - e_ref)) for x in hist["lam"][end]], " "),
-                    join([@sprintf("%9.3f", 1e3 * (x - e_ref)) for x in hist["lam_corr"][end]], " "),
-                    hist["VS"][end], gnorm, length(O), lenG, nrot, t)
+            @printf("%5d  λ-E_ref(mHa) %s  corrected %s  var %s  V_S %.3e  |g| %.2e  len(O) %8d  rots %3d  %7.1f s\n",
+                    length(hist["lam"]) - 1, join([@sprintf("%9.3f", 1e3 * (x - e_ref)) for x in lam], " "),
+                    join([@sprintf("%9.3f", 1e3 * (x - e_ref)) for x in lamc], " "),
+                    join([@sprintf("%.2e", x) for x in varc], " "), tr(V), gnorm, length(O), nrot, t)
             flush(stdout)
         end
     end
@@ -172,7 +239,6 @@ function dbf_block(Oin, kets::Vector{Ket{N}}, D; operator_truncation, gradient_t
     for iter in 1:max_iter
         G = commutator_clipped(Dop, O)
         truncate!(G, gradient_truncation)
-        σvs = [matvec(O, k) for k in kets]
         grad_vec, grad_ops = block_gradient(G, σvs, kets, grad_thresh)
         order = sort(collect(eachindex(grad_vec)), by=i -> (-abs(grad_vec[i]), grad_ops[i].z, grad_ops[i].x))
         n_rots = 0
@@ -180,7 +246,7 @@ function dbf_block(Oin, kets::Vector{Ket{N}}, D; operator_truncation, gradient_t
             Gi = grad_ops[gi]
             θi, _, _ = optimize_theta_block(O, Gi, kets)
             evolve!(O, Gi, θi)
-            truncate!(O, operator_truncation, corr)
+            truncate_block!(O, kets, operator_truncation, acc)
             push!(generators, Gi); push!(angles, θi)
             n_rots += 1
             n_rots >= max_rots_per_grad && break
@@ -196,7 +262,7 @@ function dbf_block(Oin, kets::Vector{Ket{N}}, D; operator_truncation, gradient_t
             break
         end
     end
-    return O, hist, generators, angles, corr
+    return O, hist, generators, angles, acc
 end
 
 function main(args)
@@ -230,7 +296,7 @@ function main(args)
     @printf(" operator cutoff %s, gradient cutoff %s, %s rotations per gradient, max %s iterations; energies in mHa above E_FCI\n",
             opts["coeff"], opts["grad"], opts["max-rots"], opts["max-iter"])
     println("="^100)
-    t = @elapsed O, hist, gens, angs, corr = dbf_block(Hop, kets, D;
+    t = @elapsed O, hist, gens, angs, acc = dbf_block(Hop, kets, D;
         operator_truncation=op_trunc, gradient_truncation=grad_trunc,
         max_iter=parse(Int, opts["max-iter"]), max_rots_per_grad=parse(Int, opts["max-rots"]),
         conv_thresh=parse(Float64, opts["conv"]), e_ref=e_fci)
@@ -238,7 +304,7 @@ function main(args)
     open(joinpath(opts["outdir"], "$(label).json"), "w") do io
         JSON.print(io, Dict("label" => label, "R" => meta["R_angstrom"], "basis" => basis, "E_FCI" => e_fci,
                             "settings" => opts, "n_rotations" => length(angs), "wall_time_s" => t,
-                            "final_terms" => length(O), "accumulated_block" => corr.accumulated,
+                            "final_terms" => length(O), "accumulated_M" => acc.M, "accumulated_V" => acc.V,
                             "rots_per_iter" => hist["n_rots"],
                             "generators" => [[Int(g.z), Int(g.x)] for g in gens], "angles" => angs,
                             "history" => hist), 1)

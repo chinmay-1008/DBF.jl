@@ -382,6 +382,50 @@ def compare_zoom(greedy, flow, title, windows, rights):
     return fig
 
 
+# ---------------------------------------------------------------- per-state variance extrapolation
+def state_extrapolation(entries, refs, names, title):
+    """per state: energy against that state's own variance, with extrapolate.py's adaptive tail fit
+    (linear and quadratic fits, E0 = their average intercept, half their difference as the error bar).
+    entries: [(name, lam (iterations x states, mHa above FCI), var (iterations x states, Ha²), marker, linestyle)].
+    Iteration 0 is left out of the fit, as in the ground-state protocol.  Returns (fig, rows)."""
+    import sys
+    sys.path.insert(0, os.path.dirname(HERE))
+    from extrapolate import MIN_FIT_POINTS, select_adaptive_tail
+    nS = len(refs)
+    fig, axes = plt.subplots(1, nS, figsize=(11.5, 3.9), squeeze=False)
+    rows = []
+    for i in range(nS):
+        ax = axes[0, i]
+        ax.axhline(0, color=INK, lw=1, ls="--", zorder=1)
+        for name, lam, var, marker, ls in entries:
+            x, y = var[1:, i], lam[1:, i] - refs[i]
+            best, _ = select_adaptive_tail(x, y, MIN_FIT_POINTS)
+            k = best["num_take"]
+            xt, yt = x[-k:], y[-k:]
+            xs = np.linspace(0, xt.max(), 60)
+            lin, quad = np.polyfit(xt, yt, 1), np.polyfit(xt, yt, 2)
+            ax.plot(xt, yt, marker, color=SERIES[i], ms=3, mec="none", alpha=0.8, label=f"{name} (tail, {k} pts)")
+            ax.plot(xs, np.polyval(lin, xs), ls, color=SERIES[i], lw=1.0)
+            ax.plot(xs, np.polyval(quad, xs), ls, color=SERIES[i], lw=1.0, alpha=0.5)
+            ax.errorbar(0, best["E0_average"], yerr=best["fit_half_difference"], fmt=marker, color=SERIES[i], ms=6,
+                        mec=INK, mew=0.6, capsize=3, clip_on=False, zorder=5)
+            rows.append((name, names[i], y[-1], best["E0_average"], best["fit_half_difference"], x[-1]))
+        ax.set_xlim(left=0)
+        ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0))
+        ax.set_title(f"{title}: {names[i]}", fontsize=9, color=INK, loc="left")
+        ax.set_xlabel(f"energy variance of this state (Ha²)")
+        ax.tick_params(labelsize=7.5)
+        style(ax)
+        if i == 0:
+            ax.set_ylabel("energy − exact (mHa)")
+        ax.legend(fontsize=7, loc="upper left")
+    fig.suptitle("Per-state extrapolation: each block state's energy against its own variance, tail of the run\n"
+                 "lines = linear and (lighter) quadratic tail fits; marker at 0 = extrapolated energy ± half the fits' difference",
+                 x=0.01, ha="left", fontsize=10, color=INK)
+    fig.tight_layout(rect=(0, 0, 1, 0.86))
+    return fig, rows
+
+
 # ---------------------------------------------------------------- Pauli-propagation runs (run_block_pp.jl)
 def pp_series(pp):
     """V_S reported by the run, raw and truncation-corrected block eigenvalues (mHa above FCI)"""
@@ -556,6 +600,25 @@ def main():
             compare_energies(r110[0][2], flow, "1.1 Å").savefig(os.path.join(OUT, "n2_110_compare_energies.png"), dpi=170)
             compare_zoom(r110[0][2], flow, "1.1 Å", w110, x110).savefig(os.path.join(OUT, "n2_110_compare_zoom.png"),
                                                                       dpi=170)
+        # per-state extrapolation: exact greedy, plus the Pauli-propagation runs (corrected energy vs corrected
+        # variance, as in the ground-state protocol) when they have per-state variances
+        g = r110[0][2]
+        _, _, refs, _, _ = run_data(g)
+        sn = ["S0", "³Πg", "¹Πg"]
+        ent = [("exact greedy", (np.array(g["history"]["lam"]) - g["E_FCI"]) * 1e3, np.array(g["history"]["var"]), "o", "-")]
+        fig, xrows = state_extrapolation(ent, refs, sn, "1.1 Å")
+        fig.savefig(os.path.join(OUT, "n2_110_extrap_exact.png"), dpi=170)
+        for cut, mk, ls in (("1e-5", "^", "--"), ("1e-6", "s", "-.")):
+            pp = load(f"uno_1.10_blockpp_c{cut}")
+            if pp is not None and "var_corr" in pp["history"]:
+                h = pp["history"]
+                ent.append((f"Pauli prop. {cut}", (np.array(h["lam_corr"]) - pp["E_FCI"]) * 1e3, np.array(h["var_corr"]), mk, ls))
+        if len(ent) > 1:
+            fig, xrows = state_extrapolation(ent, refs, sn, "1.1 Å")
+            fig.savefig(os.path.join(OUT, "n2_110_extrap_all.png"), dpi=170)
+        print("per-state extrapolation (mHa vs exact): run | state | last | extrapolated ± | last variance")
+        for r in xrows:
+            print(f"  {r[0]:<18} {r[1]:<5} {r[2]:+9.4f} {r[3]:+9.4f} ± {r[4]:.4f}   {r[5]:.2e}")
         # Pauli propagation at 1.1 A: the doc's figures per cutoff, then the cutoffs together
         pps = []
         for cut, ls in (("1e-5", "-"), ("1e-6", (0, (5, 2)))):

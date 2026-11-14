@@ -199,20 +199,27 @@ function block_main(args)
     # flow
     W = Matrix{Float64}(I, D, D)
     hS = [Hopt * W[:, k] for k in kS]          # (H + λ S^2) w_y for the block columns
-    hist = Dict{String,Any}(k => Any[] for k in ("C", "lam", "VS", "VS_H", "infid", "S2", "leak", "cross", "max_grad", "time"))
+    hist = Dict{String,Any}(k => Any[] for k in ("C", "lam", "var", "VS", "VS_H", "infid", "S2", "leak", "cross",
+                                                  "max_grad", "time"))
     function record!(g, t)
         Wb = W[:, kS]
         Mopt = Wb' * hcat(hS...)
         hH = [Hs * Wb[:, j] for j in 1:nS]
-        M = Wb' * hcat(hH...)
+        HH = hcat(hH...)
+        M = Wb' * HH
         M = (M + M') / 2
+        # variance matrix <y|H(1 - Π_S)H|y'> = A - M², A = <y|H²|y'>; each block
+        # eigenstate's energy variance is its quadratic form, and they sum to V_S
+        Vmat = HH' * HH - M * M
         # M is block diagonal over cosets; diagonalise per coset so lam pairs with E_tgt
-        lam, φ = Float64[], zeros(D, 0)
+        lam, var, φ = Float64[], Float64[], zeros(D, 0)
         for idx in blk_idx
             F = eigen(Symmetric(M[idx, idx]))
             append!(lam, F.values)
+            append!(var, [dot(F.vectors[:, i], Vmat[idx, idx] * F.vectors[:, i]) for i in axes(F.vectors, 2)])
             φ = hcat(φ, Wb[:, idx] * F.vectors)
         end
+        push!(hist["var"], var)
         push!(hist["cross"], maximum((abs(M[i, j]) for i in 1:nS, j in 1:nS if cos_S[i] != cos_S[j]); init=0.0))
         push!(hist["C"], tr(Mopt)); push!(hist["lam"], lam)
         push!(hist["VS"], sum(dot(h, h) for h in hS) - sum(abs2, Mopt))

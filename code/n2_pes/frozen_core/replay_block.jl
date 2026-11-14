@@ -78,12 +78,16 @@ function replay_main(args)
         end
         HV = Hs * V
         M = Symmetric(V' * HV)
-        lam = eigvals(M)
+        F = eigen(M)
+        lam = F.values
+        Vmat = HV' * HV - Matrix(M) * Matrix(M)                 # <y|H(1 - Π_S)H|y'>
+        var = [dot(F.vectors[:, i], Vmat * F.vectors[:, i]) for i in 1:3]
         vs = sum(abs2, HV - V * Matrix(M))
         orth = maximum(abs, V' * V - I)
-        push!(rows, Dict("iter" => it, "rotations" => K, "lam" => lam, "VS" => vs))
-        @printf("%5d  %6d rot  true λ - E_FCI (mHa) %s  true V_S %.3e  orth %.1e  (%.0f s)\n", it, K,
-                join([@sprintf("%10.4f", 1e3 * (l - e_fci)) for l in lam], " "), vs, orth, time() - t0)
+        push!(rows, Dict("iter" => it, "rotations" => K, "lam" => lam, "var" => var, "VS" => vs))
+        @printf("%5d  %6d rot  true λ - E_FCI (mHa) %s  true var %s  V_S %.3e  orth %.1e  (%.0f s)\n", it, K,
+                join([@sprintf("%10.4f", 1e3 * (l - e_fci)) for l in lam], " "),
+                join([@sprintf("%.3e", x) for x in var], " "), vs, orth, time() - t0)
         flush(stdout)
     end
     open(joinpath(@__DIR__, "sv_results", "$(label)_replay.json"), "w") do io
