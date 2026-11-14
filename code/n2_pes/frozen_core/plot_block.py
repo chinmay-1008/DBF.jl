@@ -150,11 +150,11 @@ def energies_zoom(runs, windows=None, rights=None):
             ax = axes[r, i]
             err = lam[:, i] - refs[i]
             w = windows[i] if windows else max(abs(err[n // 2]), 4 * abs(err[-1]), 0.02)
-            ax.axhline(refs[i], color=INK, lw=1, ls="--", zorder=1)
-            ax.plot(vs, lam[:, i], "-", color=SERIES[i], lw=1.6, zorder=3)
-            ax.plot(vs[-1], lam[-1, i], "o", color=SERIES[i], ms=5.5, mec="white", mew=0.8, zorder=5)
+            ax.axhline(0, color=INK, lw=1, ls="--", zorder=1)
+            ax.plot(vs, err, "-", color=SERIES[i], lw=1.6, zorder=3)
+            ax.plot(vs[-1], err[-1], "o", color=SERIES[i], ms=5.5, mec="white", mew=0.8, zorder=5)
             ax.set_xscale("log")
-            ax.set_ylim(refs[i] - 0.25 * w, refs[i] + 1.15 * w)
+            ax.set_ylim(-0.25 * w, 1.15 * w)
             # x range: from where the curve last enters the frame to the end of the run
             inside = np.abs(err) <= 1.15 * w
             k = n - 1
@@ -174,8 +174,8 @@ def energies_zoom(runs, windows=None, rights=None):
             if r == len(runs) - 1:
                 ax.set_xlabel("$V_S$ of H (Ha², log)")
             if i == 0:
-                ax.set_ylabel("mHa above exact S0")
-    fig.suptitle("Zoom on each state: the block eigenvalue (colour) landing on its exact energy (dashed)\n"
+                ax.set_ylabel("energy − exact (mHa)")
+    fig.suptitle("Zoom on each state: error from that state's exact energy (dashed line = 0)\n"
                  "starts on the right, converges to the left; each panel is cropped to where its curve enters the frame",
                  x=0.01, ha="left", fontsize=10, color=INK)
     fig.tight_layout(rect=(0, 0, 1, 0.95))
@@ -356,12 +356,12 @@ def compare_zoom(greedy, flow, title, windows, rights):
     fig, axes = plt.subplots(1, nS, figsize=(11, 3.4), squeeze=False)
     for i in range(nS):
         ax, w = axes[0, i], windows[i]
-        ax.axhline(refs[i], color=INK, lw=1, ls="--", zorder=1)
-        ax.plot(vs_g, lam_g[:, i], "-", color=SERIES[i], lw=1.6, zorder=3, label="greedy vDBF")
-        ax.plot(vs_f, lam_f[:, i], ls=FLOW_LS, color=SERIES[i], lw=2.2, zorder=4, label="full flow")
-        ax.plot(vs_g[-1], lam_g[-1, i], "o", color=SERIES[i], ms=5.5, mec="white", mew=0.8, zorder=5)
+        ax.axhline(0, color=INK, lw=1, ls="--", zorder=1)
+        ax.plot(vs_g, lam_g[:, i] - refs[i], "-", color=SERIES[i], lw=1.6, zorder=3, label="greedy vDBF")
+        ax.plot(vs_f, lam_f[:, i] - refs[i], ls=FLOW_LS, color=SERIES[i], lw=2.2, zorder=4, label="full flow")
+        ax.plot(vs_g[-1], lam_g[-1, i] - refs[i], "o", color=SERIES[i], ms=5.5, mec="white", mew=0.8, zorder=5)
         ax.set_xscale("log")
-        ax.set_ylim(refs[i] - 0.25 * w, refs[i] + 1.15 * w)
+        ax.set_ylim(-0.25 * w, 1.15 * w)
         ax.set_xlim(vs_f.min() / 1.5, rights[i])
         ax.set_title(f"{title}: {names[i]}", fontsize=8.5, color=INK, loc="left")
         ax.text(0.98, 0.94, f"greedy, last: {nz(lam_g[-1, i] - refs[i], 5e-5):+.4f} mHa", transform=ax.transAxes,
@@ -373,9 +373,9 @@ def compare_zoom(greedy, flow, title, windows, rights):
         ax.set_xlabel("$V_S$ of H (Ha², log)")
         style(ax)
         if i == 0:
-            ax.set_ylabel("mHa above exact S0")
+            ax.set_ylabel("energy − exact (mHa)")
             ax.legend(loc="center left", fontsize=7.5)
-    fig.suptitle("Zoom on each state: greedy vDBF (solid) and the full flow (dotted) landing on the exact energy (dashed)\n"
+    fig.suptitle("Zoom on each state: error from that state's exact energy, greedy vDBF (solid) and the full flow (dotted)\n"
                  "same windows as the separate zoom figures; greedy stops at its last iteration, the full flow continues",
                  x=0.01, ha="left", fontsize=10, color=INK)
     fig.tight_layout(rect=(0, 0, 1, 0.84))
@@ -524,18 +524,18 @@ def pp_zoom(greedy, pps, title):
         for name, pp, rep, ls in pps:
             vs, raw, cor = pp_series(pp)
             xt, tru = replay_series(rep, pp)
-            ax.plot(vs, cor[:, i], ls=ls, color=SERIES[i], lw=1.6, zorder=3, label=f"{name}, corrected")
-            ax.plot(vs, raw[:, i], ls=ls, color=SERIES[i], lw=0.8, alpha=0.45, zorder=2, label=f"{name}, raw")
+            ax.plot(vs, cor[:, i] - refs[i], ls=ls, color=SERIES[i], lw=1.6, zorder=3, label=f"{name}, corrected")
+            ax.plot(vs, raw[:, i] - refs[i], ls=ls, color=SERIES[i], lw=0.8, alpha=0.45, zorder=2, label=f"{name}, raw")
             if tru is not None:
-                ax.plot(xt, tru[:, i], "o", color=SERIES[i], ms=3, mec="none", zorder=4,
+                ax.plot(xt, tru[:, i] - refs[i], "o", color=SERIES[i], ms=3, mec="none", zorder=4,
                         label=f"{name}, true (replay)")
                 errs.append(abs(tru[-1, i] - refs[i]))
             errs += [abs(cor[-1, i] - refs[i]), abs(raw[-1, i] - refs[i])]
             lo_x = min(lo_x, vs.min())
-        ax.plot(vs_g, lam_g[:, i], "-", color=MUTED, lw=1.2, zorder=2, label="exact greedy (no truncation)")
-        ax.axhline(refs[i], color=INK, lw=1, ls="--", zorder=1)
+        ax.plot(vs_g, lam_g[:, i] - refs[i], "-", color=MUTED, lw=1.2, zorder=2, label="exact greedy (no truncation)")
+        ax.axhline(0, color=INK, lw=1, ls="--", zorder=1)
         w = max(2.5 * max(errs), 0.05)
-        ax.set_ylim(refs[i] - 0.5 * w, refs[i] + 1.2 * w)
+        ax.set_ylim(-0.5 * w, 1.2 * w)
         ax.set_xscale("log")
         ax.set_xlim(lo_x / 1.5, 0.1)
         ax.set_title(f"{title}: {names[i]}", fontsize=8.5, color=INK, loc="left")
@@ -545,9 +545,9 @@ def pp_zoom(greedy, pps, title):
         ax.set_xlabel("$V_S$ of H (Ha², log)")
         style(ax)
         if i == 0:
-            ax.set_ylabel("mHa above exact S0")
+            ax.set_ylabel("energy − exact (mHa)")
     axes[0, -1].legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=7.5)
-    fig.suptitle("Zoom on each state, Pauli propagation against the exact greedy run; exact energy dashed\n"
+    fig.suptitle("Zoom on each state: error from that state's exact energy, Pauli propagation against the exact greedy run\n"
                  "starts on the right, converges to the left (x axis cut at V_S = 0.1)",
                  x=0.01, ha="left", fontsize=10, color=INK)
     fig.tight_layout(rect=(0, 0, 1, 0.86))
