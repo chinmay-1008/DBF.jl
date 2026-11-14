@@ -382,6 +382,98 @@ def compare_zoom(greedy, flow, title, windows, rights):
     return fig
 
 
+# ---------------------------------------------------------------- Pauli-propagation runs (run_block_pp.jl)
+def pp_series(pp):
+    """V_S reported by the run, raw and truncation-corrected block eigenvalues (mHa above FCI)"""
+    h, f = pp["history"], pp["E_FCI"]
+    return (np.array(h["VS"]), (np.array(h["lam"]) - f) * 1e3, (np.array(h["lam_corr"]) - f) * 1e3)
+
+
+def replay_series(rep, pp):
+    """true eigenvalues from replay_block.jl, placed at the run's own V_S of those iterations"""
+    if rep is None:
+        return None, None
+    vs = np.array(pp["history"]["VS"])
+    it = [r["iter"] for r in rep["rows"]]
+    return vs[it], (np.array([r["lam"] for r in rep["rows"]]) - rep["E_FCI"]) * 1e3
+
+
+def pp_energies(greedy, pp, rep, title):
+    """the doc's energies-vs-variance figure for a truncated run: corrected (solid), raw (thin), true (dots)"""
+    fig, ax = plt.subplots(figsize=(6.6, 4.4))
+    _, _, refs, names, _ = run_data(greedy)
+    vs, raw, cor = pp_series(pp)
+    xt, tru = replay_series(rep, pp)
+    lines = exact_lines(greedy, refs)
+    top = max(cor[0].max(), max(e for e, _, _ in lines)) * 1.08
+    for e, name, _ in lines:
+        ax.axhline(e, color=INK, lw=0.9, ls="--", zorder=1)
+        ax.annotate("exact " + name, xy=(1.01, e), xycoords=("axes fraction", "data"), fontsize=7.5, va="center",
+                    color=INK)
+    for i in range(cor.shape[1]):
+        ax.plot(vs, cor[:, i], "-", color=SERIES[i], lw=1.6, zorder=3, label=names[i])
+        ax.plot(vs, raw[:, i], "-", color=SERIES[i], lw=0.8, alpha=0.45, zorder=2)
+        ax.plot(vs[0], cor[0, i], "o", color=SERIES[i], ms=5.5, mfc="white", mew=1.2, zorder=5)
+        ax.plot(vs[-1], cor[-1, i], "o", color=SERIES[i], ms=5.5, mec="white", mew=0.8, zorder=5)
+        if tru is not None:
+            ax.plot(xt, tru[:, i], "o", color=SERIES[i], ms=2.6, mec="none", zorder=4)
+    ax.set_xscale("log")
+    ax.set_ylim(-0.06 * top, top)
+    ax.set_title(title, fontsize=10, color=INK, loc="left")
+    ax.set_xlabel("block variance $V_S$ of H (Ha², log)")
+    ax.set_ylabel("energy (mHa above exact S0)")
+    ax.legend(loc="upper left", fontsize=7.5, title="corrected block eigenvalues", title_fontsize=7.5, alignment="left")
+    style(ax)
+    fig.suptitle("Pauli propagation: block eigenvalues against block variance; exact energies dashed\n"
+                 "solid = corrected for truncation, thin = raw, dots = true energy of the circuit (exact replay)",
+                 x=0.01, ha="left", fontsize=10, color=INK)
+    fig.tight_layout(rect=(0, 0, 0.9, 0.86))
+    return fig
+
+
+def pp_zoom(greedy, pps, title):
+    """per state, zoomed on the exact energy: each truncated run's corrected (solid) and raw (thin) eigenvalues
+    and its true energies (dots), plus the exact greedy run (grey).  pps: [(name, pp, rep, linestyle)]"""
+    lam_g, vs_g, refs, names, _ = run_data(greedy)
+    nS = lam_g.shape[1]
+    fig, axes = plt.subplots(1, nS, figsize=(11, 3.6), squeeze=False)
+    for i in range(nS):
+        ax = axes[0, i]
+        errs = [abs(lam_g[-1, i] - refs[i])]
+        lo_x = vs_g.min()
+        for name, pp, rep, ls in pps:
+            vs, raw, cor = pp_series(pp)
+            xt, tru = replay_series(rep, pp)
+            ax.plot(vs, cor[:, i], ls=ls, color=SERIES[i], lw=1.6, zorder=3, label=f"{name}, corrected")
+            ax.plot(vs, raw[:, i], ls=ls, color=SERIES[i], lw=0.8, alpha=0.45, zorder=2, label=f"{name}, raw")
+            if tru is not None:
+                ax.plot(xt, tru[:, i], "o", color=SERIES[i], ms=3, mec="none", zorder=4,
+                        label=f"{name}, true (replay)")
+                errs.append(abs(tru[-1, i] - refs[i]))
+            errs += [abs(cor[-1, i] - refs[i]), abs(raw[-1, i] - refs[i])]
+            lo_x = min(lo_x, vs.min())
+        ax.plot(vs_g, lam_g[:, i], "-", color=MUTED, lw=1.2, zorder=2, label="exact greedy (no truncation)")
+        ax.axhline(refs[i], color=INK, lw=1, ls="--", zorder=1)
+        w = max(2.5 * max(errs), 0.05)
+        ax.set_ylim(refs[i] - 0.5 * w, refs[i] + 1.2 * w)
+        ax.set_xscale("log")
+        ax.set_xlim(lo_x / 1.5, 0.1)
+        ax.set_title(f"{title}: {names[i]}", fontsize=8.5, color=INK, loc="left")
+        ax.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
+        ax.ticklabel_format(axis="y", useOffset=False)
+        ax.tick_params(labelsize=7.5)
+        ax.set_xlabel("$V_S$ of H (Ha², log)")
+        style(ax)
+        if i == 0:
+            ax.set_ylabel("mHa above exact S0")
+    axes[0, -1].legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=7.5)
+    fig.suptitle("Zoom on each state, Pauli propagation against the exact greedy run; exact energy dashed\n"
+                 "starts on the right, converges to the left (x axis cut at V_S = 0.1)",
+                 x=0.01, ha="left", fontsize=10, color=INK)
+    fig.tight_layout(rect=(0, 0, 1, 0.86))
+    return fig
+
+
 def greedy_vs_flow(methods, refs, names, title):
     """per state: block eigenvalue against V_S for greedy vDBF and the full flow (top row, energies with the
     exact energy dashed; bottom row, error on a log scale).  methods: [(name, data, colour, linestyle)]"""
@@ -457,10 +549,26 @@ def main():
             fl = [(f"uno_1.10_flow1c_{tag}", title, d)]
             energies_vs_variance(fl).savefig(os.path.join(OUT, f"n2_110_flow_{tag}_energies.png"), dpi=170)
             energies_zoom(fl, w110, x110)[0].savefig(os.path.join(OUT, f"n2_110_flow_{tag}_zoom.png"), dpi=170)
-            if tag == "projector":                   # both on the same axes: greedy (exact ranking) and this flow
-                compare_energies(r110[0][2], d, "1.1 Å").savefig(os.path.join(OUT, "n2_110_compare_energies.png"), dpi=170)
-                compare_zoom(r110[0][2], d, "1.1 Å", w110, x110).savefig(
-                    os.path.join(OUT, "n2_110_compare_zoom.png"), dpi=170)
+
+        # both on the same axes: greedy (exact ranking) and the full flow, with section 4's D1c when available
+        flow = load("uno_1.10_flow1c_d1c") or load("uno_1.10_flow1c_projector")
+        if flow is not None:
+            compare_energies(r110[0][2], flow, "1.1 Å").savefig(os.path.join(OUT, "n2_110_compare_energies.png"), dpi=170)
+            compare_zoom(r110[0][2], flow, "1.1 Å", w110, x110).savefig(os.path.join(OUT, "n2_110_compare_zoom.png"),
+                                                                      dpi=170)
+        # Pauli propagation at 1.1 A: the doc's figures per cutoff, then the cutoffs together
+        pps = []
+        for cut, ls in (("1e-5", "-"), ("1e-6", (0, (5, 2)))):
+            pp = load(f"uno_1.10_blockpp_c{cut}")
+            if pp is None:
+                continue
+            rep = load(f"uno_1.10_blockpp_c{cut}_replay")
+            pps.append((f"cutoff {cut}", pp, rep, ls))
+            pp_energies(r110[0][2], pp, rep, f"1.1 Å, Pauli propagation, cutoff {cut}").savefig(
+                os.path.join(OUT, f"n2_110_pp_c{cut}_energies.png"), dpi=170)
+            pp_zoom(r110[0][2], [pps[-1]], "1.1 Å").savefig(os.path.join(OUT, f"n2_110_pp_c{cut}_zoom.png"), dpi=170)
+        if len(pps) > 1:
+            pp_zoom(r110[0][2], pps, "1.1 Å").savefig(os.path.join(OUT, "n2_110_pp_compare_zoom.png"), dpi=170)
     error_vs_variance(runs).savefig(os.path.join(OUT, "error_vs_variance.png"), dpi=170)
     conv = [r for r in runs if r[0] in ("uno_1.10_block1c_exact", "uno_2.30_block1c_exact_s2pen0.05",
                                          "uno_2.30_block1c_exact_s2pen0.1")]

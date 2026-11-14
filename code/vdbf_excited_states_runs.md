@@ -98,7 +98,9 @@ $$\frac{d\bar H}{ds} = [\,\eta, \bar H\,], \qquad \eta = [\,\bar H, D\,], \qquad
 
 Every instant is an exact unitary rotation, $\bar H(s) = W(s)^\dagger H\, W(s)$, so the spectrum never changes. $\mathrm{Tr}(\bar H D)$ decreases monotonically, and the flow stops when $[\bar H, D] = 0$, with the lowest energies on the top eigenspace of $D$, i.e. on the block. Here it is computed exactly, with no truncation.
 
-**Which $D$.** Only the top eigenspace of $D$ decides which states end up in the block. The simplest $D$ with the same top eigenspace as section 4's operator is the **block projector** $\Pi_S = |0\rangle\langle 0| + |a\rangle\langle a| + |b\rangle\langle b|$. With it, $\mathrm{Tr}(\bar H \Pi_S)$ is exactly the block sum $C$, so the flow is the gradient flow of $C$, and it has a closed form: at flow time $s$ the block is spanned by $e^{-sH}|0\rangle$, $e^{-sH}|a\rangle$, $e^{-sH}|b\rangle$ (subspace imaginary-time evolution). That is the flow shown here. The same flow with section 4's $D_{1c}$ also reorders the states outside the block, has to be integrated numerically, and is much slower; it is running and will be added.
+**Which $D$.** Section 4's operator, $D_{1c}$. The flow is integrated numerically (exponential midpoint, step size adapted to keep every matrix element accurate to $10^{-9}$ Ha), separately in the two symmetry sectors since H couples neither; about 3,000 steps and 40 minutes per sector.
+
+Only the top eigenspace of $D$ decides which states end up in the block. The simplest $D$ with the same top eigenspace is the **block projector** $\Pi_S = |0\rangle\langle 0| + |a\rangle\langle a| + |b\rangle\langle b|$; with it the flow is exactly the gradient flow of the block sum $C$ and has a closed form (the block is spanned by $e^{-sH}|0\rangle$, $e^{-sH}|a\rangle$, $e^{-sH}|b\rangle$, subspace imaginary-time evolution). It traces almost the same energy-against-$V_S$ curve as $D_{1c}$ (section 7), so only $D_{1c}$ is shown.
 
 **Result.** Same start as everything else (the bare 3×3 block, $V_S = 0.93$):
 
@@ -108,13 +110,13 @@ Every instant is an exact unitary rotation, $\bar H(s) = W(s)^\dagger H\, W(s)$,
 | ³Πg | 435.8 | 297.1739 | 297.1739 | < 10⁻⁶ |
 | ¹Πg | 512.2 | 347.3837 | 347.3837 | < 10⁻⁶ |
 
-All three are within 1.6 mHa by $s = 2.2$ ($V_S = 1.9\times10^{-3}$), within 0.01 mHa by $s = 7.1$ ($V_S = 5\times10^{-6}$), and exact to $10^{-6}$ mHa by $s \approx 12$. They stay spin-pure throughout (⟨S²⟩ = 0, 2, 0).
+All three are within 1.6 mHa by $s = 0.28$ ($V_S = 2.2\times10^{-3}$), within 0.01 mHa by $s = 1.3$ ($V_S = 5\times10^{-6}$), and exact to $10^{-6}$ mHa by $s = 3.4$; the run stops at $V_S = 10^{-13}$. They stay spin-pure throughout (⟨S²⟩ = 0, 2, 0).
 
-![Full flow: block eigenvalues against block variance at 1.1 Å](n2_pes/frozen_core/sv_results/plots/n2_110_flow_projector_energies.png)
+![Full flow: block eigenvalues against block variance at 1.1 Å](n2_pes/frozen_core/sv_results/plots/n2_110_flow_d1c_energies.png)
 
 The flow starts on the right (large $V_S$, hollow dots) and moves left as the block decouples; the three energies settle on the exact energies (dashed).
 
-![Full flow: zoom on each state at 1.1 Å](n2_pes/frozen_core/sv_results/plots/n2_110_flow_projector_zoom.png)
+![Full flow: zoom on each state at 1.1 Å](n2_pes/frozen_core/sv_results/plots/n2_110_flow_d1c_zoom.png)
 
 Zoomed onto each exact line, with the same windows as the greedy zoom in section 6. The flow lands exactly on all three.
 
@@ -152,7 +154,7 @@ All three are still approaching their exact lines at the last iteration. Each er
 ![Greedy vDBF and the full flow, zoom on each state](n2_pes/frozen_core/sv_results/plots/n2_110_compare_zoom.png)
 
 - **Same states.** Both end on S0, ³Πg and ¹Πg.
-- **At the same $V_S$, greedy is lower.** Where greedy stopped ($V_S = 2.5\times10^{-4}$) its errors are 0.019, 0.022, 0.037 mHa; the full flow at that $V_S$ has 0.042, 0.072, 0.31 mHa. Likewise greedy has all three within 1.6 mHa by $V_S = 9.6\times10^{-3}$ (iteration 37), the full flow only by $V_S = 1.9\times10^{-3}$. So the greedy single-Pauli path loses nothing against the true gradient flow; per unit of decoupling it does better.
+- **At the same $V_S$, greedy is lower.** Where greedy stopped ($V_S = 2.5\times10^{-4}$) its errors are 0.019, 0.022, 0.037 mHa; the full flow at that $V_S$ has 0.035, 0.072, 0.29 mHa (0.042, 0.072, 0.31 with the block projector instead of $D_{1c}$). Likewise greedy has all three within 1.6 mHa by $V_S = 9.6\times10^{-3}$ (iteration 37), the full flow only by $V_S = 2.2\times10^{-3}$. So the greedy single-Pauli path loses nothing against the true flow; per unit of decoupling it does better.
 - **The full flow goes all the way.** Greedy stopped at 200 iterations; the full flow continues to $V_S \approx 10^{-20}$ and the exact energies. In both, the error falls roughly in proportion to $V_S$.
 
 ## 8. Two things worth knowing
@@ -166,6 +168,8 @@ Code in `code/n2_pes/frozen_core/`: greedy `sv_block.jl`, full flow `cflow_block
 
 ```
 julia -t 8 --project=../../integrals sv_block.jl data_unocore/R_1.10 uno uno_1.10_block1c_exact
-julia -t 8 --project=../../integrals cflow_block.jl data_unocore/R_1.10 uno uno_1.10_flow1c_projector --gen projector --s-max 200
+julia --project=../../integrals cflow_block.jl data_unocore/R_1.10 uno uno_1.10_flow1c_d1c --gen d1c --coset 0 --s-max 60
+julia --project=../../integrals cflow_block.jl data_unocore/R_1.10 uno uno_1.10_flow1c_d1c --gen d1c --coset a --s-max 60
+julia --project=../../integrals cflow_block.jl --merge uno_1.10_flow1c_d1c
 python plot_block.py
 ```
