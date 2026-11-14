@@ -36,18 +36,23 @@
 #            to the block (generalises 'onebody').  The block is checked to be
 #            D's top eigenspace.
 #
+# --s2-penalty λ runs the flow on H + λ S^2 (as in sv_dbf.jl): cost, gradient,
+# angles and the Ky Fan target are of H + λ S^2, so a spin-S level moves up by
+# λ S(S+1).  M, its eigenvalues and V_S^H are always reported for H.
+#
 # Diagnostics per iteration (all exact): block cost minus its Ky Fan target,
 # eigenvalues of M minus the target eigenvalues, block variance
-# V_S = sum_y |(1 - Π_S) O e_y|^2, subspace infidelity 1 - |P_target P_block|^2/|S|,
-# and <S^2> and the weight outside 10 electrons for each eigenvector of M.
+# V_S = sum_y |(1 - Π_S) O e_y|^2 of the flow operator and of H,
+# subspace infidelity 1 - |P_target P_block|^2/|S|, and <S^2> and the weight
+# outside 10 electrons for each eigenvector of M.
 #
 #     julia -t 8 --project=../../integrals sv_block.jl <point dir> <basis> <label>
-#         [--homo n_alpha-1] [--lumo n_alpha] [--rank exact] [--c 1.0]
+#         [--homo n_alpha-1] [--lumo n_alpha] [--rank exact] [--c 1.0] [--s2-penalty 0]
 #         [--max-rots 50] [--max-iter 200] [--grad-thresh 1e-6]
 include(joinpath(@__DIR__, "sv_dbf.jl"))   # sector, S^2, rotate_W!, μ; its main() does not run
 
 function parse_block_cli(args)
-    opts = Dict("homo" => "", "lumo" => "", "rank" => "exact", "c" => "1.0", "max-rots" => "50",
+    opts = Dict("homo" => "", "lumo" => "", "rank" => "exact", "c" => "1.0", "s2-penalty" => "0", "max-rots" => "50",
                 "max-iter" => "200", "grad-thresh" => "1e-6", "outdir" => joinpath(@__DIR__, "sv_results"))
     pos = String[]
     i = 1
@@ -97,6 +102,7 @@ function block_main(args)
     cpar = parse(Float64, opts["c"])
     max_rots, max_iter = parse(Int, opts["max-rots"]), parse(Int, opts["max-iter"])
     gthresh = parse(Float64, opts["grad-thresh"])
+    λ = parse(Float64, opts["s2-penalty"])
 
     meta = JSON.parsefile(joinpath(dir, "metadata.json"))
     na0, nb0 = meta["n_alpha"], meta["n_beta"]
@@ -131,10 +137,13 @@ function block_main(args)
     Hs = sector_matrix(H, states, pos)
     norm(Hs - Hs') < 1e-10 || error("sector H is not symmetric")
     S2s = s2_matrix(states, pos, ref, Ovl)
+    norm(S2s - S2s') < 1e-10 || error("sector S^2 is not symmetric")
+    Hopt = λ == 0 ? Hs : Hs + λ * S2s          # drives the flow; reported energies are of Hs
     cos_S = [reduce_span(y, V0) for y in S]
     cosets = unique(cos_S)
     @printf("R = %.2f %s: HOMO %d, LUMO %d (qubits %d,%d and %d,%d); sector dim %d, %d of its cosets hold block states; nnz(H) %d, threads %d\n",
             meta["R_angstrom"], basis, homo, lumo, qH, qL, qHb, qLb, D, length(cosets), nnz(Hs), nthreads())
+    @printf("flow on H + %.3g S^2; [H, S^2] / |H| = %.1e\n", λ, norm(Hs * S2s - S2s * Hs) / norm(Hs))
 
     # exact levels per coset, from its (n_alpha, n_beta) blocks
     amask = bit(NORB) - 1
@@ -144,32 +153,33 @@ function block_main(args)
         c = reduce_span(b, V0)
         c in cosets && push!(get!(classes, (c, nab(b)...), Int[]), k)
     end
+    # levels of the flow operator; E is the energy for H, Eopt the eigenvalue of H + λ S^2
     levels = Dict(c => Any[] for c in cosets)
     for ((c, a_, b_), ks) in classes
-        F = eigen(Symmetric(Matrix(Hs[ks, ks])))
-        S2b = S2s[ks, ks]
+        F = eigen(Symmetric(Matrix(Hopt[ks, ks])))
+        Hb, S2b = Hs[ks, ks], S2s[ks, ks]
         for i in 1:min(8, length(ks))
             v = F.vectors[:, i]
-            push!(levels[c], (E=F.values[i], S2=dot(v, S2b * v), na=a_, nb=b_, ks=ks, v=v))
+            push!(levels[c], (E=dot(v, Hb * v), Eopt=F.values[i], S2=dot(v, S2b * v), na=a_, nb=b_, ks=ks, v=v))
         end
     end
     targets, edge = Any[], Any[]
     for c in cosets
-        sort!(levels[c]; by=l -> l.E)
+        sort!(levels[c]; by=l -> l.Eopt)
         nc = count(==(c), cos_S)
-        @printf("coset of %s (%d block state%s): lowest levels, mHa above FCI\n",
-                c == 0 ? "|0>" : "|a>", nc, nc == 1 ? "" : "s")
+        @printf("coset of %s (%d block state%s): lowest levels of H + %.3g S^2; E of H in mHa above FCI\n",
+                c == 0 ? "|0>" : "|a>", nc, nc == 1 ? "" : "s", λ)
         for (i, l) in enumerate(levels[c][1:min(8, end)])
             @printf("   %s %10.3f   <S^2> %6.3f   (%d,%d)\n", i <= nc ? "*" : " ", 1e3 * (l.E - e_fci), l.S2, l.na, l.nb)
         end
-        @printf("   gap above the targets: %.3f mHa\n", 1e3 * (levels[c][nc+1].E - levels[c][nc].E))
+        @printf("   gap above the targets (H + λ S^2): %.3f mHa\n", 1e3 * (levels[c][nc+1].Eopt - levels[c][nc].Eopt))
         append!(targets, levels[c][1:nc])
         # target space for the fidelity: the targets plus any level degenerate with the last one
-        append!(edge, [l for l in levels[c] if l.E < levels[c][nc].E + 1e-6])
+        append!(edge, [l for l in levels[c] if l.Eopt < levels[c][nc].Eopt + 1e-6])
     end
     abs(levels[UInt64(0)][1].E - e_fci) < 1e-8 || error("lowest level of the |0> coset is not FCI")
     E_tgt = [l.E for l in targets]             # coset by coset, ascending within each
-    kyfan = sum(E_tgt)
+    kyfan = sum(l.Eopt for l in targets)
     Φ = zeros(D, length(edge))
     for (i, l) in enumerate(edge)
         Φ[l.ks, i] = l.v
@@ -188,11 +198,13 @@ function block_main(args)
 
     # flow
     W = Matrix{Float64}(I, D, D)
-    hS = [Hs * W[:, k] for k in kS]            # H w_y for the block columns
-    hist = Dict{String,Any}(k => Any[] for k in ("C", "lam", "VS", "infid", "S2", "leak", "cross", "max_grad", "time"))
+    hS = [Hopt * W[:, k] for k in kS]          # (H + λ S^2) w_y for the block columns
+    hist = Dict{String,Any}(k => Any[] for k in ("C", "lam", "VS", "VS_H", "infid", "S2", "leak", "cross", "max_grad", "time"))
     function record!(g, t)
         Wb = W[:, kS]
-        M = Wb' * hcat(hS...)
+        Mopt = Wb' * hcat(hS...)
+        hH = [Hs * Wb[:, j] for j in 1:nS]
+        M = Wb' * hcat(hH...)
         M = (M + M') / 2
         # M is block diagonal over cosets; diagonalise per coset so lam pairs with E_tgt
         lam, φ = Float64[], zeros(D, 0)
@@ -202,24 +214,26 @@ function block_main(args)
             φ = hcat(φ, Wb[:, idx] * F.vectors)
         end
         push!(hist["cross"], maximum((abs(M[i, j]) for i in 1:nS, j in 1:nS if cos_S[i] != cos_S[j]); init=0.0))
-        push!(hist["C"], tr(M)); push!(hist["lam"], lam)
-        push!(hist["VS"], sum(dot(h, h) for h in hS) - sum(abs2, M))
+        push!(hist["C"], tr(Mopt)); push!(hist["lam"], lam)
+        push!(hist["VS"], sum(dot(h, h) for h in hS) - sum(abs2, Mopt))
+        push!(hist["VS_H"], sum(dot(h, h) for h in hH) - sum(abs2, M))
         push!(hist["infid"], 1 - sum(abs2, Φ' * Wb) / nS)
         push!(hist["S2"], [dot(φ[:, i], S2s * φ[:, i]) for i in 1:nS])
         push!(hist["leak"], [leak(φ[:, i], states, ref, nel) for i in 1:nS])
         push!(hist["max_grad"], g); push!(hist["time"], t)
     end
     function report(iter, drift)
-        @printf("%5d %+11.4f %s %10.3e %10.3e %9.2e %s %8.1e %8s %6.1f\n", iter, 1e3 * (hist["C"][end] - kyfan),
+        @printf("%5d %+11.4f %s %10.3e %10.3e %10.3e %9.2e %s %8.1e %8s %6.1f\n", iter, 1e3 * (hist["C"][end] - kyfan),
                 join([@sprintf("%+10.4f", 1e3 * x) for x in hist["lam"][end] .- E_tgt], " "),
-                hist["VS"][end], hist["max_grad"][end], hist["infid"][end],
+                hist["VS"][end], hist["VS_H"][end], hist["max_grad"][end], hist["infid"][end],
                 join([@sprintf("%6.3f", s) for s in hist["S2"][end]], " "), maximum(hist["leak"][end]),
                 drift === nothing ? "" : @sprintf("%8.1e", drift), hist["time"][end])
         flush(stdout)
     end
-    @printf("target: %s mHa above FCI (Ky Fan sum %.10f)\n", join([@sprintf("%.3f", 1e3 * (e - e_fci)) for e in E_tgt], ", "), kyfan)
-    @printf("%5s %11s %32s %10s %10s %9s %20s %8s %8s %6s\n", "iter", "C-target", "lambda_i - target_i (mHa)",
-            "V_S", "max|grad|", "1-F_S", "<S^2> of M's states", "leak", "drift", "time")
+    @printf("target: %s mHa above FCI (Ky Fan sum of H + λ S^2: %.10f)\n",
+            join([@sprintf("%.3f", 1e3 * (e - e_fci)) for e in E_tgt], ", "), kyfan)
+    @printf("%5s %11s %32s %10s %10s %10s %9s %20s %8s %8s %6s\n", "iter", "C-target", "lambda_i - target_i (mHa)",
+            "V_S", "V_S^H", "max|grad|", "1-F_S", "<S^2> of M's states", "leak", "drift", "time")
     record!(0.0, 0.0)
     report(0, nothing)
     t0 = time()
@@ -261,7 +275,7 @@ function block_main(args)
             z === nothing && error("no generator with the wanted signs for x = $x")
             G = PauliBasis{N}(Int128(z), Int128(x))
             μs = [μ(G, y) for y in S]
-            HV = [Hs * V[j] for j in 1:nS]
+            HV = [Hopt * V[j] for j in 1:nS]
             B = sum((dot(view(W, :, kS[j]), hS[j]) - dot(V[j], HV[j])) / 2 for j in out)
             Cg = sum(μs[j] * Mv[j] for j in out)
             tsum = sum(abs(Mv[j]) for j in out)
@@ -276,7 +290,7 @@ function block_main(args)
         # recompute from scratch to keep the recurrences honest
         drift = 0.0
         for j in 1:nS
-            hn = Hs * W[:, kS[j]]
+            hn = Hopt * W[:, kS[j]]
             drift = max(drift, maximum(abs, hn .- hS[j]))
             hS[j] = hn
         end
@@ -308,10 +322,12 @@ function block_main(args)
     mkpath(opts["outdir"])
     open(joinpath(opts["outdir"], "$(label).json"), "w") do io
         JSON.print(io, Dict("label" => label, "R" => meta["R_angstrom"], "basis" => basis,
-                            "homo" => homo, "lumo" => lumo, "rank" => rank, "c" => cpar,
+                            "homo" => homo, "lumo" => lumo, "rank" => rank, "c" => cpar, "s2_penalty" => λ,
                             "max_rots" => max_rots, "E_FCI" => e_fci, "sector_dim" => D,
-                            "targets" => [Dict("E" => l.E, "S2" => l.S2, "n_alpha" => l.na, "n_beta" => l.nb) for l in targets],
-                            "levels" => Dict(string(c) => [Dict("E" => l.E, "S2" => l.S2, "n_alpha" => l.na, "n_beta" => l.nb)
+                            "targets" => [Dict("E" => l.E, "Eopt" => l.Eopt, "S2" => l.S2, "n_alpha" => l.na, "n_beta" => l.nb)
+                                          for l in targets],
+                            "levels" => Dict(string(c) => [Dict("E" => l.E, "Eopt" => l.Eopt, "S2" => l.S2,
+                                                                "n_alpha" => l.na, "n_beta" => l.nb)
                                                            for l in levels[c]] for c in cosets),
                             "history" => hist, "orthogonality" => orth), 1)
     end

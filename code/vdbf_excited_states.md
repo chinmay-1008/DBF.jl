@@ -243,10 +243,20 @@ Code: `code/n2_pes/frozen_core/sv_block.jl` (includes `sv_dbf.jl`). No truncatio
 - **2.3 Å does not converge in 200 iterations.** The |0⟩ column picks up the ⁵Σg⁺ state 9 mHa above, the same spin contamination as the ground-state-only flow on bare H (`uno_2.30_onebody`, ⟨S²⟩ 0.32 after 200 iterations). There the fix was $H + 0.05\,S^2$.
 - **The d1c proxy ranks as well as the exact gradient** at 1.1 Å (curves nearly identical); at 2.3 Å it is worse.
 
+**Spin penalty at 2.3 Å** (`--s2-penalty`, 500 iterations, exact ranking; $[H, S^2]$ = 5e-16):
+
+- **λ = 0.05 converges:** S0 +0.0095, T1 +0.030 (2.873 vs 2.842), third state the triplet at 120.6 (+0.36), all spin-pure, $V_S^H$ 1.2e-4. This is the Ky Fan target for that λ.
+- **λ = 0.1 loses T1.** Its Ky Fan target is exactly (S0, T1, S1), but both HOMO→LUMO columns turn into singlets early (triplet character costs 2λ = 200 mHa) and spin conservation keeps them there: S0 +0.045, S1 +0.50, second singlet (263.3) +0.71; C − target stuck at 62 mHa. Same spin protection as at 1.1 Å, now against us.
+
+**Linear extrapolation in $V_S$** (open question 1; straight-line fit over the last 40% of iterations, `plot_block.py`): at 1.1 Å the tails are straight and extrapolation takes all three errors to ≤ 0.002 mHa. At 2.3 Å (+0.05 S²) it improves S0 and T1 (T1 +0.030 → −0.022) but the third state's tail still curves (+0.36 → +0.25).
+
+Explainer for these runs: `vdbf_excited_states_runs.md`. Plots: `python plot_block.py` → `frozen_core/sv_results/plots/`.
+
 **Next.**
 
-1. 2.3 Å: add `--s2-penalty` to `sv_block.jl` as in `sv_dbf.jl` and run longer. With exact $[H, S^2] = 0$ the decoupled block of $H + \lambda S^2$ is also decoupled for $H$. The penalty also changes the Ky Fan target in the HOMO→LUMO coset (the septet moves up by $12\lambda$, T1 by $2\lambda$).
-2. 1.1 Å: run to convergence, then Stage 4 (port the five swaps to `dbf_groundstate` with truncation at 1e-5 and 1e-6).
+1. Getting (S0, T1, S1) at 2.3 Å needs per-column spin control, e.g. a penalty only on the columns meant to be singlets, or starting the HOMO→LUMO columns from the spin-adapted combinations $|a\rangle \mp |b\rangle$ and penalising each toward its own $S$.
+2. Per-state variance as the x-axis for extrapolation (currently the block total $V_S$).
+3. Stage 4: port the five swaps to `dbf_groundstate` with truncation at 1e-5 and 1e-6, starting at 1.1 Å, where the exact flow is clean.
 
 ## 8. Implementation notes for whoever picks this up
 
