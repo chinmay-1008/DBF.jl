@@ -383,46 +383,75 @@ def compare_zoom(greedy, flow, title, windows, rights):
 
 
 # ---------------------------------------------------------------- per-state variance extrapolation
-def state_extrapolation(entries, refs, names, title):
-    """per state: energy against that state's own variance, with extrapolate.py's adaptive tail fit
-    (linear and quadratic fits, E0 = their average intercept, half their difference as the error bar).
+def window_fit(x, y, factor=2.0):
+    """linear fit of y against x over the window [v, factor v], v = the last x (the run's final variance).
+    E0 = the linear intercept; uncertainty = half its difference from a quadratic fit over the same window.
+    Returns None when v <= 0 or the window holds fewer than 3 points."""
+    v = x[-1]
+    if not v > 0:
+        return None
+    sel = (x >= v) & (x <= factor * v)
+    k = int(sel.sum())
+    if k < 3:
+        return None
+    lin = np.polyfit(x[sel], y[sel], 1)
+    quad = np.polyfit(x[sel], y[sel], 2) if k >= 5 else None
+    half = abs(lin[1] - quad[2]) / 2 if quad is not None else float("nan")
+    return dict(e0=lin[1], half=half, sel=sel, lin=lin, v=v, k=k)
+
+
+def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
+    """per state: energy against that state's own variance, fitted linearly over the window [v, 2v] with v the
+    state's variance at the last iteration, and extrapolated to zero variance.
     entries: [(name, lam (iterations x states, mHa above FCI), var (iterations x states, Ha²), marker, linestyle)].
-    Iteration 0 is left out of the fit, as in the ground-state protocol.  Returns (fig, rows)."""
-    import sys
-    sys.path.insert(0, os.path.dirname(HERE))
-    from extrapolate import MIN_FIT_POINTS, select_adaptive_tail
+    Iteration 0 is left out.  Returns (fig, rows); rows hold (series, state, last error, E0, ±, v, #points)."""
     nS = len(refs)
-    fig, axes = plt.subplots(1, nS, figsize=(11.5, 3.9), squeeze=False)
+    nr = len(entries) if grid else 1                  # grid: one row per series, each panel on its own axes
+    fig, axes = plt.subplots(nr, nS, figsize=(11.5, 3.3 * nr + 0.6), squeeze=False)
     rows = []
-    for i in range(nS):
-        ax = axes[0, i]
+    for r_, i in [(r_, i) for r_ in range(nr) for i in range(nS)]:
+        ax = axes[r_, i]
         ax.axhline(0, color=INK, lw=1, ls="--", zorder=1)
-        for name, lam, var, marker, ls in entries:
+        xmax = 0.0
+        for name, lam, var, marker, ls in (entries[r_:r_ + 1] if grid else entries):
             x, y = var[1:, i], lam[1:, i] - refs[i]
-            best, _ = select_adaptive_tail(x, y, MIN_FIT_POINTS)
-            k = best["num_take"]
-            xt, yt = x[-k:], y[-k:]
-            xs = np.linspace(0, xt.max(), 60)
-            lin, quad = np.polyfit(xt, yt, 1), np.polyfit(xt, yt, 2)
-            ax.plot(xt, yt, marker, color=SERIES[i], ms=3, mec="none", alpha=0.8, label=f"{name} (tail, {k} pts)")
-            ax.plot(xs, np.polyval(lin, xs), ls, color=SERIES[i], lw=1.0)
-            ax.plot(xs, np.polyval(quad, xs), ls, color=SERIES[i], lw=1.0, alpha=0.5)
-            ax.errorbar(0, best["E0_average"], yerr=best["fit_half_difference"], fmt=marker, color=SERIES[i], ms=6,
-                        mec=INK, mew=0.6, capsize=3, clip_on=False, zorder=5)
-            rows.append((name, names[i], y[-1], best["E0_average"], best["fit_half_difference"], x[-1]))
-        ax.set_xlim(left=0)
+            fit = window_fit(x, y, factor)
+            if fit is None:
+                ax.text(0.5, 0.5, f"{name}: last variance {x[-1]:.1e} ≤ 0,\nno extrapolation", transform=ax.transAxes,
+                        ha="center", va="center", fontsize=8, color=MUTED)
+                rows.append((name, names[i], y[-1], float("nan"), float("nan"), x[-1], 0))
+                continue
+            v, sel = fit["v"], fit["sel"]
+            ctx = (x > 0) & (x <= 4 * v)              # context: points up to 4v, lighter
+            ax.plot(x[ctx & ~sel], y[ctx & ~sel], marker, color=SERIES[i], ms=2.5, mec="none", alpha=0.3)
+            ax.plot(x[sel], y[sel], marker, color=SERIES[i], ms=3.2, mec="none",
+                    label=f"{name}: {fit['k']} pts in [v, 2v]")
+            xs = np.linspace(0, factor * v, 50)
+            ax.plot(xs, np.polyval(fit["lin"], xs), ls, color=SERIES[i], lw=1.1)
+            ax.axvspan(v, factor * v, color=GRID, alpha=0.5, lw=0, zorder=0)
+            ax.errorbar(0, fit["e0"], yerr=0 if np.isnan(fit["half"]) else fit["half"], fmt=marker, color=SERIES[i],
+                        ms=6, mec=INK, mew=0.6, capsize=3, clip_on=False, zorder=5)
+            rows.append((name, names[i], y[-1], fit["e0"], fit["half"], v, fit["k"]))
+            xmax = max(xmax, 4 * v)
+            yy = y[ctx]
+            lo, hi = min(yy.min(), fit["e0"], 0), max(yy.max(), fit["e0"], 0)
+            ax.set_ylim(lo - 0.08 * (hi - lo + 1e-9), hi + 0.12 * (hi - lo + 1e-9))
+        if xmax > 0:
+            ax.set_xlim(0, xmax)
         ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0))
-        ax.set_title(f"{title}: {names[i]}", fontsize=9, color=INK, loc="left")
-        ax.set_xlabel(f"energy variance of this state (Ha²)")
+        ax.set_title(f"{title}: {names[i]}" + (f", {entries[r_][0]}" if grid else ""), fontsize=9, color=INK, loc="left")
+        ax.set_xlabel("energy variance of this state (Ha²)")
         ax.tick_params(labelsize=7.5)
         style(ax)
         if i == 0:
             ax.set_ylabel("energy − exact (mHa)")
-        ax.legend(fontsize=7, loc="upper left")
-    fig.suptitle("Per-state extrapolation: each block state's energy against its own variance, tail of the run\n"
-                 "lines = linear and (lighter) quadratic tail fits; marker at 0 = extrapolated energy ± half the fits' difference",
+        if ax.get_legend_handles_labels()[0]:
+            ax.legend(fontsize=7, loc="upper left")
+    fig.suptitle("Per-state extrapolation: each block state's energy against its own variance\n"
+                 "linear fit over [v, 2v] (shaded), v = the state's variance at the last iteration; "
+                 "marker at 0 = extrapolated energy, error bar = half the difference from a quadratic fit",
                  x=0.01, ha="left", fontsize=10, color=INK)
-    fig.tight_layout(rect=(0, 0, 1, 0.86))
+    fig.tight_layout(rect=(0, 0, 1, 0.86 if nr == 1 else 0.94))
     return fig, rows
 
 
@@ -616,9 +645,9 @@ def main():
         if len(ent) > 1:
             fig, xrows = state_extrapolation(ent, refs, sn, "1.1 Å")
             fig.savefig(os.path.join(OUT, "n2_110_extrap_all.png"), dpi=170)
-        print("per-state extrapolation (mHa vs exact): run | state | last | extrapolated ± | last variance")
+        print("per-state extrapolation over [v, 2v] (mHa vs exact): run | state | last | extrapolated ± | v | points")
         for r in xrows:
-            print(f"  {r[0]:<18} {r[1]:<5} {r[2]:+9.4f} {r[3]:+9.4f} ± {r[4]:.4f}   {r[5]:.2e}")
+            print(f"  {r[0]:<18} {r[1]:<5} {r[2]:+9.4f} {r[3]:+9.4f} ± {r[4]:.4f}   {r[5]:.2e}  {r[6]}")
         # Pauli propagation at 1.1 A: the doc's figures per cutoff, then the cutoffs together
         pps = []
         for cut, ls in (("1e-5", "-"), ("1e-6", (0, (5, 2)))):
@@ -630,6 +659,19 @@ def main():
             pp_energies(r110[0][2], pp, rep, f"1.1 Å, Pauli propagation, cutoff {cut}").savefig(
                 os.path.join(OUT, f"n2_110_pp_c{cut}_energies.png"), dpi=170)
             pp_zoom(r110[0][2], [pps[-1]], "1.1 Å").savefig(os.path.join(OUT, f"n2_110_pp_c{cut}_zoom.png"), dpi=170)
+            if "var_corr" in pp["history"]:          # per-state extrapolation: corrected, raw, and the true circuit
+                h = pp["history"]
+                ent = []
+                if rep is not None and "var" in rep["rows"][0]:
+                    ent.append(("true (exact replay)", (np.array([r["lam"] for r in rep["rows"]]) - rep["E_FCI"]) * 1e3,
+                                np.array([r["var"] for r in rep["rows"]]), "o", "-"))
+                ent += [("corrected", (np.array(h["lam_corr"]) - pp["E_FCI"]) * 1e3, np.array(h["var_corr"]), "^", "--"),
+                        ("raw", (np.array(h["lam"]) - pp["E_FCI"]) * 1e3, np.array(h["var"]), "v", ":")]
+                fig, prow = state_extrapolation(ent, refs, sn, f"PP {cut}", grid=True)
+                fig.savefig(os.path.join(OUT, f"n2_110_pp_c{cut}_extrap.png"), dpi=170)
+                print(f"Pauli propagation {cut}: per-state extrapolation over [v, 2v] (mHa vs exact)")
+                for r in prow:
+                    print(f"  {r[0]:<20} {r[1]:<5} {r[2]:+9.4f} {r[3]:+9.4f} ± {r[4]:.4f}   v {r[5]:.2e}  {r[6]} pts")
         if len(pps) > 1:
             pp_zoom(r110[0][2], pps, "1.1 Å").savefig(os.path.join(OUT, "n2_110_pp_compare_zoom.png"), dpi=170)
     error_vs_variance(runs).savefig(os.path.join(OUT, "error_vs_variance.png"), dpi=170)

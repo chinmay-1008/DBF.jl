@@ -155,17 +155,17 @@ $$\mathrm{var}_i = \langle \phi_i|\bar H^2|\phi_i\rangle - \lambda_i^2 = \lVert 
 
 Inside the block $\bar H\phi_i = \lambda_i \phi_i$ exactly, so only the coupling to the outside contributes. The three variances add up to the block variance $V_S$; for a one-state block this is the usual ground-state variance.
 
-Near convergence the energy error of each state is proportional to its own variance (if $\phi = \sqrt{1-\epsilon^2}\,|\Psi\rangle + \epsilon\,|\chi\rangle$, both are of order $\epsilon^2$). So each state is extrapolated on its own: energy against its own variance, with the same tail fit as the ground-state protocol (`extrapolate.py`: linear and quadratic fits over an automatically chosen tail; the estimate is their average intercept, the uncertainty half their difference).
+Near convergence the energy error of each state is proportional to its own variance (if $\phi = \sqrt{1-\epsilon^2}\,|\Psi\rangle + \epsilon\,|\chi\rangle$, both are of order $\epsilon^2$). So each state is extrapolated on its own: energy against its own variance, fitted with a straight line over the window $[v, 2v]$, where $v$ is that state's variance at the last iteration, and read off at zero variance. The uncertainty is half the difference from a quadratic fit over the same window.
 
 ![Per-state extrapolation, exact greedy, 1.1 Å](n2_pes/frozen_core/sv_results/plots/n2_110_extrap_exact.png)
 
 | state | error at the last iteration | extrapolated error |
 |---|---|---|
-| S0 | +0.019 mHa | +0.0012 ± < 0.0001 mHa |
-| ³Πg | +0.022 mHa | −0.0019 ± < 0.0001 mHa |
-| ¹Πg | +0.037 mHa | −0.0018 ± 0.0001 mHa |
+| S0 | +0.019 mHa | +0.0009 ± 0.0014 mHa |
+| ³Πg | +0.022 mHa | −0.0015 ± 0.0010 mHa |
+| ¹Πg | +0.037 mHa | +0.0000 ± 0.0038 mHa |
 
-The tails are straight lines, and extrapolation cuts the errors by 10–20×. Excitation energies from the extrapolated values: ³Πg 297.171 vs 297.174 mHa, ¹Πg 347.381 vs 347.384 mHa.
+The tails are straight lines (about 40 points in each window), and extrapolation cuts the errors by more than 10×, to about 0.001 mHa. Excitation energies from the extrapolated values: ³Πg 297.172 vs 297.174 mHa, ¹Πg 347.383 vs 347.384 mHa.
 
 One difference from the ground state: an excited state can also mix with states below it, so it is not guaranteed to approach its exact energy from above (only the block sum is variational). Here all three approach from above.
 
