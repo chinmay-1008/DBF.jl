@@ -219,11 +219,38 @@ Open questions to answer along the way:
 - Is block-cost flow from the start better or worse than warm-starting from the ground-state run?
 - Do errors cancel in energy differences, or is each block eigenvalue as inaccurate as a ground-state run at the same threshold?
 - For neutral excitations in idea 2, is the particle–hole part of weight 2 small enough to handle directly?
-- Which system for Stage 1? Not decided.
+- Which system for Stage 1? **Decided (14 Nov):** N2 / STO-3G, frozen core, UNO basis (16 qubits), at R = 1.1 and 2.3 Å, run first with the exact state-vector code (section 7a).
+
+## 7a. Status, 14 Nov 2026: idea 1c with exact DBF on N2
+
+Code: `code/n2_pes/frozen_core/sv_block.jl` (includes `sv_dbf.jl`). No truncation: W is a dense orthogonal matrix on a GF(2) sector, so everything below is the method's own error. Runs: `uno_{1.10,2.30}_block1c_{exact,d1c}`, 200 macro-iterations × 50 rotations, about 2 min each. HOMO = active orbital 4, LUMO = 5 (checked against the Fock diagonal at both geometries).
+
+**Things the plan did not anticipate.**
+
+- *The sector is symmetry-restricted.* `sv_dbf.jl` works in the span of H's x-strings, which only holds determinants with the reference's symmetry. HOMO→LUMO is a different symmetry here, so `sv_block.jl` adds $a, b$ to the span. H is block diagonal across the resulting cosets, the cross-coset block elements stay exactly 0, and the flow decouples $\{|0\rangle\}$ and $\{|a\rangle,|b\rangle\}$ separately.
+- *The Ky Fan target is not (S0, S1, T1).* At 1.1 Å the two lowest states of the HOMO→LUMO symmetry are both components of the degenerate ³Πg (297.17 mHa; the π orbitals are not symmetry-adapted, so x and y share a coset), with ¹Πg 50 mHa higher. At 2.3 Å they are ³Σu⁺ (2.84 mHa) and ⁷Σu⁺ (20.14 mHa), the stretched-N2 spin ladder; the HOMO→LUMO singlet is not in the lowest 8.
+
+**Results** (block eigenvalue vs the exact level with the same coset and spin, mHa above FCI):
+
+| R | ranking | S0 | T | 3rd state | $V_S$ |
+|---|---|---|---|---|---|
+| 1.1 | exact | +0.019 | 297.196 vs 297.174 (+0.022) | ¹Πg 347.421 vs 347.384 (+0.037) | 2.5e-4 |
+| 1.1 | d1c | +0.021 | +0.028 | ¹Πg +0.038 | 2.5e-4 |
+| 2.3 | exact | +1.56, ⟨S²⟩ 0.76 | 3.684 vs 2.842 (+0.84) | wanders near 120 (⟨S²⟩ 2.06) | 1.7e-3 |
+| 2.3 | d1c | +3.33, ⟨S²⟩ 1.37 | +1.74 | drifting toward the septet (⟨S²⟩ 5.9) | 1.6e-2 |
+
+- **1.1 Å works as intended.** The block holds S0, ³Πg and ¹Πg, spin-pure (⟨S²⟩ 0, 2, 0). The Ky Fan minimum would swap ¹Πg for the second ³Πg component, but that rotation has zero gradient by spin symmetry, so the flow stays on this saddle (plan §6.2): C − target plateaus at the 50.2 mHa ¹Πg–³Πg gap, and 1 − F_S at exactly 1/3. Excitation energies: ³Πg 297.177 vs 297.174, ¹Πg 347.402 vs 347.384 (errors partly cancel). Still converging at 200 iterations ($V_S$ falling).
+- **2.3 Å does not converge in 200 iterations.** The |0⟩ column picks up the ⁵Σg⁺ state 9 mHa above, the same spin contamination as the ground-state-only flow on bare H (`uno_2.30_onebody`, ⟨S²⟩ 0.32 after 200 iterations). There the fix was $H + 0.05\,S^2$.
+- **The d1c proxy ranks as well as the exact gradient** at 1.1 Å (curves nearly identical); at 2.3 Å it is worse.
+
+**Next.**
+
+1. 2.3 Å: add `--s2-penalty` to `sv_block.jl` as in `sv_dbf.jl` and run longer. With exact $[H, S^2] = 0$ the decoupled block of $H + \lambda S^2$ is also decoupled for $H$. The penalty also changes the Ky Fan target in the HOMO→LUMO coset (the septet moves up by $12\lambda$, T1 by $2\lambda$).
+2. 1.1 Å: run to convergence, then Stage 4 (port the five swaps to `dbf_groundstate` with truncation at 1e-5 and 1e-6).
 
 ## 8. Implementation notes for whoever picks this up
 
-- Code lives in DBF.jl (vDBF) on top of PauliOperators.jl. Likely touch points **(check)**: `src/groundstate.jl`, `src/truncation.jl`; Hamiltonians and JW mapping in `src/hamiltonians.jl`.
+- Code lives in DBF.jl (vDBF) on top of PauliOperators.jl. Touch points: `src/groundstate.jl` (the loop and the truncation calls; there is no `src/truncation.jl`, truncation strategies such as `CoeffTruncation` come from PauliOperators); Hamiltonians and JW mapping in `src/hamiltonians.jl`. The exact state-vector counterpart is `code/n2_pes/frozen_core/sv_block.jl`.
 - Use `SparsePauliVector`, not `PauliSum`, for propagation.
 - Before writing any helper, check whether the package already has it, and ask before adding new ones.
 - Make the minimal change: the five swaps in section 4, nothing adjacent.

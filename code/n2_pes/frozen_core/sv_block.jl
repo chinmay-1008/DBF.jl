@@ -1,0 +1,322 @@
+# Exact (untruncated) block DBF for the 16-qubit frozen-core N2 Hamiltonians:
+# idea 1c of code/vdbf_excited_states.md.
+#
+# sv_dbf.jl decouples |0>.  Here the block S = {|0>, |a>, |b>} is decoupled
+# instead, with a = HOMO_alpha -> LUMO_alpha and b = HOMO_beta -> LUMO_beta
+# (vacuum frame: a flipped occupied bit is a hole, a flipped virtual bit a
+# particle).  The flow minimises the block cost
+#
+#     C_S = sum_{y in S} <y|O|y>,      O = W' H W,
+#
+# whose minimum is the sum of the |S| lowest eigenvalues (Ky Fan).  The 3x3
+# block matrix M_yy' = <y|O|y'> is diagonalised at every iteration; its
+# eigenvalues are the ground state and two excited states once V_S = 0.
+#
+# Same machinery as sv_dbf.jl (included below): W dense on a GF(2) sector, one
+# Pauli rotation per direction x at its exact optimal angle.  Differences:
+#
+# * Sector.  |a> and |b> need not have the reference's spatial symmetry, so the
+#   sector is the GF(2) span of H's x strings and of a, b.  H is block diagonal
+#   over the cosets of the x-string span (symmetry sectors); rotations across
+#   cosets have zero gradient and are never picked.  The target is therefore,
+#   per coset, the sum of as many lowest eigenvalues as S has states in it.
+# * Angle.  For direction x, W <- W exp(-i θ G/2) gives
+#       C_S(θ) = const + B cos θ + Cg sin θ,
+#       B = sum_y (O_yy - O_{y^x,y^x})/2,     Cg = sum_y μ(y) O_{y^x,y},
+#   summed over y in S with y^x outside S (in-block pairs cancel exactly).
+# * Generator.  μ(y) = ±1 is G's sign on |y>, which depends on G's z string
+#   through (-1)^{z.y}.  z is chosen by a GF(2) solve so that every term of Cg
+#   has the same sign, |Cg| = sum_y |O_{y^x,y}|, with an odd number of Y's so
+#   the rotation is real (as in sv_dbf.jl).
+# * Ranking (--rank).
+#     exact  Cg^2, the exact block gradient squared (generalises 'projector')
+#     d1c    |Cg| * sum_y |O_{y^x,y}| (d(y) - d(y^x))/2, with d the eigenvalues
+#            of the 1c operator D = sum_rest Z_k + Z_H Z_L + Z_Hb Z_Lb
+#            + c (Z_H + Z_Hb - Z_H Z_Hb): the <y^x|[D,O]|y> proxy restricted
+#            to the block (generalises 'onebody').  The block is checked to be
+#            D's top eigenspace.
+#
+# Diagnostics per iteration (all exact): block cost minus its Ky Fan target,
+# eigenvalues of M minus the target eigenvalues, block variance
+# V_S = sum_y |(1 - Π_S) O e_y|^2, subspace infidelity 1 - |P_target P_block|^2/|S|,
+# and <S^2> and the weight outside 10 electrons for each eigenvector of M.
+#
+#     julia -t 8 --project=../../integrals sv_block.jl <point dir> <basis> <label>
+#         [--homo n_alpha-1] [--lumo n_alpha] [--rank exact] [--c 1.0]
+#         [--max-rots 50] [--max-iter 200] [--grad-thresh 1e-6]
+include(joinpath(@__DIR__, "sv_dbf.jl"))   # sector, S^2, rotate_W!, μ; its main() does not run
+
+function parse_block_cli(args)
+    opts = Dict("homo" => "", "lumo" => "", "rank" => "exact", "c" => "1.0", "max-rots" => "50",
+                "max-iter" => "200", "grad-thresh" => "1e-6", "outdir" => joinpath(@__DIR__, "sv_results"))
+    pos = String[]
+    i = 1
+    while i <= length(args)
+        if startswith(args[i], "--")
+            key = args[i][3:end]
+            haskey(opts, key) || error("unknown option $(args[i])")
+            opts[key] = args[i+1]
+            i += 2
+        else
+            push!(pos, args[i])
+            i += 1
+        end
+    end
+    length(pos) == 3 || error("usage: sv_block.jl <point dir> <basis> <label> [options]")
+    return pos..., opts
+end
+
+# canonical representative of v modulo the span of `basis` (gf2_basis output)
+reduce_span(v, basis) = foldl((u, b) -> min(u, u ⊻ b), basis; init=v)
+
+# z with parity(z & rows[i]) == rhs[i] for every i (GF(2) elimination), or nothing
+function gf2_solve(rows, rhs)
+    piv = Tuple{UInt64,UInt64,Bool}[]          # (row, pivot bit, rhs); a pivot bit is in no other row
+    for (r, t) in zip(rows, rhs)
+        for (pr, pb, pt) in piv
+            r & pb == 0 || (r ⊻= pr; t ⊻= pt)
+        end
+        if r == 0
+            t && return nothing
+            continue
+        end
+        b = r & (~r + 1)
+        for i in eachindex(piv)
+            pr, pb, pt = piv[i]
+            pr & b == 0 || (piv[i] = (pr ⊻ r, pb, pt ⊻ t))
+        end
+        push!(piv, (r, b, t))
+    end
+    return reduce(|, (pb for (_, pb, pt) in piv if pt); init=UInt64(0))
+end
+
+function block_main(args)
+    dir, basis, label, opts = parse_block_cli(args)
+    rank = opts["rank"]
+    rank in ("exact", "d1c") || error("--rank must be exact or d1c")
+    cpar = parse(Float64, opts["c"])
+    max_rots, max_iter = parse(Int, opts["max-rots"]), parse(Int, opts["max-iter"])
+    gthresh = parse(Float64, opts["grad-thresh"])
+
+    meta = JSON.parsefile(joinpath(dir, "metadata.json"))
+    na0, nb0 = meta["n_alpha"], meta["n_beta"]
+    homo = isempty(opts["homo"]) ? na0 - 1 : parse(Int, opts["homo"])
+    lumo = isempty(opts["lumo"]) ? na0 : parse(Int, opts["lumo"])
+    d = load(joinpath(dir, "hamiltonian_$(basis).jld2"))
+    ref = UInt64(d["reference_ket"].v)
+    nel = na0 + nb0
+    e_fci = meta["E_FCI_with_mu"] + meta["constant"]
+    Ovl = npzread(joinpath(dir, "$(basis)_ab_overlap.npy"))
+    Ovl[abs.(Ovl) .< 1e-6] .= 0                # as in sv_dbf.jl
+    H = to_vacuum_reference(d["H"], ref)
+
+    # block: |0>, HOMO->LUMO alpha, HOMO->LUMO beta
+    bit(q) = UInt64(1) << q
+    qH, qL, qHb, qLb = homo, lumo, NORB + homo, NORB + lumo
+    ref & bit(qH) != 0 && ref & bit(qHb) != 0 || error("orbital $homo is not occupied in the reference")
+    ref & bit(qL) == 0 && ref & bit(qLb) == 0 || error("orbital $lumo is occupied in the reference")
+    S = UInt64[0, bit(qH) | bit(qL), bit(qHb) | bit(qLb)]
+    nS = length(S)
+
+    # sector: span of H's x strings and of the block states
+    hx = unique(UInt64(p.x) for p in keys(H))
+    V0 = gf2_basis(hx)
+    states = enumerate_span(gf2_basis(vcat(hx, S)))
+    D = length(states)
+    pos = zeros(Int32, 1 << N)
+    for (k, b) in enumerate(states)
+        pos[b+1] = k
+    end
+    kS = [Int(pos[y+1]) for y in S]
+    Hs = sector_matrix(H, states, pos)
+    norm(Hs - Hs') < 1e-10 || error("sector H is not symmetric")
+    S2s = s2_matrix(states, pos, ref, Ovl)
+    cos_S = [reduce_span(y, V0) for y in S]
+    cosets = unique(cos_S)
+    @printf("R = %.2f %s: HOMO %d, LUMO %d (qubits %d,%d and %d,%d); sector dim %d, %d of its cosets hold block states; nnz(H) %d, threads %d\n",
+            meta["R_angstrom"], basis, homo, lumo, qH, qL, qHb, qLb, D, length(cosets), nnz(Hs), nthreads())
+
+    # exact levels per coset, from its (n_alpha, n_beta) blocks
+    amask = bit(NORB) - 1
+    nab(b) = (count_ones((b ⊻ ref) & amask), count_ones((b ⊻ ref) >> NORB))
+    classes = Dict{Tuple{UInt64,Int,Int},Vector{Int}}()
+    for (k, b) in enumerate(states)
+        c = reduce_span(b, V0)
+        c in cosets && push!(get!(classes, (c, nab(b)...), Int[]), k)
+    end
+    levels = Dict(c => Any[] for c in cosets)
+    for ((c, a_, b_), ks) in classes
+        F = eigen(Symmetric(Matrix(Hs[ks, ks])))
+        S2b = S2s[ks, ks]
+        for i in 1:min(8, length(ks))
+            v = F.vectors[:, i]
+            push!(levels[c], (E=F.values[i], S2=dot(v, S2b * v), na=a_, nb=b_, ks=ks, v=v))
+        end
+    end
+    targets, edge = Any[], Any[]
+    for c in cosets
+        sort!(levels[c]; by=l -> l.E)
+        nc = count(==(c), cos_S)
+        @printf("coset of %s (%d block state%s): lowest levels, mHa above FCI\n",
+                c == 0 ? "|0>" : "|a>", nc, nc == 1 ? "" : "s")
+        for (i, l) in enumerate(levels[c][1:min(8, end)])
+            @printf("   %s %10.3f   <S^2> %6.3f   (%d,%d)\n", i <= nc ? "*" : " ", 1e3 * (l.E - e_fci), l.S2, l.na, l.nb)
+        end
+        @printf("   gap above the targets: %.3f mHa\n", 1e3 * (levels[c][nc+1].E - levels[c][nc].E))
+        append!(targets, levels[c][1:nc])
+        # target space for the fidelity: the targets plus any level degenerate with the last one
+        append!(edge, [l for l in levels[c] if l.E < levels[c][nc].E + 1e-6])
+    end
+    abs(levels[UInt64(0)][1].E - e_fci) < 1e-8 || error("lowest level of the |0> coset is not FCI")
+    E_tgt = [l.E for l in targets]             # coset by coset, ascending within each
+    kyfan = sum(E_tgt)
+    Φ = zeros(D, length(edge))
+    for (i, l) in enumerate(edge)
+        Φ[l.ks, i] = l.v
+    end
+    blk_idx = [findall(==(c), cos_S) for c in cosets]
+
+    # eigenvalues of the 1c operator, for --rank d1c
+    zq(b, q) = (b >> q) & 1 == 0 ? 1.0 : -1.0
+    act = (qH, qL, qHb, qLb)
+    dval(b) = sum(zq(b, q) for q in 0:N-1 if !(q in act)) + zq(b, qH) * zq(b, qL) + zq(b, qHb) * zq(b, qLb) +
+              cpar * (zq(b, qH) + zq(b, qHb) - zq(b, qH) * zq(b, qHb))
+    dvec = dval.(states)
+    dtop = dvec[kS[1]]
+    all(dvec[kS] .== dtop) && count(dvec .>= dtop - 1e-12) == nS ||
+        error("the block is not the top eigenspace of the 1c operator (c = $cpar)")
+
+    # flow
+    W = Matrix{Float64}(I, D, D)
+    hS = [Hs * W[:, k] for k in kS]            # H w_y for the block columns
+    hist = Dict{String,Any}(k => Any[] for k in ("C", "lam", "VS", "infid", "S2", "leak", "cross", "max_grad", "time"))
+    function record!(g, t)
+        Wb = W[:, kS]
+        M = Wb' * hcat(hS...)
+        M = (M + M') / 2
+        # M is block diagonal over cosets; diagonalise per coset so lam pairs with E_tgt
+        lam, φ = Float64[], zeros(D, 0)
+        for idx in blk_idx
+            F = eigen(Symmetric(M[idx, idx]))
+            append!(lam, F.values)
+            φ = hcat(φ, Wb[:, idx] * F.vectors)
+        end
+        push!(hist["cross"], maximum((abs(M[i, j]) for i in 1:nS, j in 1:nS if cos_S[i] != cos_S[j]); init=0.0))
+        push!(hist["C"], tr(M)); push!(hist["lam"], lam)
+        push!(hist["VS"], sum(dot(h, h) for h in hS) - sum(abs2, M))
+        push!(hist["infid"], 1 - sum(abs2, Φ' * Wb) / nS)
+        push!(hist["S2"], [dot(φ[:, i], S2s * φ[:, i]) for i in 1:nS])
+        push!(hist["leak"], [leak(φ[:, i], states, ref, nel) for i in 1:nS])
+        push!(hist["max_grad"], g); push!(hist["time"], t)
+    end
+    function report(iter, drift)
+        @printf("%5d %+11.4f %s %10.3e %10.3e %9.2e %s %8.1e %8s %6.1f\n", iter, 1e3 * (hist["C"][end] - kyfan),
+                join([@sprintf("%+10.4f", 1e3 * x) for x in hist["lam"][end] .- E_tgt], " "),
+                hist["VS"][end], hist["max_grad"][end], hist["infid"][end],
+                join([@sprintf("%6.3f", s) for s in hist["S2"][end]], " "), maximum(hist["leak"][end]),
+                drift === nothing ? "" : @sprintf("%8.1e", drift), hist["time"][end])
+        flush(stdout)
+    end
+    @printf("target: %s mHa above FCI (Ky Fan sum %.10f)\n", join([@sprintf("%.3f", 1e3 * (e - e_fci)) for e in E_tgt], ", "), kyfan)
+    @printf("%5s %11s %32s %10s %10s %9s %20s %8s %8s %6s\n", "iter", "C-target", "lambda_i - target_i (mHa)",
+            "V_S", "max|grad|", "1-F_S", "<S^2> of M's states", "leak", "drift", "time")
+    record!(0.0, 0.0)
+    report(0, nothing)
+    t0 = time()
+    for iter in 1:max_iter
+        o = [W' * h for h in hS]               # o[j][k] = <states[k]|O|S[j]>
+        cand, score = Int[], Float64[]
+        gmax = 0.0
+        for k in 2:D
+            x = states[k]
+            g, dw = 0.0, 0.0
+            for j in 1:nS
+                yx = S[j] ⊻ x
+                yx in S && continue
+                k2 = pos[yx+1]
+                t = abs(o[j][k2])
+                g += t
+                dw += t * (dvec[kS[j]] - dvec[k2]) / 2
+            end
+            gmax = max(gmax, g)
+            g > gthresh || continue
+            push!(cand, k); push!(score, rank == "exact" ? g^2 : g * dw)
+        end
+        if gmax < gthresh
+            println("converged: max |block gradient| = $gmax < $gthresh")
+            break
+        end
+        for k in cand[sortperm(score; rev=true)][1:min(max_rots, length(cand))]
+            x = states[k]
+            kx = [Int(pos[(y ⊻ x)+1]) for y in S]
+            out = [j for j in 1:nS if !((S[j] ⊻ x) in S)]
+            V = [W[:, kx[j]] for j in 1:nS]
+            Mv = [dot(V[j], hS[j]) for j in 1:nS]        # O_{y^x, y}
+            jr = out[1]
+            rows, rhs = UInt64[x], Bool[true]           # odd Y count
+            for j in out[2:end]                          # all terms of Cg with one sign
+                push!(rows, S[j] ⊻ S[jr]); push!(rhs, (Mv[j] < 0) != (Mv[jr] < 0))
+            end
+            z = gf2_solve(rows, rhs)
+            z === nothing && error("no generator with the wanted signs for x = $x")
+            G = PauliBasis{N}(Int128(z), Int128(x))
+            μs = [μ(G, y) for y in S]
+            HV = [Hs * V[j] for j in 1:nS]
+            B = sum((dot(view(W, :, kS[j]), hS[j]) - dot(V[j], HV[j])) / 2 for j in out)
+            Cg = sum(μs[j] * Mv[j] for j in out)
+            tsum = sum(abs(Mv[j]) for j in out)
+            abs(abs(Cg) - tsum) <= 1e-10 * max(1.0, tsum) || error("sign choice failed for x = $x")
+            θ = atan(-Cg, -B)
+            c, s = cos(θ / 2), sin(θ / 2)
+            rotate_W!(W, G, θ, states, pos, x)
+            for j in 1:nS
+                hS[j] = c .* hS[j] .+ (s * μs[j]) .* HV[j]
+            end
+        end
+        # recompute from scratch to keep the recurrences honest
+        drift = 0.0
+        for j in 1:nS
+            hn = Hs * W[:, kS[j]]
+            drift = max(drift, maximum(abs, hn .- hS[j]))
+            hS[j] = hn
+        end
+        record!(gmax, time() - t0)
+        report(iter, drift)
+    end
+    orth = maximum(abs, W[:, kS]' * W[:, kS] - I)
+    @printf("orthogonality of the block columns of W: %.1e; max cross-coset |M_yy'|: %.1e\n", orth, maximum(hist["cross"]))
+    lam = hist["lam"][end]
+    @printf("block eigenvalues - FCI (mHa): %s\n", join([@sprintf("%.4f", 1e3 * (e - e_fci)) for e in lam], ", "))
+    @printf("exact              (mHa): %s\n", join([@sprintf("%.4f", 1e3 * (e - e_fci)) for e in E_tgt], ", "))
+    # The flow can settle on a symmetry-protected saddle (e.g. a singlet kept in the block
+    # where Ky Fan wants a second triplet component), so also compare each block state with
+    # the nearest exact level of its coset and spin.
+    S2f, i = hist["S2"][end], 0
+    for (ci, c) in enumerate(cosets), _ in blk_idx[ci]
+        i += 1
+        same = [l for l in levels[c] if abs(l.S2 - S2f[i]) < 0.5]
+        if isempty(same)
+            @printf("   block state %d: %.4f mHa, <S^2> %.3f: no exact level with that spin (spin-contaminated)\n",
+                    i, 1e3 * (lam[i] - e_fci), S2f[i])
+        else
+            l = same[argmin([abs(l.E - lam[i]) for l in same])]
+            @printf("   block state %d: %.4f mHa, <S^2> %.3f; nearest exact level of that spin %.4f mHa: error %+.4f mHa\n",
+                    i, 1e3 * (lam[i] - e_fci), S2f[i], 1e3 * (l.E - e_fci), 1e3 * (lam[i] - l.E))
+        end
+    end
+
+    mkpath(opts["outdir"])
+    open(joinpath(opts["outdir"], "$(label).json"), "w") do io
+        JSON.print(io, Dict("label" => label, "R" => meta["R_angstrom"], "basis" => basis,
+                            "homo" => homo, "lumo" => lumo, "rank" => rank, "c" => cpar,
+                            "max_rots" => max_rots, "E_FCI" => e_fci, "sector_dim" => D,
+                            "targets" => [Dict("E" => l.E, "S2" => l.S2, "n_alpha" => l.na, "n_beta" => l.nb) for l in targets],
+                            "levels" => Dict(string(c) => [Dict("E" => l.E, "S2" => l.S2, "n_alpha" => l.na, "n_beta" => l.nb)
+                                                           for l in levels[c]] for c in cosets),
+                            "history" => hist, "orthogonality" => orth), 1)
+    end
+end
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    block_main(ARGS)
+end
