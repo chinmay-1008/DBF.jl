@@ -2,12 +2,14 @@
 
     python plot_block.py            # from frozen_core/; writes sv_results/plots/*.png
 
-1. energy_vs_variance.png  each block eigenvalue minus the exact level it ends on,
-                           against the block variance V_S of H (log), one panel per run
-2. tail_extrapolation.png  the same near V_S = 0 on linear axes, with straight-line fits
-                           of the tail extrapolated to V_S = 0 (plan, open question 1)
-3. block_variance.png      V_S of H against macro-iteration, all runs
-4. levels.png              exact levels per symmetry sector, Ky Fan targets marked
+1. energies_vs_variance.png  the block eigenvalues against the block variance V_S of H
+                             (log; each run starts on the right), exact levels as horizontal lines
+2. energies_zoom.png         one panel per run and state: the eigenvalue landing on its exact line
+3. error_vs_variance.png     block eigenvalue minus the exact level it ends on, symlog
+4. tail_extrapolation.png    the error near V_S = 0 on linear axes, with straight-line fits
+                             of the tail extrapolated to V_S = 0 (plan, open question 1)
+5. block_variance.png        V_S of H against macro-iteration, all runs
+6. levels.png                exact levels per symmetry sector, Ky Fan targets marked
 
 Reference levels: each block state is compared with the exact level of its own symmetry
 sector and spin that it ends on (matched on the final iteration), since the flow can end
@@ -72,7 +74,101 @@ def style(ax):
         ax.spines[s].set_visible(False)
 
 
-def energy_vs_variance(runs):
+def exact_lines(d, refs):
+    """exact levels to draw for a run: the levels its states end on plus its Ky Fan targets (mHa above FCI)"""
+    f = d["E_FCI"]
+    allv = [l for c in d["levels"].values() for l in c]
+    out = []
+    for e in list(refs) + [(t["E"] - f) * 1e3 for t in d["targets"]]:
+        if any(abs(e - o[0]) < 1e-3 for o in out):
+            continue
+        l = min(allv, key=lambda l: abs((l["E"] - f) * 1e3 - e))
+        is_ref = any(abs(e - r) < 1e-3 for r in refs)
+        name = "S0" if abs(e) < 1e-6 else f"{SPIN.get(round(l['S2']), '?')} {e:.2f}"
+        out.append((e, name if is_ref else name + " (Ky Fan target, missed)", is_ref))
+    return sorted(out)
+
+
+def energies_vs_variance(runs):
+    """the block eigenvalues themselves against V_S, with the exact levels as horizontal lines"""
+    fig, axes = plt.subplots(2, 2, figsize=(11, 7.6), squeeze=False)
+    for ax, (label, title, d) in zip(axes.flat, runs):
+        lam, vs, refs, names, s2 = run_data(d)
+        lines = exact_lines(d, refs)
+        top = max(lam[0].max(), max(e for e, _, _ in lines)) * 1.08
+        bot = -0.06 * top
+        for e, name, is_ref in lines:
+            ax.axhline(e, color=INK if is_ref else MUTED, lw=0.9, ls="--" if is_ref else ":", zorder=1)
+        # labels for the exact lines at the right edge, dodged so close levels stay readable
+        ys = [e for e, _, _ in lines]
+        gap = 0.045 * (top - bot)
+        for k in range(1, len(ys)):
+            ys[k] = max(ys[k], ys[k - 1] + gap)
+        for (e, name, is_ref), y in zip(lines, ys):
+            ax.annotate("exact " + name, xy=(1.0, e), xycoords=("axes fraction", "data"), xytext=(1.01, y),
+                        textcoords=("axes fraction", "data"), fontsize=7.5, va="center",
+                        color=INK if is_ref else MUTED, arrowprops=dict(arrowstyle="-", color=GRID, lw=0.6))
+        for i in range(lam.shape[1]):
+            ax.plot(vs, lam[:, i], "-", color=SERIES[i], lw=1.6, label=f"{names[i]}   ⟨S²⟩ {s2[i]:.2f}", zorder=3)
+            ax.plot(vs[0], lam[0, i], "o", color=SERIES[i], ms=5.5, mfc="white", mew=1.2, zorder=5)
+            ax.plot(vs[-1], lam[-1, i], "o", color=SERIES[i], ms=5.5, mec="white", mew=0.8, zorder=5)
+        ax.set_xscale("log")
+        ax.set_ylim(bot, top)
+        ax.set_title(title, fontsize=10, color=INK, loc="left")
+        ax.set_xlabel("block variance $V_S$ of H (Ha², log)")
+        ax.set_ylabel("energy (mHa above exact S0)")
+        ax.legend(loc="upper left", fontsize=7.5, handlelength=1.4, title="block eigenvalues",
+                  title_fontsize=7.5, alignment="left")
+        style(ax)
+    fig.suptitle("Block eigenvalues against block variance, with the exact energies as horizontal lines\n"
+                 "each flow starts on the right (hollow dots) and moves left as the block decouples "
+                 "(filled dots = last iteration)", x=0.01, ha="left", fontsize=10, color=INK)
+    fig.tight_layout(rect=(0, 0, 1, 0.94), w_pad=9)
+    return fig
+
+
+def energies_zoom(runs):
+    """one small panel per run and state: the energy landing on its exact line"""
+    nS = 3
+    fig, axes = plt.subplots(len(runs), nS, figsize=(11, 2.5 * len(runs) + 0.9), squeeze=False)
+    for r, (label, title, d) in enumerate(runs):
+        lam, vs, refs, names, s2 = run_data(d)
+        n = len(vs)
+        for i in range(nS):
+            ax = axes[r, i]
+            err = lam[:, i] - refs[i]
+            w = max(abs(err[n // 2]), 4 * abs(err[-1]), 0.02)
+            ax.axhline(refs[i], color=INK, lw=1, ls="--", zorder=1)
+            ax.plot(vs, lam[:, i], "-", color=SERIES[i], lw=1.6, zorder=3)
+            ax.plot(vs[-1], lam[-1, i], "o", color=SERIES[i], ms=5.5, mec="white", mew=0.8, zorder=5)
+            ax.set_xscale("log")
+            ax.set_ylim(refs[i] - 0.25 * w, refs[i] + 1.15 * w)
+            # x range: from where the curve last enters the frame to the end of the run
+            inside = np.abs(err) <= 1.15 * w
+            k = n - 1
+            while k > 0 and inside[k - 1]:
+                k -= 1
+            ax.set_xlim(vs.min() / 1.5, min(vs.max() * 1.5, vs[max(k - 1, 0)] * 3))
+            ax.set_title(f"{title}: {names[i]}", fontsize=8.5, color=INK, loc="left")
+            ax.text(0.98, 0.94, f"last: {err[-1]:+.4f} mHa\n⟨S²⟩ {s2[i]:.2f}", transform=ax.transAxes,
+                    ha="right", va="top", fontsize=7.5, color=INK,
+                    bbox=dict(facecolor="white", edgecolor="none", alpha=0.85, pad=1.5))
+            ax.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(4))
+            ax.ticklabel_format(axis="y", useOffset=False)
+            ax.tick_params(labelsize=7.5)
+            style(ax)
+            if r == len(runs) - 1:
+                ax.set_xlabel("$V_S$ of H (Ha², log)")
+            if i == 0:
+                ax.set_ylabel("mHa above exact S0")
+    fig.suptitle("Zoom on each state: the block eigenvalue (colour) landing on its exact energy (dashed)\n"
+                 "starts on the right, converges to the left; each panel is cropped to where its curve enters the frame",
+                 x=0.01, ha="left", fontsize=10, color=INK)
+    fig.tight_layout(rect=(0, 0, 1, 0.95))
+    return fig
+
+
+def error_vs_variance(runs):
     # one row per run, shared axes, legends outside on the right
     fig, axes = plt.subplots(len(runs), 1, figsize=(9, 2.5 * len(runs) + 0.8), sharex=True, sharey=True,
                              squeeze=False)
@@ -95,10 +191,9 @@ def energy_vs_variance(runs):
         ax.set_yticklabels(["−1000", "−100", "−10", "−1", "−0.1", "0", "0.01", "0.1", "1", "10", "100", "1000"],
                            fontsize=7.5)
         style(ax)
-    axes[0, 0].invert_xaxis()                       # shared: start on the left, converged on the right
     axes[-1, 0].set_xlabel("block variance $V_S$ of H (Ha², log)")
     fig.supylabel("block eigenvalue − exact level (mHa, symlog)", fontsize=9, color=INK)
-    fig.suptitle("Block states converging: energy error against block variance, converging to the right\n"
+    fig.suptitle("Energy error of each block state against block variance; starts on the right, converges to the left\n"
                  "hollow dot = start, filled dot = last iteration, grey band = ±1.6 mHa",
                  x=0.01, ha="left", fontsize=10, color=INK)
     fig.tight_layout(rect=(0, 0, 1, 0.95))
@@ -206,7 +301,9 @@ def main():
         if d is not None:
             all_runs[label] = d
     runs = [(l, t, all_runs[l]) for l, t in RUNS if l in all_runs]
-    energy_vs_variance(runs).savefig(os.path.join(OUT, "energy_vs_variance.png"), dpi=170)
+    energies_vs_variance(runs).savefig(os.path.join(OUT, "energies_vs_variance.png"), dpi=170)
+    energies_zoom(runs).savefig(os.path.join(OUT, "energies_zoom.png"), dpi=170)
+    error_vs_variance(runs).savefig(os.path.join(OUT, "error_vs_variance.png"), dpi=170)
     conv = [r for r in runs if r[0] in ("uno_1.10_block1c_exact", "uno_2.30_block1c_exact_s2pen0.05",
                                          "uno_2.30_block1c_exact_s2pen0.1")]
     fig, rows = tail_extrapolation(conv)

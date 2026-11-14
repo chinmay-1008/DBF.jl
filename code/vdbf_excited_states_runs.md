@@ -128,7 +128,11 @@ The target was exactly (S0, T1, S1), but the flow ended on (S0, S1, a second sin
 
 Figures from `plot_block.py` (written to `frozen_core/sv_results/plots/`, not in git):
 
-- `energy_vs_variance.png`: each block eigenvalue minus the exact level it ends on, against the block variance $V_S$ of H (log; converging to the right), one panel per run. At 1.1 Å all three states lie on straight, parallel lines: each error is roughly proportional to $V_S$. At 2.3 Å with bare H the lines fold back and stall. With +0.05 S² they converge after a rearrangement near $V_S \approx 10^{-2}$. With +0.1 S² the second state starts as the triplet, ~100 mHa below the singlet it ends on, and then jumps to the singlet; that jump is where T1 is lost.
+All variance axes run the usual way: each flow starts on the right (large $V_S$) and converges to the left.
+
+- `energies_vs_variance.png`: the block eigenvalues themselves against the block variance $V_S$ of H (log), one panel per run, with the exact energies as horizontal dashed lines (dotted = a Ky Fan target the run missed). At 1.1 Å the three energies settle on S0, ³Πg and ¹Πg. At 2.3 Å with bare H the states rearrange around $V_S \approx$ 0.03–0.1 and stall. With +0.05 S² they settle on S0, T1 and the triplet at 120.6. With +0.1 S² the T1 line is missed.
+- `energies_zoom.png`: one panel per run and state, zoomed onto its exact energy, showing the eigenvalue approaching the line, with the last error printed.
+- `error_vs_variance.png`: the same as errors (block eigenvalue minus the exact level it ends on), symlog. At 1.1 Å all three states lie on straight, parallel lines: each error is roughly proportional to $V_S$. With +0.1 S² the second state runs ~100 mHa below the singlet it ends on (it is the triplet then) before jumping up; that jump is where T1 is lost.
 - `tail_extrapolation.png`: the last 40% of iterations on linear axes, with a straight-line fit extrapolated to $V_S = 0$.
 - `block_variance.png`: $V_S$ against iteration for all runs.
 - `levels.png`: the exact levels per symmetry sector with the Ky Fan targets.
