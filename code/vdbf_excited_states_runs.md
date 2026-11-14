@@ -1,185 +1,171 @@
-# What the first excited-state runs do (idea 1c, exact DBF, N2)
+# Excited states of N₂ with block DBF. Part 1: R = 1.1 Å
 
-Companion to `vdbf_excited_states.md` (the plan). Written 14 Nov 2026 to explain the `sv_block.jl` runs. Energies in mHa (1 mHa = 0.0272 eV; chemical accuracy = 1.6 mHa).
+Energies in mHa (1 mHa = 0.0272 eV). Exact numbers come from diagonalising the same Hamiltonian. Part 2 (stretched N₂, 2.3 Å) comes after this one.
 
-## In one paragraph
+## 1. What we want
 
-Ground-state vDBF rotates H until the reference $|0\rangle$ decouples from everything else. Here we decouple a block of three determinants instead: the reference, and the HOMO→LUMO single excitation in α and in β. Diagonalising the resulting 3×3 block gives a ground state and two excited states. We do this first **without Pauli propagation and without truncation**, using the exact state-vector version of DBF that already exists for frozen-core N2 (`sv_dbf.jl`), so any error is the flow's own. **At 1.1 Å it works:** after 200 iterations the block gives S0, a triplet (³Πg) and a singlet (¹Πg), all within 0.04 mHa of exact, with excitation energies within 0.02 mHa. **At 2.3 Å it does not converge without help:** the ground-state column mixes with a quintet 9 mHa away, the same spin contamination the ground-state flow shows there. **With a spin penalty $H + 0.05\,S^2$ it converges** (S0 +0.010, T1 +0.030 mHa after 500 iterations). A larger penalty, λ = 0.1, loses T1: both excited columns end up as singlets.
+vDBF finds the ground state by rotating H until the reference determinant $|0\rangle$ is decoupled from everything else; then $\langle 0|\bar H|0\rangle = E_0$.
 
-## 1. System and why the exact code
+We want a few **excited states** from the same machinery. The idea: instead of decoupling one determinant, decouple a small **block** of determinants, then diagonalise that block. Here the block has 3 determinants, so we get 3 states: the ground state and two excited states.
 
-- N2, STO-3G, 1s cores frozen: 8 spatial orbitals, 16 qubits, 5α + 5β electrons. UNO basis (natural orbitals of UHF; closed-shell reference). Same Hamiltonians as the qual-exam PES.
-- Two geometries: **1.1 Å** (near equilibrium, weakly correlated) and **2.3 Å** (stretched, strongly correlated).
-- **Exact code.** `sv_dbf.jl` stores the product of all rotations so far, $W = U_1 U_2 \cdots U_K$, as a dense orthogonal matrix. Column $y$ of $W$ is the current, rotated version of determinant $|y\rangle$. The rotated Hamiltonian is $O = W^\top H W$; we never build it, only the few elements we need ($\langle x|O|y\rangle = w_x^\top H w_y$). Nothing is truncated, so this isolates the *method* (block cost, ranking, greedy rotations) from Pauli-propagation error. Once it works here, the same five changes go into `dbf_groundstate` with truncation (plan, Stage 4).
-- **Orbitals.** HOMO = active orbital 4, LUMO = active orbital 5 at both geometries (checked against the Fock diagonal). At 1.1 Å that is σg → πg. At 2.3 Å it is πu → πg. The π orbitals come in degenerate pairs (x, y).
+For this first test we use the **exact** version of DBF (state vector, no Pauli truncation), so whatever error we see belongs to the method itself.
 
-## 2. What the ground-state flow does (sv_dbf.jl, for reference)
+## 2. The molecule: N₂ at 1.1 Å
 
-Each macro-iteration:
+**Model.** STO-3G basis, the two 1s cores frozen. That leaves 8 spatial orbitals (16 spin orbitals = 16 qubits: α on qubits 0–7, β on 8–15) and 10 electrons.
 
-1. For every determinant $|x\rangle$, compute the coupling $\langle x|O|0\rangle$ to the reference.
-2. Rank the directions $x$ by that coupling and take the top 50.
-3. For each, apply one Pauli rotation $e^{-i\theta G/2}$ that mixes $|0\rangle$ with $|x\rangle$. $G$ has X/Y on the bits where $x$ is 1. $\theta$ is chosen exactly to minimise $\langle 0|O|0\rangle$; the energy as a function of $\theta$ is $a + b\cos\theta + c\sin\theta$.
+**Orbitals** (UNO basis; at 1.1 Å these are the ordinary RHF orbitals):
 
-Converged when every $\langle x|O|0\rangle \approx 0$, i.e. $|0\rangle$ is decoupled and $\langle 0|O|0\rangle = E_0$.
+| qubit (α / β) | orbital | Fock energy (Ha) | in the reference |
+|---|---|---|---|
+| 0 / 8 | 2σg | −1.440 | occupied |
+| 1 / 9 | 2σu | −0.723 | occupied |
+| 2, 3 / 10, 11 | 1πu (x, y) | −0.571 | occupied |
+| **4 / 12** | **3σg = HOMO** | −0.539 | occupied |
+| **5 / 13** | **1πg = LUMO** | +0.280 | empty |
+| 6 / 14 | 3σu | +1.118 | empty |
+| 7 / 15 | 1πg (other component) | +0.280 | empty |
 
-## 3. What the block flow does (sv_block.jl)
+**Exact ground state.** E₀ = −107.6538 Ha. Written as a sum of determinants, $|\Psi_0\rangle = c_0|0\rangle + \sum_k c_k|k\rangle$, the exact wavefunction has **92% of its weight on the closed-shell determinant** (2σg)²(2σu)²(1πu)⁴(3σg)², which we call $|0\rangle$: $|c_0|^2 = 0.92$. The other 8% is correlation, mostly 1πu² → 1πg² double excitations at about 2% each. Because $|0\rangle$ is only part of the true state, its energy alone is 157.3 mHa above E₀; that is the correlation energy the flow has to recover.
 
-**The block.** $S = \{|0\rangle, |a\rangle, |b\rangle\}$, with $|a\rangle$ = HOMO→LUMO in α and $|b\rangle$ = HOMO→LUMO in β. Their combinations $|a\rangle \mp |b\rangle$ are the $M_s=0$ triplet and the singlet of that excitation. This is variant 1c of the plan.
+**Excited states we target.** The lowest excitation in this picture is HOMO → LUMO, 3σg → 1πg. Promoting one electron gives two determinants:
 
-**The cost.** Instead of $\langle 0|O|0\rangle$ we minimise the block's diagonal sum
+- $|a\rangle$: 3σg → 1πg in α (qubits 4 and 5 flipped)
+- $|b\rangle$: 3σg → 1πg in β (qubits 12 and 13 flipped)
 
-$$C_S = \langle 0|O|0\rangle + \langle a|O|a\rangle + \langle b|O|b\rangle .$$
+Their two combinations are the triplet and the singlet of this excitation:
 
-By the Ky Fan theorem its minimum over all rotations is the sum of the 3 lowest eigenvalues. When the block is decoupled ($\langle x|O|y\rangle = 0$ for $y$ in the block and $x$ outside), the 3×3 matrix $M_{yy'} = \langle y|O|y'\rangle$ has exact eigenvalues.
+| exact state | exact energy above E₀ | weight of the exact wavefunction on the block |
+|---|---|---|
+| S0 | 0 | 0.92 on $\lvert 0\rangle$ |
+| ³Πg | 297.17 mHa (8.09 eV) | 0.92 on $(\lvert a\rangle - \lvert b\rangle)/\sqrt2$ |
+| ¹Πg | 347.38 mHa (9.45 eV) | 0.89 on $(\lvert a\rangle + \lvert b\rangle)/\sqrt2$ |
 
-**The angle.** Same structure as the ground state: for a rotation in direction $x$, $C_S(\theta) = \text{const} + B\cos\theta + C\sin\theta$, summed over the three block states. So the optimal angle is closed-form, exactly as before. Rotations inside the block (e.g. $|0\rangle \leftrightarrow |a\rangle$) cancel out of $C_S$, as the plan said.
+These weights describe the exact states themselves, not how well DBF does. DBF still converges to the exact energies (section 6); the weights say how much of each exact state the bare determinants already contain, and so how much the flow has to build in.
 
-**One new detail: the sign of the generator.** With one block state, a Pauli generator's sign on $|0\rangle$ doesn't matter. With three, the gradient is a sum of three terms, $\sum_y \mu(y)\,\langle y\oplus x|O|y\rangle$, where $\mu(y)=\pm1$ is the sign the Pauli picks up on $|y\rangle$. That sign depends on where the Pauli has Z's. So for each direction $x$ we pick the Z-pattern (a small linear solve over bits) that makes all three terms add instead of cancel. It is still one ordinary Pauli rotation, with an odd number of Y's so it stays real.
+(Π because 1πg is doubly degenerate, so each of these has a second, degenerate component made from the other πg orbital.)
 
-**Ranking, two options.**
+So the three states we want are each mostly one combination of the three determinants $\{|0\rangle, |a\rangle, |b\rangle\}$. The remaining ~10% is correlation, spread over many other determinants. **The job of the flow is to rotate that correlation into the three determinants**, so that the 3×3 block alone gives the exact energies.
 
-- `exact`: rank by the exact gradient of $C_S$ (the block version of ranking by $|\langle x|O|0\rangle|^2$).
-- `d1c`: rank by the plan's operator $D_{1c} = \sum_{\text{rest}} Z_k + Z_H Z_L + Z_{\bar H} Z_{\bar L} + c\,(Z_H + Z_{\bar H} - Z_H Z_{\bar H})$, i.e. by $\langle y\oplus x|[D,O]|y\rangle$ restricted to the block. This is the proxy the Pauli-propagation code would use (plan §6.4). The code checks that the block is exactly the top eigenspace of $D_{1c}$, as the plan claims.
+(If we also kept the double excitation 3σg² → 1πg², the block would have 4 states; that is variant 1b of the plan. Here we use the 3-state variant 1c.)
 
-## 4. Symmetry: why the sector had to change, and what the targets are
+## 3. What ordinary DBF does
 
-`sv_dbf.jl` only works with determinants reachable from $|0\rangle$ by H's own excitations (the span of H's Pauli x-strings). That set only contains determinants with the **same spatial symmetry as the reference** (4096 of them). The HOMO→LUMO excitation has a different symmetry (σg→πg is Πg; πu→πg is ungerade), so $|a\rangle, |b\rangle$ are not in it. `sv_block.jl` adds them, which doubles the space to 8192: two symmetry sectors.
+**Frame.** We work in the frame where the reference is $|00\ldots0\rangle$. A 1 on qubit $i$ means orbital $i$'s occupation is flipped: a hole if the orbital is occupied in the reference, a particle if it is empty.
 
-H does not couple the two sectors (checked: those block elements stay exactly 0 throughout). So the problem splits:
+**The diagonal operator.** Ordinary DBF uses
 
-- Sector of $|0\rangle$: one block state → the flow targets **the lowest state of that symmetry** (S0).
-- Sector of $|a\rangle$, $|b\rangle$: two block states → the flow targets **the two lowest states of that symmetry**.
+$$D = \sum_{i=1}^{16} Z_i .$$
 
-Exact low-lying levels (from diagonalising each sector), mHa above the ground state; ★ = Ky Fan target:
+$Z_i = +1$ if qubit $i$ is not flipped and $-1$ if it is. On a determinant with $w$ flipped qubits, $D = 16 - 2w$. So $D$ is largest (= 16) only on $|0\rangle$, and every other determinant sits lower.
 
-| | 1.1 Å, sector of \|0⟩ | 1.1 Å, sector of \|a⟩ | 2.3 Å, sector of \|0⟩ | 2.3 Å, sector of \|a⟩ |
+**The flow.** A double-bracket flow with a diagonal $D$ rotates H until it commutes with $D$, and it puts the lowest energies on the largest values of $D$. Since only $|0\rangle$ has the largest value, $|0\rangle$ ends up decoupled, holding $E_0$. Section 5 writes the flow out; section 6 describes vDBF, the greedy version of it.
+
+## 4. What we change: the HOMO and LUMO terms of D
+
+We keep $Z_k$ on the 12 other qubits and replace the four HOMO/LUMO terms $Z_H + Z_L + Z_{\bar H} + Z_{\bar L}$ (qubits 4, 5, 12, 13; bar = β) with
+
+$$D_\text{active} = Z_H Z_L + Z_{\bar H} Z_{\bar L} + c\,(Z_H + Z_{\bar H} - Z_H Z_{\bar H}), \qquad c = 1 .$$
+
+What each piece does:
+
+- **$Z_H Z_L$** is +1 when HOMO-α and LUMO-α are both unflipped or both flipped, i.e. the α electron of that pair is either still in the HOMO or has moved to the LUMO. $Z_{\bar H} Z_{\bar L}$ does the same for β. These two alone favour 4 configurations: reference, $|a\rangle$, $|b\rangle$ and the double.
+- **The $c$ term** is +1 on the reference, $|a\rangle$ and $|b\rangle$, and −3 on the double, so it pushes the double down.
+
+Values on the four HOMO/LUMO qubits (order: HOMO-α, HOMO-β, LUMO-α, LUMO-β):
+
+| configuration | meaning | $D_\text{active}$ |
+|---|---|---|
+| 0000 | reference $\lvert 0\rangle$ | 2 + c |
+| 1010 | $\lvert a\rangle$, HOMO→LUMO in α | 2 + c |
+| 0101 | $\lvert b\rangle$, HOMO→LUMO in β | 2 + c |
+| 1111 | double, HOMO² → LUMO² | 2 − 3c |
+| any other (e.g. 1000: electron removed from HOMO-α only) | breaks a pair | c or lower |
+
+Flipping any of the other 12 qubits lowers $D$ by 2 as before. So **the largest value of $D$ now belongs to exactly three determinants, $\{|0\rangle, |a\rangle, |b\rangle\}$**, and the flow decouples this block as a whole instead of $|0\rangle$ alone.
+
+What this means for any flow with this $D$:
+
+- **What goes down** is the sum of the block's three diagonal elements, $C = \langle 0|\bar H|0\rangle + \langle a|\bar H|a\rangle + \langle b|\bar H|b\rangle$. Its minimum is the sum of the three lowest eigenvalues the block can reach (Ky Fan).
+- **At the end** we diagonalise the 3×3 matrix $\langle y|\bar H|y'\rangle$, $y, y' \in \{0, a, b\}$, to get the three energies.
+- **How decoupled the block is** is measured by the **block variance** $V_S = \sum_{y} \lVert (1 - \Pi_S)\,\bar H\,|y\rangle\rVert^2$, the weight with which the block still couples to the outside ($V_S = 0$: fully decoupled). All plots below use it as the x-axis, the way ground-state plots use the energy variance.
+
+## 5. Exact evolution: the full double-bracket flow
+
+**Formalism.** The flow is a continuous rotation of H, with flow time $s$:
+
+$$\frac{d\bar H}{ds} = [\,\eta, \bar H\,], \qquad \eta = [\,\bar H, D\,], \qquad \bar H(0) = H .$$
+
+Every instant is an exact unitary rotation, $\bar H(s) = W(s)^\dagger H\, W(s)$, so the spectrum never changes. $\mathrm{Tr}(\bar H D)$ decreases monotonically, and the flow stops when $[\bar H, D] = 0$, with the lowest energies on the top eigenspace of $D$, i.e. on the block. Here it is computed exactly, with no truncation.
+
+**Which $D$.** Only the top eigenspace of $D$ decides which states end up in the block. The simplest $D$ with the same top eigenspace as section 4's operator is the **block projector** $\Pi_S = |0\rangle\langle 0| + |a\rangle\langle a| + |b\rangle\langle b|$. With it, $\mathrm{Tr}(\bar H \Pi_S)$ is exactly the block sum $C$, so the flow is the gradient flow of $C$, and it has a closed form: at flow time $s$ the block is spanned by $e^{-sH}|0\rangle$, $e^{-sH}|a\rangle$, $e^{-sH}|b\rangle$ (subspace imaginary-time evolution). That is the flow shown here. The same flow with section 4's $D_{1c}$ also reorders the states outside the block, has to be integrated numerically, and is much slower; it is running and will be added.
+
+**Result.** Same start as everything else (the bare 3×3 block, $V_S = 0.93$):
+
+| state | start | after the flow | exact | error |
 |---|---|---|---|---|
-| 1 | ★ 0 (S0) | ★ 297.17 triplet | ★ 0 (S0) | ★ 2.84 triplet |
-| 2 | 622.6 quintet | ★ 297.17 triplet (degenerate partner) | 9.00 quintet | ★ 20.14 septet |
-| 3 | | 347.38 singlet ×2 | | 120.6 triplet ×2 |
-| | | | | singlet: not in the lowest 8 |
+| S0 | 157.3 | 0.0000 | 0 | < 10⁻⁶ |
+| ³Πg | 435.8 | 297.1739 | 297.1739 | < 10⁻⁶ |
+| ¹Πg | 512.2 | 347.3837 | 347.3837 | < 10⁻⁶ |
 
-What this means physically:
+All three are within 1.6 mHa by $s = 2.2$ ($V_S = 1.9\times10^{-3}$), within 0.01 mHa by $s = 7.1$ ($V_S = 5\times10^{-6}$), and exact to $10^{-6}$ mHa by $s \approx 12$. They stay spin-pure throughout (⟨S²⟩ = 0, 2, 0).
 
-- **1.1 Å.** In the HOMO→LUMO sector the lowest states are the two degenerate components of a triplet, ³Πg (x and y), with the singlet ¹Πg 50 mHa above. The π orbitals are not symmetry-adapted, so x and y share a sector. So the Ky Fan minimum is (S0, ³Πg x, ³Πg y), **not** the (S0, T1, S1) the plan assumed.
-- **2.3 Å.** The stretched molecule has the spin ladder of two N atoms: singlet, triplet (2.8 mHa), quintet (9.0), septet (20.1). Singlet and quintet share the reference's symmetry; triplet and septet are in the HOMO→LUMO sector. So the Ky Fan minimum there is (S0, triplet, septet).
-- The overall lowest triplet of N2 can sit in yet another symmetry; this block cannot see it. A block only finds the lowest states of the symmetries its determinants carry.
-- Labels like ³Πg are assigned from degeneracy, ⟨S²⟩ and orbital character; the code does not compute irreps.
+![Full flow: block eigenvalues against block variance at 1.1 Å](n2_pes/frozen_core/sv_results/plots/n2_110_flow_projector_energies.png)
 
-## 5. Results without the penalty (200 iterations × 50 rotations, about 2 min each)
+The flow starts on the right (large $V_S$, hollow dots) and moves left as the block decouples; the three energies settle on the exact energies (dashed).
 
-Block eigenvalues compared with the exact level of the same symmetry and spin, mHa above the exact ground state. "Start" = the bare 3×3 block before any rotation.
+![Full flow: zoom on each state at 1.1 Å](n2_pes/frozen_core/sv_results/plots/n2_110_flow_projector_zoom.png)
 
-**1.1 Å**
+Zoomed onto each exact line, with the same windows as the greedy zoom in section 6. The flow lands exactly on all three.
 
-| state | start | after flow (exact ranking) | exact | error |
+## 6. Greedy vDBF, exact
+
+**Formalism.** vDBF does the flow greedily, with single Pauli rotations instead of the continuous $\eta$. Here too everything is exact (state vector, no truncation):
+
+1. **Start.** Nothing is rotated. The 3×3 block of the bare H gives 157.3, 435.8 and 512.2 mHa above E₀: the reference energy and the bare HOMO→LUMO triplet and singlet.
+2. **Each macro-iteration.** For every determinant outside the block, compute how strongly it couples to the block. Rank them, take the top 50, and apply one Pauli rotation for each, with the angle chosen exactly to lower the block sum $C$.
+3. **Track.** After each macro-iteration, diagonalise the 3×3 block and record its three eigenvalues and $V_S$.
+4. **Stop** after 200 macro-iterations (10 000 rotations, about 2 minutes).
+
+The ranking can use $D$ (the $[H, D]$ proxy, as in vDBF) or the exact gradient of $C$; here both give the same numbers.
+
+**Result.**
+
+| state | start | after 200 iterations | exact | error |
 |---|---|---|---|---|
 | S0 | 157.3 | 0.019 | 0 | +0.019 |
 | ³Πg | 435.8 | 297.196 | 297.174 | +0.022 |
 | ¹Πg | 512.2 | 347.421 | 347.384 | +0.037 |
 
-Excitation energies: ³Πg 297.177 vs 297.174 (8.087 eV), ¹Πg 347.402 vs 347.384 (9.453 eV). Errors partly cancel in the differences. The d1c ranking gives nearly identical numbers (+0.021, +0.028, +0.038). Still improving at 200 iterations.
+Excitation energies: ³Πg 297.177 vs 297.174 mHa, ¹Πg 347.402 vs 347.384 mHa. All three stay spin-pure (⟨S²⟩ = 0, 2, 0). With $D$-ranking: +0.021, +0.028, +0.038.
 
-**Why it lands on (S0, ³Πg, ¹Πg), not the Ky Fan minimum.** To swap the singlet for the second triplet component, the flow would need a coupling between a singlet column and a triplet state. H conserves spin exactly ($[H, S^2]$ = 5e-16 here), so for a spin-pure column that coupling is zero and the gradient pointing there is zero. The block is decoupled (any set of eigenstates is a stationary point), just not the lowest one. The plan calls this a saddle (§6.2). Here it is welcome: it is exactly the plan's intended (S0, T1, S1). In the log this shows as `C-target` stuck at +50.2 mHa (the ¹Πg–³Πg gap) and `1-F_S` at exactly 1/3 (one of three block directions is outside the Ky Fan target space).
+![Greedy vDBF: block eigenvalues against block variance at 1.1 Å](n2_pes/frozen_core/sv_results/plots/n2_110_energies.png)
 
-**2.3 Å**
+![Greedy vDBF: zoom on each state at 1.1 Å](n2_pes/frozen_core/sv_results/plots/n2_110_zoom.png)
 
-| state | start | after flow (exact ranking) | comment |
-|---|---|---|---|
-| S0 | 744.7 | 1.56 | ⟨S²⟩ = 0.76: mixed with the quintet 9 mHa above |
-| triplet | 543.5 | 3.68 (exact 2.84) | +0.84 |
-| 3rd | 607.1 | ~120.5 | wanders between a triplet at 120.6 and the septet |
+All three are still approaching their exact lines at the last iteration. Each error shrinks roughly in proportion to $V_S$; a straight-line extrapolation to $V_S = 0$ brings all three within 0.002 mHa.
 
-Not converged, and the d1c ranking is worse (S0 at +3.3 with ⟨S²⟩ 1.4, third state drifting toward the septet). Cause: a single Pauli rotation is not spin-adapted. When a state of different spin sits close by (the quintet, 9 mHa above S0, in the same symmetry), the greedy rotations mix them and the flow is slow to undo it. The ground-state-only flow from the same start has the same problem (`uno_2.30_onebody`, ⟨S²⟩ 0.32 after 200 iterations). There the fix was flowing on $H + 0.05\,S^2$.
+## 7. Both on the same plots
 
-## 6. The spin penalty
+![Greedy vDBF and the full flow on the same axes, 1.1 Å](n2_pes/frozen_core/sv_results/plots/n2_110_compare_energies.png)
 
-`--s2-penalty λ` makes the flow minimise the block cost of $H + \lambda S^2$; reported energies are still of $H$. Because $[H, S^2] = 0$, the eigenstates are unchanged; each spin-$S$ level just moves up by $\lambda S(S+1)$ in the cost (triplet +2λ, quintet +6λ, septet +12λ). Two effects:
+![Greedy vDBF and the full flow, zoom on each state](n2_pes/frozen_core/sv_results/plots/n2_110_compare_zoom.png)
 
-1. The quintet is pushed far from S0, so the |0⟩ column should stop mixing.
-2. The Ky Fan target in the HOMO→LUMO sector changes. At 2.3 Å the HOMO→LUMO singlet is at 227.5 mHa:
-   - **λ = 0.05:** target = triplet 2.84 + one of the triplet pair at 120.6 (degenerate at the block edge).
-   - **λ = 0.1:** the 120.6 triplets move above the singlet (they rise by 2λ, the singlet doesn't), so the target becomes exactly **(S0, T1 at 2.84, S1 at 227.5)**, with a 29 mHa gap to the next level. Any λ above ≈ 0.054 does this.
+- **Same states.** Both end on S0, ³Πg and ¹Πg.
+- **At the same $V_S$, greedy is lower.** Where greedy stopped ($V_S = 2.5\times10^{-4}$) its errors are 0.019, 0.022, 0.037 mHa; the full flow at that $V_S$ has 0.042, 0.072, 0.31 mHa. Likewise greedy has all three within 1.6 mHa by $V_S = 9.6\times10^{-3}$ (iteration 37), the full flow only by $V_S = 1.9\times10^{-3}$. So the greedy single-Pauli path loses nothing against the true gradient flow; per unit of decoupling it does better.
+- **The full flow goes all the way.** Greedy stopped at 200 iterations; the full flow continues to $V_S \approx 10^{-20}$ and the exact energies. In both, the error falls roughly in proportion to $V_S$.
 
-Both were run for 500 iterations with exact ranking (`uno_2.30_block1c_exact_s2pen0.05`, `uno_2.30_block1c_exact_s2pen0.1`).
+## 8. Two things worth knowing
 
-**λ = 0.05: converged.**
+- **Symmetry.** $|a\rangle$ and $|b\rangle$ have a different spatial symmetry (Πg) from the ground state (Σg⁺), so H never couples them to $|0\rangle$. In practice both flows decouple $|0\rangle$ on its own and $\{|a\rangle, |b\rangle\}$ on their own.
+- **Which excited states come out.** Because 1πg is degenerate, ³Πg has two components at 297.17. Strictly, the lowest possible block sum would take both ³Πg components instead of ³Πg + ¹Πg. Neither flow goes there: H conserves spin, so nothing pulls the singlet toward a triplet, and it stays a singlet. The result is exactly the set we wanted: S0, one triplet and one singlet of the same excitation.
 
-| state | after flow | exact | error | ⟨S²⟩ |
-|---|---|---|---|---|
-| S0 | 0.0095 | 0 | +0.0095 | 0.000 |
-| T1 (³Σu⁺) | 2.873 | 2.842 | +0.030 | 2.000 |
-| triplet | 120.974 | 120.614 | +0.36 | 1.995 |
+---
 
-The spin contamination is gone, and the T1 excitation energy is 2.863 vs 2.842 mHa. The block reaches its Ky Fan target (C − target 0.13 mHa and falling, $V_S^H$ = 1.2e-4).
-
-**λ = 0.1: the triplet is lost.**
-
-| state | after flow | exact | error | ⟨S²⟩ |
-|---|---|---|---|---|
-| S0 | 0.0445 | 0 | +0.045 | 0.000 |
-| S1 (HOMO→LUMO singlet) | 228.013 | 227.512 | +0.50 | 0.000 |
-| second singlet | 263.991 | 263.281 | +0.71 | 0.002 |
-
-The target was exactly (S0, T1, S1), but the flow ended on (S0, S1, a second singlet), with C − target stuck at 62 mHa. With a large penalty, triplet character costs 2λ = 200 mHa, so early in the flow the greedy rotations push both HOMO→LUMO columns into singlet space. Once a column is a pure singlet, spin conservation means nothing pulls it back toward T1. It is the same protection that kept ¹Πg in the block at 1.1 Å, now working against us. The penalty decides each column's spin early; getting (S0, T1, S1) reliably at 2.3 Å needs the spin of each column steered, not just penalised. λ = 0.05 is the setting that works.
-
-## 6b. Watching the chosen states converge
-
-Figures from `plot_block.py` (written to `frozen_core/sv_results/plots/`, not in git):
-
-All variance axes run the usual way: each flow starts on the right (large $V_S$) and converges to the left.
-
-- `energies_vs_variance.png`: the block eigenvalues themselves against the block variance $V_S$ of H (log), one panel per run, with the exact energies as horizontal dashed lines (dotted = a Ky Fan target the run missed). At 1.1 Å the three energies settle on S0, ³Πg and ¹Πg. At 2.3 Å with bare H the states rearrange around $V_S \approx$ 0.03–0.1 and stall. With +0.05 S² they settle on S0, T1 and the triplet at 120.6. With +0.1 S² the T1 line is missed.
-- `energies_zoom.png`: one panel per run and state, zoomed onto its exact energy, showing the eigenvalue approaching the line, with the last error printed.
-- `error_vs_variance.png`: the same as errors (block eigenvalue minus the exact level it ends on), symlog. At 1.1 Å all three states lie on straight, parallel lines: each error is roughly proportional to $V_S$. With +0.1 S² the second state runs ~100 mHa below the singlet it ends on (it is the triplet then) before jumping up; that jump is where T1 is lost.
-- `tail_extrapolation.png`: the last 40% of iterations on linear axes, with a straight-line fit extrapolated to $V_S = 0$.
-- `block_variance.png`: $V_S$ against iteration for all runs.
-- `levels.png`: the exact levels per symmetry sector with the Ky Fan targets.
-
-**Does it extrapolate linearly in $V_S$?** (Open question 1 of the plan.) Error at the last iteration → straight-line extrapolation to $V_S = 0$, mHa:
-
-| run | state | last | extrapolated |
-|---|---|---|---|
-| 1.1 Å | S0 / ³Πg / ¹Πg | +0.019 / +0.023 / +0.037 | −0.002 / −0.0002 / −0.001 |
-| 2.3 Å, +0.05 S² | S0 / T1 / triplet 120.6 | +0.010 / +0.030 / +0.36 | −0.005 / −0.022 / +0.25 |
-| 2.3 Å, +0.1 S² | S0 / S1 / second singlet | +0.045 / +0.50 / +0.71 | −0.011 / +0.25 / +0.51 |
-
-At 1.1 Å, yes: the tails are straight and extrapolation removes almost all of the error. At 2.3 Å it helps S0 and T1, but the higher states' tails still curve. $V_S$ is one number for the whole block; a per-state variance would be a cleaner x-axis and is easy to add.
-
-## 7. How to read a log line
-
-```
- iter    C-target   lambda_i - target_i (mHa)   V_S   V_S^H   max|grad|   1-F_S   <S^2> of M's states   leak   drift   time
-```
-
-- **C-target**: block cost minus its Ky Fan minimum (of $H + \lambda S^2$). Goes to 0 only at the true minimum; plateaus on a saddle.
-- **λᵢ − targetᵢ**: eigenvalues of the 3×3 block of $H$ minus the target levels, per symmetry sector (S0 first). On a saddle, compare instead with the matching exact level, which the end-of-run printout does.
-- **V_S**: block variance, $\sum_{y\in S} \|(1-\Pi_S)\,O\,|y\rangle\|^2$: how strongly the block still couples to the outside. 0 = decoupled. `V_S` is for the flow operator, `V_S^H` for H (equal when λ = 0).
-- **max|grad|**: largest block gradient over all directions; convergence when below 1e-6.
-- **1−F_S**: how much of the block lies outside the target eigenvectors (0 = block spans exactly the targets; 1/3 = one block direction is a different eigenstate, as on the 1.1 Å saddle).
-- **⟨S²⟩**: of each eigenvector of the 3×3 block (0 singlet, 2 triplet, 6 quintet, 12 septet).
-- **leak**: weight outside 10 electrons. The Hamiltonian has no chemical potential and the sector contains other electron numbers, so this should go to 0.
-- **drift**: check that the running updates match a from-scratch recomputation (~1e-13).
-
-## 8. Caveats
-
-- Exact arithmetic only so far. Nothing here says how truncation will behave.
-- 200 iterations was not enough to converge fully even at 1.1 Å ($V_S$ ≈ 2.5e-4 and falling).
-- The target depends on the symmetry of the block determinants and on the orbital basis (here the degenerate π pairs are not symmetry-adapted).
-- The d1c ranking is the plan's $[H, D]$ proxy evaluated only on matrix elements touching the block, as `sv_dbf.jl`'s "onebody" ranking is for the ground state; the Pauli-propagation version sees the whole operator.
-
-## 9. Reproduce
-
-From `code/n2_pes/frozen_core/` (input data in `data_unocore/R_*`, not in git; copy from the qual_exam checkout):
+Code in `code/n2_pes/frozen_core/`: greedy `sv_block.jl`, full flow `cflow_block.jl`, plots `plot_block.py` (written to `sv_results/plots/`, not in git).
 
 ```
 julia -t 8 --project=../../integrals sv_block.jl data_unocore/R_1.10 uno uno_1.10_block1c_exact
-julia -t 8 --project=../../integrals sv_block.jl data_unocore/R_2.30 uno uno_2.30_block1c_exact
-julia -t 8 --project=../../integrals sv_block.jl data_unocore/R_2.30 uno uno_2.30_block1c_d1c --rank d1c
-julia -t 8 --project=../../integrals sv_block.jl data_unocore/R_2.30 uno uno_2.30_block1c_exact_s2pen0.05 --s2-penalty 0.05 --max-iter 500
-julia -t 8 --project=../../integrals sv_block.jl data_unocore/R_2.30 uno uno_2.30_block1c_exact_s2pen0.1 --s2-penalty 0.1 --max-iter 500
+julia -t 8 --project=../../integrals cflow_block.jl data_unocore/R_1.10 uno uno_1.10_flow1c_projector --gen projector --s-max 200
 python plot_block.py
 ```
-
-Results go to `sv_results/<label>.json`; the logs above were saved to `sv_results/logs/<label>.out`.

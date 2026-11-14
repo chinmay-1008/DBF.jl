@@ -41,6 +41,11 @@ plt.rcParams.update({"font.family": ["Helvetica", "Arial", "DejaVu Sans"], "font
                      "ytick.color": MUTED, "axes.linewidth": 0.8, "legend.frameon": False})
 
 
+def nz(x, eps):
+    """x, with values that round to zero printed as +0 rather than -0"""
+    return 0.0 if abs(x) < eps else x
+
+
 def load(label):
     p = os.path.join(RES, label + ".json")
     return json.load(open(p)) if os.path.exists(p) else None
@@ -51,8 +56,11 @@ def run_data(d):
     h, f = d["history"], d["E_FCI"]
     lam = (np.array(h["lam"]) - f) * 1e3
     vs = np.array(h.get("VS_H", h["VS"]))
+    keep = vs > 1e-14                                # rows past full convergence add nothing on a log axis
+    lam, vs = lam[keep], vs[keep]
     s2 = h["S2"][-1]
-    cos = list(d["levels"].values())                 # sector of |0> first, then |a>
+    # sector of |0> first (its lowest level is FCI), then the sector of |a>
+    cos = sorted(d["levels"].values(), key=lambda lv: min(abs(l["E"] - f) for l in lv))
     owner = [0] + [1] * (lam.shape[1] - 1)
     refs, names = [], []
     for i, (s, c) in enumerate(zip(s2, owner)):
@@ -91,7 +99,9 @@ def exact_lines(d, refs):
 
 def energies_vs_variance(runs):
     """the block eigenvalues themselves against V_S, with the exact levels as horizontal lines"""
-    fig, axes = plt.subplots(2, 2, figsize=(11, 7.6), squeeze=False)
+    ncol = min(2, len(runs))
+    nrow = (len(runs) + ncol - 1) // ncol
+    fig, axes = plt.subplots(nrow, ncol, figsize=(5.5 * ncol, 3.8 * nrow + 0.4), squeeze=False)
     for ax, (label, title, d) in zip(axes.flat, runs):
         lam, vs, refs, names, s2 = run_data(d)
         lines = exact_lines(d, refs)
@@ -109,7 +119,7 @@ def energies_vs_variance(runs):
                         textcoords=("axes fraction", "data"), fontsize=7.5, va="center",
                         color=INK if is_ref else MUTED, arrowprops=dict(arrowstyle="-", color=GRID, lw=0.6))
         for i in range(lam.shape[1]):
-            ax.plot(vs, lam[:, i], "-", color=SERIES[i], lw=1.6, label=f"{names[i]}   ⟨S²⟩ {s2[i]:.2f}", zorder=3)
+            ax.plot(vs, lam[:, i], "-", color=SERIES[i], lw=1.6, label=f"{names[i]}   ⟨S²⟩ {nz(s2[i], 5e-3):.2f}", zorder=3)
             ax.plot(vs[0], lam[0, i], "o", color=SERIES[i], ms=5.5, mfc="white", mew=1.2, zorder=5)
             ax.plot(vs[-1], lam[-1, i], "o", color=SERIES[i], ms=5.5, mec="white", mew=0.8, zorder=5)
         ax.set_xscale("log")
@@ -120,16 +130,18 @@ def energies_vs_variance(runs):
         ax.legend(loc="upper left", fontsize=7.5, handlelength=1.4, title="block eigenvalues",
                   title_fontsize=7.5, alignment="left")
         style(ax)
-    fig.suptitle("Block eigenvalues against block variance, with the exact energies as horizontal lines\n"
-                 "each flow starts on the right (hollow dots) and moves left as the block decouples "
-                 "(filled dots = last iteration)", x=0.01, ha="left", fontsize=10, color=INK)
-    fig.tight_layout(rect=(0, 0, 1, 0.94), w_pad=9)
+    fig.suptitle("Block eigenvalues against block variance; exact energies dashed\n"
+                 "starts on the right (hollow dots), converges to the left (filled dots)",
+                 x=0.01, ha="left", fontsize=10, color=INK)
+    fig.tight_layout(rect=(0, 0, 1, 0.94 if nrow > 1 else 0.88), w_pad=9)
     return fig
 
 
-def energies_zoom(runs):
-    """one small panel per run and state: the energy landing on its exact line"""
+def energies_zoom(runs, windows=None, rights=None):
+    """one small panel per run and state: the energy landing on its exact line.  windows / rights (per state)
+    fix the y half-window and the right x edge, e.g. to match another figure; returns (fig, windows, rights)"""
     nS = 3
+    used_w, used_r = [], []
     fig, axes = plt.subplots(len(runs), nS, figsize=(11, 2.5 * len(runs) + 0.9), squeeze=False)
     for r, (label, title, d) in enumerate(runs):
         lam, vs, refs, names, s2 = run_data(d)
@@ -137,7 +149,7 @@ def energies_zoom(runs):
         for i in range(nS):
             ax = axes[r, i]
             err = lam[:, i] - refs[i]
-            w = max(abs(err[n // 2]), 4 * abs(err[-1]), 0.02)
+            w = windows[i] if windows else max(abs(err[n // 2]), 4 * abs(err[-1]), 0.02)
             ax.axhline(refs[i], color=INK, lw=1, ls="--", zorder=1)
             ax.plot(vs, lam[:, i], "-", color=SERIES[i], lw=1.6, zorder=3)
             ax.plot(vs[-1], lam[-1, i], "o", color=SERIES[i], ms=5.5, mec="white", mew=0.8, zorder=5)
@@ -148,9 +160,11 @@ def energies_zoom(runs):
             k = n - 1
             while k > 0 and inside[k - 1]:
                 k -= 1
-            ax.set_xlim(vs.min() / 1.5, min(vs.max() * 1.5, vs[max(k - 1, 0)] * 3))
+            right = rights[i] if rights else min(vs.max() * 1.5, vs[max(k - 1, 0)] * 3)
+            ax.set_xlim(vs.min() / 1.5, right)
+            used_w.append(w); used_r.append(right)
             ax.set_title(f"{title}: {names[i]}", fontsize=8.5, color=INK, loc="left")
-            ax.text(0.98, 0.94, f"last: {err[-1]:+.4f} mHa\n⟨S²⟩ {s2[i]:.2f}", transform=ax.transAxes,
+            ax.text(0.98, 0.94, f"last: {nz(err[-1], 5e-5):+.4f} mHa\n⟨S²⟩ {nz(s2[i], 5e-3):.2f}", transform=ax.transAxes,
                     ha="right", va="top", fontsize=7.5, color=INK,
                     bbox=dict(facecolor="white", edgecolor="none", alpha=0.85, pad=1.5))
             ax.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(4))
@@ -165,7 +179,7 @@ def energies_zoom(runs):
                  "starts on the right, converges to the left; each panel is cropped to where its curve enters the frame",
                  x=0.01, ha="left", fontsize=10, color=INK)
     fig.tight_layout(rect=(0, 0, 1, 0.95))
-    return fig
+    return fig, used_w, used_r
 
 
 def error_vs_variance(runs):
@@ -292,8 +306,135 @@ def levels():
     return fig
 
 
+FLOW_LS = (0, (1.2, 1.6))           # dotted, for the full flow when drawn next to greedy (solid)
+
+
+def compare_energies(greedy, flow, title):
+    """the doc's energies-vs-variance figure with greedy (solid) and the full flow (dotted) on the same axes"""
+    fig, ax = plt.subplots(figsize=(6.6, 4.4))
+    lam_g, vs_g, refs, names, s2 = run_data(greedy)
+    lam_f, vs_f, _, _, _ = run_data(flow)
+    lines = exact_lines(greedy, refs)
+    top = max(lam_g[0].max(), max(e for e, _, _ in lines)) * 1.08
+    bot = -0.06 * top
+    for e, name, is_ref in lines:
+        ax.axhline(e, color=INK, lw=0.9, ls="--", zorder=1)
+        ax.annotate("exact " + name, xy=(1.01, e), xycoords=("axes fraction", "data"), fontsize=7.5, va="center",
+                    color=INK)
+    for i in range(lam_g.shape[1]):
+        ax.plot(vs_g, lam_g[:, i], "-", color=SERIES[i], lw=1.6, zorder=3, label=names[i])
+        ax.plot(vs_f, lam_f[:, i], ls=FLOW_LS, color=SERIES[i], lw=2.2, zorder=4)
+        ax.plot(vs_g[0], lam_g[0, i], "o", color=SERIES[i], ms=5.5, mfc="white", mew=1.2, zorder=5)
+        ax.plot(vs_g[-1], lam_g[-1, i], "o", color=SERIES[i], ms=5.5, mec="white", mew=0.8, zorder=5)
+        ax.plot(vs_f[-1], lam_f[-1, i], "D", color=SERIES[i], ms=5, mec="white", mew=0.8, zorder=5)
+    ax.set_xscale("log")
+    ax.set_ylim(bot, top)
+    ax.set_title(title, fontsize=10, color=INK, loc="left")
+    ax.set_xlabel("block variance $V_S$ of H (Ha², log)")
+    ax.set_ylabel("energy (mHa above exact S0)")
+    from matplotlib.lines import Line2D
+    states = ax.legend(loc="upper left", fontsize=7.5, title="state", title_fontsize=7.5, alignment="left")
+    ax.add_artist(states)
+    ax.legend(handles=[Line2D([], [], color=INK, lw=1.6, ls="-", marker="o", ms=4, label="greedy vDBF (200 iterations)"),
+                       Line2D([], [], color=INK, lw=2.2, ls=FLOW_LS, marker="D", ms=4, label="full flow"),
+                       Line2D([], [], color=INK, lw=0.9, ls="--", label="exact")],
+              loc="lower left", bbox_to_anchor=(0.0, 0.17), fontsize=7.5, title="method", title_fontsize=7.5,
+              alignment="left")
+    style(ax)
+    fig.suptitle("Greedy vDBF and the full flow on the same axes; exact energies dashed\n"
+                 "both start on the right (hollow dots); filled dot = greedy end, diamond = full-flow end",
+                 x=0.01, ha="left", fontsize=10, color=INK)
+    fig.tight_layout(rect=(0, 0, 0.9, 0.86))
+    return fig
+
+
+def compare_zoom(greedy, flow, title, windows, rights):
+    """the doc's per-state zoom with greedy (solid) and the full flow (dotted) in the same panels"""
+    lam_g, vs_g, refs, names, s2 = run_data(greedy)
+    lam_f, vs_f, _, _, _ = run_data(flow)
+    nS = lam_g.shape[1]
+    fig, axes = plt.subplots(1, nS, figsize=(11, 3.4), squeeze=False)
+    for i in range(nS):
+        ax, w = axes[0, i], windows[i]
+        ax.axhline(refs[i], color=INK, lw=1, ls="--", zorder=1)
+        ax.plot(vs_g, lam_g[:, i], "-", color=SERIES[i], lw=1.6, zorder=3, label="greedy vDBF")
+        ax.plot(vs_f, lam_f[:, i], ls=FLOW_LS, color=SERIES[i], lw=2.2, zorder=4, label="full flow")
+        ax.plot(vs_g[-1], lam_g[-1, i], "o", color=SERIES[i], ms=5.5, mec="white", mew=0.8, zorder=5)
+        ax.set_xscale("log")
+        ax.set_ylim(refs[i] - 0.25 * w, refs[i] + 1.15 * w)
+        ax.set_xlim(vs_f.min() / 1.5, rights[i])
+        ax.set_title(f"{title}: {names[i]}", fontsize=8.5, color=INK, loc="left")
+        ax.text(0.98, 0.94, f"greedy, last: {nz(lam_g[-1, i] - refs[i], 5e-5):+.4f} mHa", transform=ax.transAxes,
+                ha="right", va="top", fontsize=7.5, color=INK,
+                bbox=dict(facecolor="white", edgecolor="none", alpha=0.85, pad=1.5))
+        ax.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(4))
+        ax.ticklabel_format(axis="y", useOffset=False)
+        ax.tick_params(labelsize=7.5)
+        ax.set_xlabel("$V_S$ of H (Ha², log)")
+        style(ax)
+        if i == 0:
+            ax.set_ylabel("mHa above exact S0")
+            ax.legend(loc="center left", fontsize=7.5)
+    fig.suptitle("Zoom on each state: greedy vDBF (solid) and the full flow (dotted) landing on the exact energy (dashed)\n"
+                 "same windows as the separate zoom figures; greedy stops at its last iteration, the full flow continues",
+                 x=0.01, ha="left", fontsize=10, color=INK)
+    fig.tight_layout(rect=(0, 0, 1, 0.84))
+    return fig
+
+
+def greedy_vs_flow(methods, refs, names, title):
+    """per state: block eigenvalue against V_S for greedy vDBF and the full flow (top row, energies with the
+    exact energy dashed; bottom row, error on a log scale).  methods: [(name, data, colour, linestyle)]"""
+    nS = len(refs)
+    fig, axes = plt.subplots(2, nS, figsize=(4.0 * nS, 6.6), squeeze=False)
+    for i in range(nS):
+        top, bot = axes[0, i], axes[1, i]
+        lo, hi = refs[i], refs[i]
+        for name, d, colour, ls in methods:
+            h = d["history"]
+            lam = (np.array(h["lam"])[:, i] - d["E_FCI"]) * 1e3
+            vs = np.array(h.get("VS_H", h["VS"]))
+            keep = vs > 1e-14                     # converged flow rows add nothing on a log axis
+            top.plot(vs[keep], lam[keep], ls, color=colour, lw=1.6, label=name)
+            err = np.abs(lam[keep] - refs[i])
+            bot.plot(vs[keep], np.maximum(err, 1e-9), ls, color=colour, lw=1.6, label=name)
+            hi = max(hi, lam[0])
+        top.axhline(refs[i], color=INK, lw=1, ls="--", zorder=1)
+        top.set_ylim(lo - 0.05 * (hi - lo + 1), hi + 0.05 * (hi - lo + 1))
+        top.set_title(f"{names[i]} (exact {abs(refs[i]) if abs(refs[i]) < 5e-3 else refs[i]:.2f} mHa, dashed)",
+                      fontsize=9.5, color=INK, loc="left")
+        bot.set_title(f"{names[i]}: absolute error", fontsize=9.5, color=INK, loc="left")
+        for ax in (top, bot):
+            ax.set_xscale("log")
+            ax.set_xlabel("block variance $V_S$ of H (Ha², log)")
+            style(ax)
+        top.set_xlim(2e-6, 3)                    # where the methods differ; the bottom row shows the full range
+        bot.set_yscale("log")
+        bot.set_ylim(1e-6, 1e3)
+        bot.axhline(1.6, color=MUTED, lw=0.8, ls=":")
+        if i == 0:
+            top.set_ylabel("energy (mHa above exact S0)")
+            bot.set_ylabel("abs(block eigenvalue − exact) (mHa)")
+            top.legend(fontsize=7.5, loc="upper left")
+    fig.suptitle(f"{title}: greedy vDBF against the full double-bracket flow, both exact (no truncation)\n"
+                 "each method starts on the right ($V_S$ = 0.93) and converges to the left; top row cropped to $V_S$ > 2e-6; dotted line = 1.6 mHa",
+                 x=0.01, ha="left", fontsize=10, color=INK)
+    fig.tight_layout(rect=(0, 0, 1, 0.92))
+    return fig
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
+    # greedy vDBF vs the full flow at 1.1 A, against the same exact levels
+    g = [("greedy vDBF, exact ranking", "uno_1.10_block1c_exact", SERIES[0], "-"),
+         ("greedy vDBF, D1c ranking", "uno_1.10_block1c_d1c", SERIES[1], "-"),
+         ("full flow, D = block projector", "uno_1.10_flow1c_projector", SERIES[2], "--"),
+         ("full flow, D = D1c", "uno_1.10_flow1c_d1c", SERIES[3], "--")]
+    methods = [(n, load(l), c, ls) for n, l, c, ls in g if load(l) is not None]
+    if len(methods) > 1 and methods[0][1] is not None:
+        _, _, refs, names, _ = run_data(load("uno_1.10_block1c_exact"))
+        greedy_vs_flow(methods, refs, ["S0", "³Πg", "¹Πg"], "N2, 1.1 Å").savefig(
+            os.path.join(OUT, "n2_110_greedy_vs_flow.png"), dpi=170)
     all_runs = {}
     for label in ["uno_1.10_block1c_exact", "uno_1.10_block1c_d1c", "uno_2.30_block1c_exact", "uno_2.30_block1c_d1c",
                   "uno_2.30_block1c_exact_s2pen0.05", "uno_2.30_block1c_exact_s2pen0.1"]:
@@ -302,7 +443,24 @@ def main():
             all_runs[label] = d
     runs = [(l, t, all_runs[l]) for l, t in RUNS if l in all_runs]
     energies_vs_variance(runs).savefig(os.path.join(OUT, "energies_vs_variance.png"), dpi=170)
-    energies_zoom(runs).savefig(os.path.join(OUT, "energies_zoom.png"), dpi=170)
+    energies_zoom(runs)[0].savefig(os.path.join(OUT, "energies_zoom.png"), dpi=170)
+    r110 = [r for r in runs if r[0] == "uno_1.10_block1c_exact"]       # 1.1 A alone, for the explainer
+    if r110:
+        energies_vs_variance(r110).savefig(os.path.join(OUT, "n2_110_energies.png"), dpi=170)
+        fig, w110, x110 = energies_zoom(r110)
+        fig.savefig(os.path.join(OUT, "n2_110_zoom.png"), dpi=170)
+        # the same two figures for the full double-bracket flow; zoom panels use the greedy figure's windows
+        for tag, title in (("projector", "1.1 Å, full flow, D = block projector"), ("d1c", "1.1 Å, full flow, D = D1c")):
+            d = load(f"uno_1.10_flow1c_{tag}")
+            if d is None:
+                continue
+            fl = [(f"uno_1.10_flow1c_{tag}", title, d)]
+            energies_vs_variance(fl).savefig(os.path.join(OUT, f"n2_110_flow_{tag}_energies.png"), dpi=170)
+            energies_zoom(fl, w110, x110)[0].savefig(os.path.join(OUT, f"n2_110_flow_{tag}_zoom.png"), dpi=170)
+            if tag == "projector":                   # both on the same axes: greedy (exact ranking) and this flow
+                compare_energies(r110[0][2], d, "1.1 Å").savefig(os.path.join(OUT, "n2_110_compare_energies.png"), dpi=170)
+                compare_zoom(r110[0][2], d, "1.1 Å", w110, x110).savefig(
+                    os.path.join(OUT, "n2_110_compare_zoom.png"), dpi=170)
     error_vs_variance(runs).savefig(os.path.join(OUT, "error_vs_variance.png"), dpi=170)
     conv = [r for r in runs if r[0] in ("uno_1.10_block1c_exact", "uno_2.30_block1c_exact_s2pen0.05",
                                          "uno_2.30_block1c_exact_s2pen0.1")]
