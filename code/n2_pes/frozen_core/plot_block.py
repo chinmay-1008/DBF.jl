@@ -143,13 +143,19 @@ def energies_zoom(runs, windows=None, rights=None):
     nS = 3
     used_w, used_r = [], []
     fig, axes = plt.subplots(len(runs), nS, figsize=(11, 2.5 * len(runs) + 0.9), squeeze=False)
+    data = [run_data(d) for _, _, d in runs]
+    if windows:                                       # same y range in every panel, for a fair comparison
+        W = max(windows)
+    else:
+        W = max(max(abs(lam[len(lam) // 2, i] - refs[i]), 4 * abs(lam[-1, i] - refs[i]), 0.02)
+                for lam, _, refs, _, _ in data for i in range(nS))
     for r, (label, title, d) in enumerate(runs):
-        lam, vs, refs, names, s2 = run_data(d)
+        lam, vs, refs, names, s2 = data[r]
         n = len(vs)
         for i in range(nS):
             ax = axes[r, i]
             err = lam[:, i] - refs[i]
-            w = windows[i] if windows else max(abs(err[n // 2]), 4 * abs(err[-1]), 0.02)
+            w = W
             ax.axhline(0, color=INK, lw=1, ls="--", zorder=1)
             ax.plot(vs, err, "-", color=SERIES[i], lw=1.6, zorder=3)
             ax.plot(vs[-1], err[-1], "o", color=SERIES[i], ms=5.5, mec="white", mew=0.8, zorder=5)
@@ -163,6 +169,17 @@ def energies_zoom(runs, windows=None, rights=None):
             right = rights[i] if rights else min(vs.max() * 1.5, vs[max(k - 1, 0)] * 3)
             ax.set_xlim(vs.min() / 1.5, right)
             used_w.append(w); used_r.append(right)
+    # same x range in every panel too: the widest of the per-panel crops
+    lefts = [ax.get_xlim()[0] for ax in axes.flat]
+    for ax in axes.flat:
+        ax.set_xlim(min(lefts), max(used_r))
+    used_r = [max(used_r)] * len(used_r)
+    for r in range(len(runs)):
+        lam, vs, refs, names, s2 = data[r]
+        title = runs[r][1]
+        for i in range(nS):
+            ax = axes[r, i]
+            err = lam[:, i] - refs[i]
             ax.set_title(f"{title}: {names[i]}", fontsize=8.5, color=INK, loc="left")
             ax.text(0.98, 0.94, f"last: {nz(err[-1], 5e-5):+.4f} mHa\n⟨S²⟩ {nz(s2[i], 5e-3):.2f}", transform=ax.transAxes,
                     ha="right", va="top", fontsize=7.5, color=INK,
@@ -176,7 +193,7 @@ def energies_zoom(runs, windows=None, rights=None):
             if i == 0:
                 ax.set_ylabel("energy − exact (mHa)")
     fig.suptitle("Zoom on each state: error from that state's exact energy (dashed line = 0)\n"
-                 "starts on the right, converges to the left; each panel is cropped to where its curve enters the frame",
+                 "starts on the right, converges to the left; all panels share the same x and y ranges",
                  x=0.01, ha="left", fontsize=10, color=INK)
     fig.tight_layout(rect=(0, 0, 1, 0.95))
     return fig, used_w, used_r
@@ -355,7 +372,7 @@ def compare_zoom(greedy, flow, title, windows, rights):
     nS = lam_g.shape[1]
     fig, axes = plt.subplots(1, nS, figsize=(11, 3.4), squeeze=False)
     for i in range(nS):
-        ax, w = axes[0, i], windows[i]
+        ax, w = axes[0, i], max(windows)
         ax.axhline(0, color=INK, lw=1, ls="--", zorder=1)
         ax.plot(vs_g, lam_g[:, i] - refs[i], "-", color=SERIES[i], lw=1.6, zorder=3, label="greedy vDBF")
         ax.plot(vs_f, lam_f[:, i] - refs[i], ls=FLOW_LS, color=SERIES[i], lw=2.2, zorder=4, label="full flow")
@@ -517,6 +534,7 @@ def pp_zoom(greedy, pps, title):
     lam_g, vs_g, refs, names, _ = run_data(greedy)
     nS = lam_g.shape[1]
     fig, axes = plt.subplots(1, nS, figsize=(11, 3.6), squeeze=False)
+    ws = []
     for i in range(nS):
         ax = axes[0, i]
         errs = [abs(lam_g[-1, i] - refs[i])]
@@ -534,8 +552,7 @@ def pp_zoom(greedy, pps, title):
             lo_x = min(lo_x, vs.min())
         ax.plot(vs_g, lam_g[:, i] - refs[i], "-", color=MUTED, lw=1.2, zorder=2, label="exact greedy (no truncation)")
         ax.axhline(0, color=INK, lw=1, ls="--", zorder=1)
-        w = max(2.5 * max(errs), 0.05)
-        ax.set_ylim(-0.5 * w, 1.2 * w)
+        ws.append(max(2.5 * max(errs), 0.05))
         ax.set_xscale("log")
         ax.set_xlim(lo_x / 1.5, 0.1)
         ax.set_title(f"{title}: {names[i]}", fontsize=8.5, color=INK, loc="left")
@@ -546,6 +563,9 @@ def pp_zoom(greedy, pps, title):
         style(ax)
         if i == 0:
             ax.set_ylabel("energy − exact (mHa)")
+    W = max(ws)                                       # same y range in every panel, for a fair comparison
+    for ax in axes[0]:
+        ax.set_ylim(-0.5 * W, 1.2 * W)
     axes[0, -1].legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=7.5)
     fig.suptitle("Zoom on each state: error from that state's exact energy, Pauli propagation against the exact greedy run\n"
                  "starts on the right, converges to the left (x axis cut at V_S = 0.1)",
