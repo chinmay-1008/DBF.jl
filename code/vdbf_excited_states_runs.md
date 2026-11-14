@@ -216,13 +216,15 @@ Same layout as the earlier energy figures, with the run's own $V_S$ on the x-axi
 |---|---|---|---|
 | S0 | −0.013 ± 0.009 | −0.187 ± 0.001 | +0.860 ± 0.073 |
 | ³Πg | −0.012 ± 0.011 | −0.083 ± 0.026 | +0.863 ± 0.116 |
-| ¹Πg | −0.038 ± 0.095 | — (variance < 0) | +0.760 ± 0.036 |
+| ¹Πg | −0.038 ± 0.095 | −0.443 ± 0.001 * | +0.760 ± 0.036 |
 | ³Πg excitation | +0.001 | +0.104 | +0.003 |
-| ¹Πg excitation | −0.025 | — | −0.100 |
+| ¹Πg excitation | −0.025 | −0.255 | −0.100 |
 
 - The true energies extrapolate to within 0.04 mHa.
 - The raw energy is flat inside its window (it has stopped improving while the variance still falls), so all three land about 0.8 mHa high. The offset is nearly the same for all three, so the raw *excitation energies* are good: +0.003 and −0.10 mHa.
 - The corrected values are not reliable at this cutoff.
+
+\* The corrected ¹Πg variance turns negative from iteration 188 on, so $[v, 2v]$ does not exist; that series is fitted over $[0, 0.2\times10^{-3}]$ Ha² instead (46 points, iterations 142–187).
 
 The same run at cutoff 10⁻⁶ is in progress.
 

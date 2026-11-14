@@ -383,21 +383,27 @@ def compare_zoom(greedy, flow, title, windows, rights):
 
 
 # ---------------------------------------------------------------- per-state variance extrapolation
+NEG_WINDOW = 2e-4      # Ha²; fit window [0, NEG_WINDOW] for a series whose last variance is negative
+
+
 def window_fit(x, y, factor=2.0):
     """linear fit of y against x over the window [v, factor v], v = the last x (the run's final variance).
-    E0 = the linear intercept; uncertainty = half its difference from a quadratic fit over the same window.
-    Returns None when v <= 0 or the window holds fewer than 3 points."""
+    If v <= 0 (a truncation-corrected variance can turn negative) the window is [0, NEG_WINDOW] instead,
+    negative points left out.  E0 = the linear intercept; uncertainty = half its difference from a quadratic
+    fit over the same window.  Returns None when the window holds fewer than 3 points."""
     v = x[-1]
-    if not v > 0:
-        return None
-    sel = (x >= v) & (x <= factor * v)
+    if v > 0:
+        lo, hi = v, factor * v
+    else:
+        lo, hi = 0.0, NEG_WINDOW
+    sel = (x >= lo) & (x <= hi)
     k = int(sel.sum())
     if k < 3:
         return None
     lin = np.polyfit(x[sel], y[sel], 1)
     quad = np.polyfit(x[sel], y[sel], 2) if k >= 5 else None
     half = abs(lin[1] - quad[2]) / 2 if quad is not None else float("nan")
-    return dict(e0=lin[1], half=half, sel=sel, lin=lin, v=v, k=k)
+    return dict(e0=lin[1], half=half, sel=sel, lin=lin, v=v, k=k, lo=lo, hi=hi)
 
 
 def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
@@ -417,22 +423,23 @@ def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
             x, y = var[1:, i], lam[1:, i] - refs[i]
             fit = window_fit(x, y, factor)
             if fit is None:
-                ax.text(0.5, 0.5, f"{name}: last variance {x[-1]:.1e} ≤ 0,\nno extrapolation", transform=ax.transAxes,
+                ax.text(0.5, 0.5, f"{name}: fewer than 3 points in the window,\nno extrapolation", transform=ax.transAxes,
                         ha="center", va="center", fontsize=8, color=MUTED)
                 rows.append((name, names[i], y[-1], float("nan"), float("nan"), x[-1], 0))
                 continue
-            v, sel = fit["v"], fit["sel"]
-            ctx = (x > 0) & (x <= 4 * v)              # context: points up to 4v, lighter
+            v, sel, lo, hi = fit["v"], fit["sel"], fit["lo"], fit["hi"]
+            ctx = (x > 0) & (x <= 2 * hi)             # context: points up to twice the window's top, lighter
             ax.plot(x[ctx & ~sel], y[ctx & ~sel], marker, color=SERIES[i], ms=2.5, mec="none", alpha=0.3)
+            wlabel = "[v, 2v]" if v > 0 else f"[0, {hi:.1e}] (last variance {v:.0e} < 0)"
             ax.plot(x[sel], y[sel], marker, color=SERIES[i], ms=3.2, mec="none",
-                    label=f"{name}: {fit['k']} pts in [v, 2v]")
-            xs = np.linspace(0, factor * v, 50)
+                    label=f"{name}: {fit['k']} pts in {wlabel}")
+            xs = np.linspace(0, hi, 50)
             ax.plot(xs, np.polyval(fit["lin"], xs), ls, color=SERIES[i], lw=1.1)
-            ax.axvspan(v, factor * v, color=GRID, alpha=0.5, lw=0, zorder=0)
+            ax.axvspan(lo, hi, color=GRID, alpha=0.5, lw=0, zorder=0)
             ax.errorbar(0, fit["e0"], yerr=0 if np.isnan(fit["half"]) else fit["half"], fmt=marker, color=SERIES[i],
                         ms=6, mec=INK, mew=0.6, capsize=3, clip_on=False, zorder=5)
             rows.append((name, names[i], y[-1], fit["e0"], fit["half"], v, fit["k"]))
-            xmax = max(xmax, 4 * v)
+            xmax = max(xmax, 2 * hi)
             yy = y[ctx]
             lo, hi = min(yy.min(), fit["e0"], 0), max(yy.max(), fit["e0"], 0)
             ax.set_ylim(lo - 0.08 * (hi - lo + 1e-9), hi + 0.12 * (hi - lo + 1e-9))
@@ -448,7 +455,7 @@ def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
         if ax.get_legend_handles_labels()[0]:
             ax.legend(fontsize=7, loc="upper left")
     fig.suptitle("Per-state extrapolation: each block state's energy against its own variance\n"
-                 "linear fit over [v, 2v] (shaded), v = the state's variance at the last iteration; "
+                 "linear fit over [v, 2v] (shaded), v = the state's variance at the last iteration ([0, 2e-4] if v < 0); "
                  "marker at 0 = extrapolated energy, error bar = half the difference from a quadratic fit",
                  x=0.01, ha="left", fontsize=10, color=INK)
     fig.tight_layout(rect=(0, 0, 1, 0.86 if nr == 1 else 0.94))
