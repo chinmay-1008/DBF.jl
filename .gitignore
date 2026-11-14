@@ -4,4 +4,19 @@
 /Manifest.toml
 /docs/Manifest.toml
 /docs/build/
-/code/
+.DS_Store
+__pycache__/
+.ipynb_checkpoints/
+
+# code/ holds scripts and notebooks only; run data and outputs stay local
+/code/**/data*/
+/code/**/results/
+/code/**/sv_results/
+/code/**/replay_results/
+/code/**/logs/
+/code/**/*.jld2
+/code/**/*.npy
+/code/**/*.xlsx
+/code/n2_pes/cluster_pes/DBF.jl/
+/code/n2_pes/cluster_pes/queue*/
+/code/n2_pes/cluster_pes/slurm_logs/
