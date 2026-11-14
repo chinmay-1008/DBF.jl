@@ -179,7 +179,54 @@ One difference from the ground state: an excited state can also mix with states 
 - **At the same $V_S$, greedy is lower.** Where greedy stopped ($V_S = 2.5\times10^{-4}$) its errors are 0.019, 0.022, 0.037 mHa; the full flow at that $V_S$ has 0.035, 0.072, 0.29 mHa (0.042, 0.072, 0.31 with the block projector instead of $D_{1c}$). Likewise greedy has all three within 1.6 mHa by $V_S = 9.6\times10^{-3}$ (iteration 37), the full flow only by $V_S = 2.2\times10^{-3}$. So the greedy single-Pauli path loses nothing against the true flow; per unit of decoupling it does better.
 - **The full flow goes all the way.** Greedy stopped at 200 iterations; the full flow continues to $V_S \approx 10^{-20}$ and the exact energies. In both, the error falls roughly in proportion to $V_S$.
 
-## 8. Two things worth knowing
+## 8. Greedy vDBF with Pauli propagation (cutoff 10⁻⁵)
+
+**Formalism.** The same greedy flow as section 6, now run the way vDBF runs on large systems: $\bar H$ is stored as a sum of Pauli strings, and after every rotation each string with coefficient $|c| \le 10^{-5}$ is dropped. Relative to ground-state vDBF only the block parts change: candidate rotations come from $[\bar H, D_{1c}]$, they are scored and their angles chosen on the block sum $C$, and at the end the 3×3 block is diagonalised.
+
+Truncation means the block read off the truncated $\bar H$ is no longer exactly the block of the rotations that were applied. Three numbers are therefore shown for each state:
+
+- **raw**: the eigenvalues of the 3×3 block of the truncated $\bar H$, what the run sees;
+- **corrected**: raw minus the accumulated change that the truncations made to the 3×3 block, for both the energies and the variances. This is the block version of ground-state vDBF's "E − accumulated error" and "Var − accumulated variance error";
+- **true**: the generated rotations applied exactly to the three determinants. That is the actual energy of the circuit, possible here because the system is small.
+
+200 iterations × 50 rotations took 27 minutes; $\bar H$ grew to 1.1 million Pauli strings.
+
+**Result** (errors in mHa at the last iteration):
+
+| state | raw | corrected | true |
+|---|---|---|---|
+| S0 | +1.08 | −0.18 | +0.14 |
+| ³Πg | +0.85 | +0.03 | +0.15 |
+| ¹Πg | +1.04 | −0.46 | +0.20 |
+
+![Pauli propagation 10⁻⁵: block eigenvalues against block variance at 1.1 Å](n2_pes/frozen_core/sv_results/plots/n2_110_pp_c1e-5_energies.png)
+
+Same layout as the earlier energy figures, with the run's own $V_S$ on the x-axis: corrected (solid), raw (thin), true (dots).
+
+![Pauli propagation 10⁻⁵: zoom on each state, against the exact greedy run](n2_pes/frozen_core/sv_results/plots/n2_110_pp_c1e-5_zoom.png)
+
+- **The circuit is as good as the exact one.** The true energies (dots) lie on the exact greedy curve (grey): at this cutoff truncation does not spoil the rotations.
+- **What truncation spoils is the estimate.** Raw sits about 1 mHa too high. The corrected values overshoot below exact. The correction counts each dropped term's effect at the moment it is dropped, not after the later rotations, and over 10,000 truncations that difference adds up. The corrected ¹Πg variance even ends slightly negative.
+
+**Extrapolation**, per state over $[v, 2v]$ as in section 6:
+
+![Pauli propagation 10⁻⁵: per-state extrapolation, true / corrected / raw](n2_pes/frozen_core/sv_results/plots/n2_110_pp_c1e-5_extrap.png)
+
+| state | true | corrected | raw |
+|---|---|---|---|
+| S0 | −0.013 ± 0.009 | −0.187 ± 0.001 | +0.860 ± 0.073 |
+| ³Πg | −0.012 ± 0.011 | −0.083 ± 0.026 | +0.863 ± 0.116 |
+| ¹Πg | −0.038 ± 0.095 | — (variance < 0) | +0.760 ± 0.036 |
+| ³Πg excitation | +0.001 | +0.104 | +0.003 |
+| ¹Πg excitation | −0.025 | — | −0.100 |
+
+- The true energies extrapolate to within 0.04 mHa.
+- The raw energy is flat inside its window (it has stopped improving while the variance still falls), so all three land about 0.8 mHa high. The offset is nearly the same for all three, so the raw *excitation energies* are good: +0.003 and −0.10 mHa.
+- The corrected values are not reliable at this cutoff.
+
+The same run at cutoff 10⁻⁶ is in progress.
+
+## 9. Two things worth knowing
 
 - **Symmetry.** $|a\rangle$ and $|b\rangle$ have a different spatial symmetry (Πg) from the ground state (Σg⁺), so H never couples them to $|0\rangle$. In practice both flows decouple $|0\rangle$ on its own and $\{|a\rangle, |b\rangle\}$ on their own.
 - **Which excited states come out.** Because 1πg is degenerate, ³Πg has two components at 297.17. Strictly, the lowest possible block sum would take both ³Πg components instead of ³Πg + ¹Πg. Neither flow goes there: H conserves spin, so nothing pulls the singlet toward a triplet, and it stays a singlet. The result is exactly the set we wanted: S0, one triplet and one singlet of the same excitation.
