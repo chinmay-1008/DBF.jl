@@ -20,3 +20,5 @@ __pycache__/
 /code/n2_pes/cluster_pes/DBF.jl/
 /code/n2_pes/cluster_pes/queue*/
 /code/n2_pes/cluster_pes/slurm_logs/
+/code/n2_pes/cluster_block/DBF.jl/
+/code/n2_pes/cluster_block/slurm_logs/

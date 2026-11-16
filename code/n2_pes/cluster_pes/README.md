@@ -2,6 +2,8 @@
 
 This bundle runs the full N₂ STO-3G potential energy surface: frozen core, 16 qubits, R = 0.8–3.0 Å in steps of 0.1 Å (23 points). It runs every orbital basis with and without the S² penalty, plus a singlet-projected start for the four spin-broken references. The point is to see whether localization causes problems.
 
+The block (excited-state) runs at 2.3 Å have their own, smaller bundle: `../cluster_block`.
+
 The five bases:
 
 | Basis | Orbitals | Reference determinant |

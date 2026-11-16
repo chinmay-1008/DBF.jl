@@ -33,7 +33,9 @@
 #
 #     julia --project=. run_block_pp.jl <point dir> <basis> <label>
 #         [--coeff 1e-5] [--grad 1e-6] [--max-iter 200] [--max-rots 50]
-#         [--conv 1e-5] [--c 1.0] [--s2-penalty 0] [--outdir frozen_core/sv_results]
+#         [--conv 1e-5] [--c 1.0] [--s2-penalty 0] [--save-every 50] [--outdir frozen_core/sv_results]
+#     The result <outdir>/<label>.json is also written every --save-every iterations (0: only at
+#     the end) with "finished": false; the final write has "finished": true.
 #     e.g. julia --project=. run_block_pp.jl frozen_core/data_unocore/R_1.10 uno uno_1.10_blockpp_c1e-5
 using DBF, PauliOperators, JLD2, JSON, Printf, LinearAlgebra
 using DBF: commutator_clipped, matvec
@@ -43,7 +45,7 @@ const NORB = 8
 
 function parse_cli(args)
     opts = Dict("coeff" => "1e-5", "grad" => "1e-6", "max-iter" => "200", "max-rots" => "50",
-                "conv" => "1e-5", "c" => "1.0", "s2-penalty" => "0",
+                "conv" => "1e-5", "c" => "1.0", "s2-penalty" => "0", "save-every" => "50",
                 "outdir" => joinpath(@__DIR__, "frozen_core", "sv_results"))
     pos = String[]
     i = 1
@@ -366,19 +368,32 @@ function main(args)
     @printf(" operator cutoff %s, gradient cutoff %s, %s rotations per gradient, max %s iterations; energies in mHa above E_FCI\n",
             opts["coeff"], opts["grad"], opts["max-rots"], opts["max-iter"])
     println("="^100)
+    # the result JSON; also written every --save-every iterations with "finished": false, so a run
+    # stopped early (e.g. at a cluster time limit) keeps its history and circuit up to the last save,
+    # which replay_block.jl can replay.  Written to a temporary file and renamed, so a kill mid-write
+    # leaves the previous save intact.
+    mkpath(opts["outdir"])
+    out = joinpath(opts["outdir"], "$(label).json")
+    function save(O, hist, gens, angs, acc, t, finished)
+        open(out * ".tmp", "w") do io
+            JSON.print(io, Dict("label" => label, "R" => meta["R_angstrom"], "basis" => basis, "E_FCI" => e_fci,
+                                "settings" => opts, "finished" => finished, "n_rotations" => length(angs),
+                                "wall_time_s" => t, "final_terms" => length(O),
+                                "accumulated_M" => acc.M, "accumulated_V" => acc.V,
+                                "rots_per_iter" => hist["n_rots"],
+                                "generators" => [[Int(g.z), Int(g.x)] for g in gens], "angles" => angs,
+                                "history" => hist), 1)
+        end
+        mv(out * ".tmp", out; force=true)
+    end
+    every = parse(Int, opts["save-every"])
+    on_iter = every <= 0 ? nothing :
+        (it, hist, gens, angs, acc, O) -> it % every == 0 && save(O, hist, gens, angs, acc, hist["time"][end], false)
     t = @elapsed O, hist, gens, angs, acc = dbf_block(Hop, kets, D;
         operator_truncation=op_trunc, gradient_truncation=grad_trunc,
         max_iter=parse(Int, opts["max-iter"]), max_rots_per_grad=parse(Int, opts["max-rots"]),
-        conv_thresh=parse(Float64, opts["conv"]), e_ref=e_fci)
-    mkpath(opts["outdir"])
-    open(joinpath(opts["outdir"], "$(label).json"), "w") do io
-        JSON.print(io, Dict("label" => label, "R" => meta["R_angstrom"], "basis" => basis, "E_FCI" => e_fci,
-                            "settings" => opts, "n_rotations" => length(angs), "wall_time_s" => t,
-                            "final_terms" => length(O), "accumulated_M" => acc.M, "accumulated_V" => acc.V,
-                            "rots_per_iter" => hist["n_rots"],
-                            "generators" => [[Int(g.z), Int(g.x)] for g in gens], "angles" => angs,
-                            "history" => hist), 1)
-    end
+        conv_thresh=parse(Float64, opts["conv"]), e_ref=e_fci, on_iter=on_iter)
+    save(O, hist, gens, angs, acc, t, true)
     @printf(" done: %d rotations in %.0f s; wrote %s.json\n", length(angs), t, label)
 end
 
