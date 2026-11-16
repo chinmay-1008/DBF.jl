@@ -11,6 +11,7 @@ corrected = minus the accumulated truncation change of the 3x3 block (as in run_
     heis_N<N>_energies.png   block eigenvalues against the block variance V_S, DMRG energies dashed (symlog y)
     heis_N<N>_zoom.png       per state, error from DMRG, raw and corrected per cutoff, common y range
     heis_N<N>_gap.png        the two spin-gap estimates (triplet - S0) against V_S, DMRG gap dashed
+    heis_N<N>_position.png   overlaps of the DMRG states with the block determinants at every position
     heis_N<N>_extrap.png     per-state extrapolation over [v, 2v], raw and corrected, cutoffs whose
                              corrected variances stayed positive (healthy())
 """
@@ -229,6 +230,51 @@ def extrap(runs, refs, N):
     return fig, rows
 
 
+def position(N):
+    """position_check.jl: overlaps of the exact (DMRG) states with the block determinants placed anywhere on
+    the chain, and the Ms = +1 magnetisation; the run's choice (bond N/2, N/2+1 and site N/2) marked"""
+    f = os.path.join(RES, f"position_N{N}.json")
+    if not os.path.exists(f):
+        return None
+    d = json.load(open(f))
+    c = d["centre"]
+    ff = np.array(d["flipflop_S0"])
+    si = [(i + 1, w) for i, w in enumerate(d["single_T1"]) if w is not None]
+    m = np.array(d["Sz"])
+    fig, axes = plt.subplots(1, 3, figsize=(11.5, 3.5))
+    ax = axes[0]
+    ax.plot(np.arange(1, N) + 0.5, ff, "o", color=SERIES[0], ms=2.6, mec="none")
+    ax.plot(c + 0.5, ff[c - 1], "o", color=INK, ms=6, mfc="none", mew=1.2, label=f"used: bond {c}–{c + 1}")
+    ax.set_yscale("log")
+    ax.set_xlabel("bond position")
+    ax.set_title("|f⟩ (pair exchanged) on S0", fontsize=9, color=INK, loc="left")
+    ax.set_ylabel("weight of the exact state on it")
+    ax = axes[1]
+    x, w = np.array([a for a, _ in si]), np.array([b for _, b in si])
+    ax.plot(x, w, "o", color=SERIES[2], ms=2.6, mec="none")
+    ax.plot(c, w[list(x).index(c)], "o", color=INK, ms=6, mfc="none", mew=1.2, label=f"used: site {c}")
+    ax.set_yscale("log")
+    ax.set_xlabel("flipped site (↓ → ↑)")
+    ax.set_title("|s⟩ (single flip) on T, Ms = +1", fontsize=9, color=INK, loc="left")
+    ax = axes[2]
+    ax.axhline(0, color=INK, lw=0.8)
+    ax.plot(np.arange(1, N + 1), m, "-", color=SERIES[1], lw=0.8)
+    pair = np.array(d["Sz_pairs"])
+    ax.plot(np.arange(1, N, 2) + 0.5, pair, "-", color=INK, lw=1.6, label="pair sums (smooth part)")
+    ax.axvline(c + 0.5, color=MUTED, lw=0.8, ls=(0, (3, 2)))
+    ax.set_xlabel("site")
+    ax.set_title("$\\langle S^z_i \\rangle$ in T, Ms = +1", fontsize=9, color=INK, loc="left")
+    for a in axes:
+        a.legend(fontsize=7.5, loc="upper center" if a is axes[2] else "lower right", framealpha=0.92)
+        a.tick_params(labelsize=7.5)
+        pb.style(a)
+    fig.suptitle(f"Where the target states live on the open chain, N = {N} (DMRG): weight of each exact state on the block "
+                 "determinant placed at each position\nopen circle = the position the block runs use (the centre); "
+                 "Néel = ↑ on odd sites", x=0.01, ha="left", fontsize=10, color=INK)
+    fig.subplots_adjust(left=0.07, right=0.985, bottom=0.15, top=0.8, wspace=0.28)
+    return fig
+
+
 def main():
     args = sys.argv[1:]
     cuts = args[args.index("--cuts") + 1].split(",") if "--cuts" in args else None
@@ -245,6 +291,9 @@ def main():
     energies(runs, dm, N).savefig(os.path.join(OUT, f"heis_N{N}_energies.png"), dpi=170)
     zoom(runs, refs, N).savefig(os.path.join(OUT, f"heis_N{N}_zoom.png"), dpi=170)
     gap(runs, dm, N).savefig(os.path.join(OUT, f"heis_N{N}_gap.png"), dpi=170)
+    fp = position(N)
+    if fp is not None:
+        fp.savefig(os.path.join(OUT, f"heis_N{N}_position.png"), dpi=170)
     fig, rows = extrap(runs, refs, N)
     fig.savefig(os.path.join(OUT, f"heis_N{N}_extrap.png"), dpi=170)
     g_ref = (dm["ET_m1"] - dm["E0"]) * 1e3

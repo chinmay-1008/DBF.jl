@@ -420,6 +420,23 @@ $$D_\text{centre} = Z_c Z_{c+1} - Z_c + Z_{c+1} .$$
 
 Flipping any other site lowers $D$ by 2. So **the top value of $D$ (99) belongs to exactly $|0\rangle$, $|f\rangle$ and $|s\rangle$**, checked against every single and double flip. The −3 on ↓↓ keeps only one triplet component, $M_s = +1$, in the block. Without it, the block would get a fourth state, the $M_s = -1$ component, which would only repeat the triplet energy.
 
+**Why the centre, and is it the best place?** We put the block at the centre for two reasons. The ends of an open chain are special, because an end site has only one neighbour. And the chain is mirror-symmetric about bond 50–51, so the centre treats both halves alike. To check whether the centre is also where the target states overlap the block most, DMRG gives the weight of each exact state on the block determinant placed at every position:
+
+![1×100 Heisenberg: weight of the exact states on the block determinants at every position](heisenberg/results/plots/heis_N100_position.png)
+
+| determinant | at the centre (used) | best position | worst position |
+|---|---|---|---|
+| $\lvert f\rangle$ on S0 | 7.1 × 10⁻¹⁰ (bond 50–51) | 2.0 × 10⁻⁹ (end bonds 1–2, 99–100) | 4.7 × 10⁻¹⁰ (bonds 2–3, 98–99) |
+| $\lvert s\rangle$ on T, $M_s = +1$ | 6.4 × 10⁻¹² (site 50) | 5.9 × 10⁻¹¹ (site 100) | 3.4 × 10⁻¹⁶ (site 2) |
+
+- **The overlaps do not favour the centre.**
+  - The flip-flop does about equally well on every bulk bond, and 3× better on the end bonds.
+  - The single flip gets steadily better from the left end to the right end. The centre is in the middle of that range, and the last site is 9× better.
+- **Why the single flip is lopsided.** In T($M_s = +1$) the staggered magnetisation (right panel) changes sign at the centre: the left half follows our Néel pattern (↑ on odd sites) and the right half the opposite one. A ↓ → ↑ flip on the right half agrees with the triplet's local pattern; on the left half it goes against it. With the other Néel state, or $M_s = -1$, the picture is mirrored.
+- **Whether it matters for convergence is untested.** All of these weights are tiny (10⁻⁹ to 10⁻¹¹), and the flow has to build almost the whole state either way, so a 3–9× better start may or may not converge faster. Testing it needs a block at the end of the chain, with the flip-flop on bond 99–100 and the single flip on site 100. That has not been run.
+
+So the centre was a symmetry choice. By starting overlap, the right end would have been better.
+
 **Run.** The same greedy Pauli-propagation loop as section 8, at cutoff $10^{-5}$ with 100 rotations per iteration. It was stopped at iteration 360: 36,000 rotations in 8.1 h, $\bar H$ at 16.5 million Pauli strings, and the last iterations taking about 140 s each.
 
 A run at cutoff $10^{-4}$ is left out. From about iteration 120 on, its truncation correction runs away: by iteration 160 corrected and raw S0 differ by 300 mJ, the corrected S0 variance turns negative at iteration 511, and the run ends with the corrected S0 853 mJ *below* the exact ground state.
@@ -483,6 +500,7 @@ Heisenberg chain, in `code/heisenberg/` (plots in `results/plots/`, not in git):
 
 ```
 julia --project=. dmrg_heisenberg.jl 100
+julia --project=. position_check.jl 100        # weights of the DMRG states on the block determinants at every position
 julia --project=../n2_pes run_block_heisenberg.jl 100 heis_N100_block_c1e-5 --coeff 1e-5 --max-rots 100 --max-iter 600
 python plot_heisenberg.py 100
 ```
