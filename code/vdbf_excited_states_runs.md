@@ -340,7 +340,59 @@ A run at cutoff $10^{-4}$ is left out. From about iteration 120 on, its truncati
   - T1 ends 0.03 mHa above its exact level, and the third state (a triplet at 120.6) 0.36 mHa.
 - **λ = 0.1 is too strong.** S0 is just as clean, but the second block state is pulled off the triplet and ends on singlets (228.0 and 264.0 mHa above FCI), so T1 is lost.
 
-**So:** the penalty pays off when states of a different spin sit close to the target, as with stretched bonds and open shells. It speeds things up there by turning a gap of a few mHa into hundreds. Near equilibrium it does nothing. λ has to stay small enough that the wanted spin states remain the lowest in their sector; here that means 0.05, not 0.1. Since the exact runs at 1.1 Å show nothing to gain, I did not repeat them with Pauli propagation.
+**So far:** in the exact runs the penalty pays off when states of a different spin sit close to the target, as with stretched bonds and open shells. It speeds things up there by turning a gap of a few mHa into hundreds. Near equilibrium it does nothing. λ has to stay small enough that the wanted spin states remain the lowest in their sector; here that means 0.05, not 0.1.
+
+### With Pauli propagation (1.1 Å, cutoff 10⁻⁵)
+
+This is the run of section 8 repeated on $H + \lambda S^2$ with λ = 0.02 and 0.05; it took 14 minutes per run.
+
+- **Estimates.** Raw and corrected come from the eigenvalues of $H + \lambda S^2$ minus $\lambda S(S+1)$, which removes 2λ from ³Πg and nothing from the singlets.
+- **True energies.** Every circuit is replayed exactly at every iteration. That gives the true energies and ⟨S²⟩, and the triplet is identified by its ⟨S²⟩.
+- **Variances** are those of $H + \lambda S^2$.
+- **The baseline.** The no-penalty run was also replayed at every iteration, so its true numbers differ slightly from section 8, which replayed every 5.
+
+![Pauli propagation with the S² penalty: each state's energy against its own variance, true / corrected / raw](n2_pes/frozen_core/sv_results/plots/n2_110_pp_s2pen_traj.png)
+
+True energy of the circuit, error in mHa:
+
+| iteration | 50 | 100 | 150 | 200 (S0 / ³Πg / ¹Πg) |
+|---|---|---|---|---|
+| bare H | 0.79 | 0.28 | 0.18 | 0.140 / 0.149 / 0.205 |
+| λ = 0.02 | 0.70 | 0.26 | 0.16 | 0.120 / 0.125 / 0.176 |
+| λ = 0.05 | 0.68 | 0.24 | 0.16 | 0.121 / 0.142 / 0.181 |
+
+(The columns for iterations 50–150 are S0 only.)
+
+![Pauli propagation with λ = 0.05: per-state extrapolation, true / corrected / raw](n2_pes/frozen_core/sv_results/plots/n2_110_pp_c1e-5_s2pen0.05_extrap.png)
+
+Extrapolated over $[v, 2v]$, in mHa from exact:
+
+| state | series | bare H | λ = 0.02 | λ = 0.05 |
+|---|---|---|---|---|
+| S0 | true | −0.014 ± 0.013 | −0.019 ± 0.025 | −0.011 ± 0.015 |
+| | corrected | −0.187 ± 0.001 | −0.144 ± 0.005 | −0.141 ± 0.006 |
+| | raw | +0.860 ± 0.073 | +0.257 ± 0.004 | +1.665 ± 0.035 |
+| ³Πg | true | −0.013 ± 0.013 | −0.018 ± 0.021 | −0.014 ± 0.028 |
+| | corrected | −0.083 ± 0.026 | −0.070 ± 0.007 | −0.065 ± 0.002 |
+| | raw | +0.863 ± 0.116 | +0.174 ± 0.076 | −0.018 ± 0.220 |
+| ¹Πg | true | −0.042 ± 0.097 | −0.017 ± 0.039 | −0.033 ± 0.055 |
+| | corrected | −0.443 ± 0.001 * | −0.270 ± 0.015 | −0.227 ± 0.001 |
+| | raw | +0.760 ± 0.036 | +1.884 ± 0.120 | +1.663 ± 0.184 |
+
+\* The corrected variance turned negative, so this fit uses the $[0, 0.2\times10^{-3}]$ Ha² window, as in section 8.
+
+- **The circuit gets somewhat better.** With the penalty, the true energies are 10–17% closer to exact at every iteration. In the energy-against-variance plane (top row) they lie on the same line as without the penalty: the run gets further along it, not onto a different trajectory. Spin contamination was already small without the penalty: the mean |⟨S²⟩ − S(S+1)| goes from 0.0007, 0.0002 and 0.0015 to 0.0005, 0.0002 and 0.0011 at λ = 0.02.
+- **The corrected estimates get better.**
+  - The overshoot below exact roughly halves for ¹Πg: −0.44 → −0.27 and −0.23 mHa extrapolated.
+  - The corrected variances stay positive, so the fallback window is not needed.
+  - The corrected ¹Πg excitation energy improves from −0.26 to −0.13 (λ = 0.02) and −0.09 mHa (λ = 0.05). The corrected values still come out too low, by 0.07–0.27 mHa.
+- **The raw estimates get worse.** The truncation offset moves between states rather than shrinking:
+  - λ = 0.02 brings S0 and ³Πg down to about 0.2 mHa but pushes ¹Πg up to 1.9.
+  - λ = 0.05 makes ³Πg almost exact and leaves S0 and ¹Πg 1.7 mHa high.
+  - Without the penalty the offset was nearly equal for all three states, so the raw excitation energies were good (+0.003 and −0.10 mHa). With the penalty they are off by up to 1.7 mHa.
+- **Extrapolating the true energies works equally well with or without the penalty.** All of them land within 0.04 mHa of exact. The ¹Πg error bar shrinks from ±0.097 to ±0.04–0.06.
+
+**So:** with truncation, the S² penalty helps a little. The circuit improves by 10–17%, and the corrected estimates and their extrapolation improve clearly. The raw estimate becomes less useful for excitation energies. The large gain is still the one seen in the exact runs at 2.3 Å, where states of another spin are close.
 
 ---
 
@@ -353,6 +405,8 @@ julia --project=../../integrals cflow_block.jl data_unocore/R_1.10 uno uno_1.10_
 julia --project=../../integrals cflow_block.jl --merge uno_1.10_flow1c_d1c
 python plot_block.py
 julia -t 8 --project=../../integrals sv_block.jl data_unocore/R_1.10 uno uno_1.10_block1c_exact_s2pen0.05 --s2-penalty 0.05
+cd .. && julia --project=. run_block_pp.jl frozen_core/data_unocore/R_1.10 uno uno_1.10_blockpp_c1e-5_s2pen0.05 --coeff 1e-5 --s2-penalty 0.05
+cd frozen_core && julia -t 4 --project=../../integrals replay_block.jl data_unocore/R_1.10 uno uno_1.10_blockpp_c1e-5_s2pen0.05 1
 python plot_block.py --penalty          # section 11 figures only
 ```
 

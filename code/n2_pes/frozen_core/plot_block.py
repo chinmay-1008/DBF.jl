@@ -716,6 +716,87 @@ def penalty_230():
     return fig
 
 
+# ---------------------------------------------------------------- Pauli propagation on H + λ S^2 at 1.1 A
+SS1 = np.array([0.0, 2.0, 0.0])                       # S(S+1) of the targets S0, 3Πg, 1Πg
+
+
+def pp_pen_series(pp, rep, lam_s2):
+    """a PP block run on H + λ S^2 (or bare H, λ = 0) and its replay, as per-state arrays in the order
+    (S0, 3Πg, 1Πg): estimates = flow-operator eigenvalue - λ S(S+1) (mHa above FCI), variances of the flow
+    operator.  The order per iteration comes from the replay's <S^2> (the triplet is the state with the
+    largest <S^2>, S0 the lowest); bare-H runs keep the sorted order, where 3Πg < 1Πg already."""
+    h, f = pp["history"], pp["E_FCI"]
+    n = len(h["lam"])
+    order = np.tile(np.arange(3), (n, 1))
+    if lam_s2 != 0:
+        rows = {r["iter"]: r for r in rep["rows"]}
+        last = None
+        for it in range(n - 1, -1, -1):                # iterations without a replay row take the next row's order
+            r = rows.get(it)
+            if r is not None:
+                lam = np.array(r["lam"])
+                s0 = int(np.argmin(lam))
+                rest = [k for k in range(3) if k != s0]
+                t = max(rest, key=lambda k: r["S2"][k])
+                last = [s0, t, [k for k in rest if k != t][0]]
+            if last is not None:
+                order[it] = last
+    pick = lambda a: np.take_along_axis(np.asarray(a), order, axis=1)
+    shift = lam_s2 * 1e3 * SS1
+    out = dict(vs=np.array(h["VS"]), it=np.arange(n),
+               raw=(pick(h["lam"]) - f) * 1e3 - shift, cor=(pick(h["lam_corr"]) - f) * 1e3 - shift,
+               var=pick(h["var"]), var_corr=pick(h["var_corr"]))
+    if rep is not None:
+        its = np.array([r["iter"] for r in rep["rows"]])
+        o = order[its]
+        tl = lambda key: np.take_along_axis(np.array([r[key] for r in rep["rows"]]), o, axis=1)
+        out.update(t_it=its, tru=(tl("lam") - rep["E_FCI"]) * 1e3 - shift, t_var=tl("var"),
+                   t_vs=np.array([r["VS"] for r in rep["rows"]]))
+        if lam_s2 != 0:
+            out.update(tru_H=(tl("lam_H") - rep["E_FCI"]) * 1e3, t_S2=tl("S2"))
+    return out
+
+
+def pp_penalty_trajectories(runs, refs, names):
+    """per state, error against that state's own variance (the plane the extrapolation is done in),
+    one row per estimate (true, corrected, raw), one line per run; x and y shared within a row"""
+    kinds = [("true (exact replay)", "tru", "t_var"), ("corrected", "cor", "var_corr"), ("raw", "raw", "var")]
+    fig, axes = plt.subplots(3, 3, figsize=(11.5, 9.0), squeeze=False)
+    for r_, (kname, ek, vk) in enumerate(kinds):
+        X, Y = 0.0, [0.0, 0.0]
+        for lab, col, ls, s in runs:
+            if ek not in s:
+                continue
+            for i in range(3):
+                x, y = s[vk][1:, i], s[ek][1:, i] - refs[i]
+                k = x > 0
+                axes[r_, i].plot(x[k], y[k], ls=ls, color=col, lw=1.4 if ek != "tru" else 1.1,
+                                 marker="o" if ek == "tru" else None, ms=2.2, label=lab)
+                late = slice(len(x) // 3, None)          # ranges from the last two thirds of each run
+                X = max(X, x[late][x[late] > 0].max())
+                Y = [min(Y[0], y[late].min()), max(Y[1], y[late].max())]
+        pad = 0.08 * (Y[1] - Y[0])
+        for i in range(3):
+            ax = axes[r_, i]
+            ax.axhline(0, color=INK, lw=0.9, ls=(0, (4, 2)), zorder=1)
+            ax.set_xlim(0, X * 1.05)
+            ax.set_ylim(Y[0] - pad, Y[1] + pad)
+            ax.set_title(f"{kname}: {names[i]}", fontsize=9, color=INK, loc="left")
+            ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0))
+            ax.tick_params(labelsize=7.5)
+            style(ax)
+            if r_ == 2:
+                ax.set_xlabel("variance of this state (Ha²)")
+        axes[r_, 0].set_ylabel("energy − exact (mHa)")
+        axes[r_, 2].legend(fontsize=7, loc="upper left")
+    fig.suptitle("1.1 Å, Pauli propagation at cutoff 10⁻⁵: each state's energy against its own variance, without and "
+                 "with the S² penalty\npenalty runs: eigenvalue of H + λS² minus λS(S+1), variance of H + λS²; "
+                 "x and y shared within a row; the run goes from right to left towards (0, 0)",
+                 x=0.01, ha="left", fontsize=10, color=INK)
+    fig.subplots_adjust(left=0.07, right=0.985, bottom=0.06, top=0.9, wspace=0.22, hspace=0.35)
+    return fig
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     # greedy vDBF vs the full flow at 1.1 A, against the same exact levels
@@ -822,6 +903,36 @@ if __name__ == "__main__":
         fi.savefig(os.path.join(OUT, "n2_110_s2pen_iter.png"), dpi=170)
         fv.savefig(os.path.join(OUT, "n2_110_s2pen_vs.png"), dpi=170)
         penalty_230().savefig(os.path.join(OUT, "n2_230_s2pen_s0.png"), dpi=170)
+        # Pauli propagation at cutoff 1e-5, bare H against the penalty runs
+        g = load("uno_1.10_block1c_exact")
+        _, _, refs, _, _ = run_data(g)
+        sn = ["S0", "³Πg", "¹Πg"]
+        ppr = [("bare H", INK, (0, (4, 2)), pp_pen_series(load("uno_1.10_blockpp_c1e-5"),
+                                                          load("uno_1.10_blockpp_c1e-5_replay1")
+                                                          or load("uno_1.10_blockpp_c1e-5_replay"), 0.0))]
+        xrows = []
+        for l in ("0.02", "0.05"):
+            pp, rep = load(f"uno_1.10_blockpp_c1e-5_s2pen{l}"), load(f"uno_1.10_blockpp_c1e-5_s2pen{l}_replay")
+            if pp is None or rep is None:
+                continue
+            s = pp_pen_series(pp, rep, float(l))
+            ppr.append((f"λ = {l}", PEN_COL[l], "-", s))
+        if len(ppr) > 1:
+            pp_penalty_trajectories(ppr, refs, sn).savefig(os.path.join(OUT, "n2_110_pp_s2pen_traj.png"), dpi=170)
+            for lab, _, _, s in ppr:
+                ent = [("true (exact replay)", s["tru"], s["t_var"], "o", "-"),
+                       ("corrected", s["cor"], s["var_corr"], "^", "--"), ("raw", s["raw"], s["var"], "v", ":")]
+                fig, pprow = state_extrapolation(ent, refs, sn, f"PP 1e-5, {lab}", grid=True)
+                if lab != "bare H":
+                    fig.savefig(os.path.join(OUT, f"n2_110_pp_c1e-5_s2pen{lab.split()[-1]}_extrap.png"), dpi=170)
+                plt.close(fig)
+                xrows += [(lab,) + r for r in pprow]
+                if "tru_H" in s:
+                    print(f"{lab}: true <S^2> at the end {np.round(s['t_S2'][-1], 4)}; true H energy - exact "
+                          f"{np.round(s['tru_H'][-1] - refs, 4)}; estimate - exact {np.round(s['tru'][-1] - refs, 4)}")
+            print("PP 1e-5 extrapolation over [v, 2v] (mHa vs exact): run | series | state | last | extrapolated ± | v | pts")
+            for r in xrows:
+                print(f"  {r[0]:<8} {r[1]:<20} {r[2]:<4} {r[3]:+9.4f} {r[4]:+9.4f} ± {r[5]:.4f}  {r[6]:.2e} {r[7]}")
         print("λ | slot | state | <S^2> | last err (mHa) | stays below 1.6 / 0.1 / 0.03 mHa from iteration")
         for r in prow:
             print(f"  {r[0]:<5} {r[1]} {r[2]:<16} {r[3]:6.3f}  {r[4]:.2e}   {r[5]} / {r[6]} / {r[7]}")

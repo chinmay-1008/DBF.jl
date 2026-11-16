@@ -33,7 +33,7 @@
 #
 #     julia --project=. run_block_pp.jl <point dir> <basis> <label>
 #         [--coeff 1e-5] [--grad 1e-6] [--max-iter 200] [--max-rots 50]
-#         [--conv 1e-5] [--c 1.0] [--outdir frozen_core/sv_results]
+#         [--conv 1e-5] [--c 1.0] [--s2-penalty 0] [--outdir frozen_core/sv_results]
 #     e.g. julia --project=. run_block_pp.jl frozen_core/data_unocore/R_1.10 uno uno_1.10_blockpp_c1e-5
 using DBF, PauliOperators, JLD2, JSON, Printf, LinearAlgebra
 using DBF: commutator_clipped, matvec
@@ -43,7 +43,8 @@ const NORB = 8
 
 function parse_cli(args)
     opts = Dict("coeff" => "1e-5", "grad" => "1e-6", "max-iter" => "200", "max-rots" => "50",
-                "conv" => "1e-5", "c" => "1.0", "outdir" => joinpath(@__DIR__, "frozen_core", "sv_results"))
+                "conv" => "1e-5", "c" => "1.0", "s2-penalty" => "0",
+                "outdir" => joinpath(@__DIR__, "frozen_core", "sv_results"))
     pos = String[]
     i = 1
     while i <= length(args)
@@ -330,6 +331,18 @@ function main(args)
     H, ψ0 = to_vacuum_reference(data["H"], data["reference_ket"])
     abs(real(expectation_value(H, ψ0)) - data["reference_energy"]) < 1e-8 ||
         error("<0|X H X|0> does not reproduce the reference energy")
+    # --s2-penalty λ: the flow runs on H + λ S^2 (S^2 from frozen_core/build_s2.jl, as in run_dbf_pes.jl).
+    # Everything the run records (λ_i, variances, V_S, corrections) is then of H + λ S^2; a converged
+    # spin-S state sits at E + λ S(S+1).  replay_block.jl reports the H energies of the same circuit.
+    λs2 = parse(Float64, opts["s2-penalty"])
+    if λs2 != 0
+        S2, _ = to_vacuum_reference(load(joinpath(dir, "s2_$(basis).jld2"), "S2"), data["reference_ket"])
+        for (p, c) in S2
+            H[p] = get(H, p, zero(valtype(H))) + λs2 * c
+        end
+        @printf(" Penalty: H + %g S^2   (<ref|S^2|ref> = %.6f, %d terms in total)\n", λs2,
+                real(expectation_value(S2, ψ0)), length(H))
+    end
     na = meta["n_alpha"]
     qH, qL, qHb, qLb = na - 1, na, NORB + na - 1, NORB + na
     bitk(qs...) = Ket{N_Q}(reduce(|, (Int128(1) << q for q in qs); init=Int128(0)))
