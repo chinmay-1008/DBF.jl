@@ -402,6 +402,35 @@ True energy of the circuit, in mHa from each run's own target:
 - **No run converges.** Every run is at its best around iterations 110–180 and gets worse after that.
 - **The corrected estimate cannot be trusted here.** It keeps going down while the true energy goes up. At iteration 500, λ = 0.05 has corrected S0 and T1 within 8 mHa of exact (−2.8 and −8.2), while the real circuit is 44 and 211 mHa away.
 
+**Extrapolating in the variance.** This is the same [v, 2v] fit as at 1.1 Å, one figure per run. The true rows use the energy and variance of H. The corrected and raw rows use H + λS², as before.
+
+![2.3 Å, bare H: per-state extrapolation, true / corrected / raw](n2_pes/frozen_core/sv_results/plots/n2_230_pp_c1e-5_extrap.png)
+
+![2.3 Å, λ = 0.02: per-state extrapolation, true / corrected / raw](n2_pes/frozen_core/sv_results/plots/n2_230_pp_c1e-5_s2pen0.02_extrap.png)
+
+![2.3 Å, λ = 0.05: per-state extrapolation, true / corrected / raw](n2_pes/frozen_core/sv_results/plots/n2_230_pp_c1e-5_s2pen0.05_extrap.png)
+
+Extrapolated, in mHa from each run's own target ("no window" means fewer than 3 points in [v, 2v]):
+
+| run | series | S0 | T1 | third state |
+|---|---|---|---|---|
+| bare H | true | no window | +24 ± 746 | −228 ± 1668 |
+| | corrected | +78 ± 431 | +81 ± 147 | −56 ± 212 |
+| λ = 0.02 | true | no window | 0 ± 3047 | no window |
+| | corrected | +26.3 ± 1.3 | −57 ± 48 | −309 ± 301 |
+| λ = 0.05 | true | −416 ± 2829 | no window | no window |
+| | corrected | +0.003 ± 0.36 * | +76 ± 75 | −90 ± 228 |
+
+\* The corrected variance turned negative, so this fit uses the $[0, 0.2\times10^{-3}]$ Ha² window.
+
+- **The extrapolation does not work at 2.3 Å.**
+  - The window is set by the variance at the last iteration. In these runs the variance grows after iteration 100–150, so the last point sits near the largest variance of the whole run.
+  - So the window often holds fewer than 3 points. Where it holds more, they come from different stretches of the run, and the error bars are tens to thousands of mHa.
+- **Why.** Extrapolation assumes the run moves down a line towards zero variance. Here the true points turn around after their best iteration and move back up: energy and variance grow together (top rows).
+- **Two corrected values look good but are not.**
+  - λ = 0.02, S0: +26.3 ± 1.3 is a tight fit, but to the corrected estimate, which by iteration 500 is 46 mHa below the true circuit.
+  - λ = 0.05, S0: +0.003 ± 0.36 comes from the fallback window after the corrected variance went negative. The circuit itself is 44 mHa off.
+
 **So:** at 2.3 Å the penalty helps the truncated runs as well: S0 is 2–3× closer and stays spin-clean. But cutoff 10⁻⁵ is far too coarse for the stretched bond, with or without the penalty. The best errors are tens of mHa, against 0.01 mHa without truncation and 0.1–0.2 mHa at 1.1 Å with the same cutoff.
 
 A tighter cutoff is the obvious next step. At 1.1 Å, going from 10⁻⁵ to 10⁻⁶ multiplied the operator size by 6 and the run time by 5. At 2.3 Å that would mean about 25–30 million Pauli terms and about 13 hours per run. That is close to this machine's 32 GB of memory.

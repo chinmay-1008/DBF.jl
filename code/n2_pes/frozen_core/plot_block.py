@@ -441,9 +441,16 @@ def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
             x, y = var[1:, i], lam[1:, i] - refs[i]
             fit = window_fit(x, y, factor)
             if fit is None:
-                ax.text(0.5, 0.5, f"{name}: fewer than 3 points in the window,\nno extrapolation", transform=ax.transAxes,
-                        ha="center", va="center", fontsize=8, color=MUTED)
+                ax.text(0.03, 0.96, f"{name}: fewer than 3 points in the window,\nno extrapolation", transform=ax.transAxes,
+                        ha="left", va="top", fontsize=7.5, color=MUTED)
                 rows.append((name, names[i], y[-1], float("nan"), float("nan"), x[-1], 0))
+                ok = x > 0                           # still show where the run went
+                if ok.any():
+                    ax.plot(x[ok], y[ok], marker, color=SERIES[i], ms=2.5, mec="none", alpha=0.3)
+                    ax.plot(x[-1], y[-1], marker, color=SERIES[i], ms=6, mec=INK, mew=0.6, zorder=5)
+                    xmax = max(xmax, 1.05 * x[ok].max())
+                    lo, hi = min(y[ok].min(), 0), max(y[ok].max(), 0)
+                    ax.set_ylim(lo - 0.08 * (hi - lo + 1e-9), hi + 0.12 * (hi - lo + 1e-9))
                 continue
             v, sel, lo, hi = fit["v"], fit["sel"], fit["lo"], fit["hi"]
             ctx = (x > 0) & (x <= 2 * hi)             # context: points up to twice the window's top, lighter
@@ -454,8 +461,10 @@ def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
             xs = np.linspace(0, hi, 50)
             ax.plot(xs, np.polyval(fit["lin"], xs), ls, color=SERIES[i], lw=1.1)
             ax.axvspan(lo, hi, color=GRID, alpha=0.5, lw=0, zorder=0)
-            ax.errorbar(0, fit["e0"], yerr=0 if np.isnan(fit["half"]) else fit["half"], fmt=marker, color=SERIES[i],
-                        ms=6, mec=INK, mew=0.6, capsize=3, clip_on=False, zorder=5)
+            # error bar clipped to the panel (it can be far larger than the data range); the marker itself is not
+            ax.errorbar(0, fit["e0"], yerr=0 if np.isnan(fit["half"]) else fit["half"], fmt="none", ecolor=SERIES[i],
+                        capsize=3, zorder=5)
+            ax.plot(0, fit["e0"], marker, color=SERIES[i], ms=6, mec=INK, mew=0.6, clip_on=False, zorder=6)
             rows.append((name, names[i], y[-1], fit["e0"], fit["half"], v, fit["k"]))
             xmax = max(xmax, 2 * hi)
             yy = y[ctx]
@@ -883,6 +892,34 @@ def pp_penalty_230():
     return fig, rows
 
 
+def pp230_extrapolation():
+    """2.3 A, cutoff 1e-5: the per-state [v, 2v] extrapolation (state_extrapolation, one row per series) for each
+    run.  True = H energy and H variance of the circuit's block states (exact replay); corrected and raw =
+    eigenvalue of H + λS² minus λS(S+1) of the target (0, 2, 2), with the run's variances of H + λS².
+    States in the run's energy order, errors from each run's own targets.  Returns [(λ string, fig, rows)]."""
+    tg = {}
+    for key, lab in (("0", "uno_2.30_block1c_exact"), ("pen", "uno_2.30_block1c_exact_s2pen0.05")):
+        d = load(lab)
+        tg[key] = (np.array([t["E"] for t in d["targets"]]) - d["E_FCI"]) * 1e3
+    out = []
+    for l in ("0", "0.02", "0.05"):
+        lab = "uno_2.30_blockpp_c1e-5" + ("" if l == "0" else f"_s2pen{l}")
+        pp, rep = load(lab), load(lab + "_replay")
+        if pp is None or rep is None:
+            continue
+        lam, f, h, rr = float(l), pp["E_FCI"], pp["history"], rep["rows"]
+        shift = lam * 1e3 * np.array([0.0, 2.0, 2.0])
+        kE, kV = ("lam_H", "var_H") if lam else ("lam", "var")
+        ent = [("true (exact replay)", (np.array([r[kE] for r in rr]) - f) * 1e3, np.array([r[kV] for r in rr]), "o", "-"),
+               ("corrected", (np.array(h["lam_corr"]) - f) * 1e3 - shift, np.array(h["var_corr"]), "^", "--"),
+               ("raw", (np.array(h["lam"]) - f) * 1e3 - shift, np.array(h["var"]), "v", ":")]
+        name = "bare H" if l == "0" else f"λ = {l}"
+        fig, rows = state_extrapolation(ent, tg["0" if l == "0" else "pen"], ["S0", "T1", "third"],
+                                        f"2.3 Å, {name}", grid=True)
+        out.append((l, fig, rows))
+    return out
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     # greedy vDBF vs the full flow at 1.1 A, against the same exact levels
@@ -1026,6 +1063,12 @@ if __name__ == "__main__":
                   " | corrected at the end | <S^2> at the end")
             for r in rows230:
                 print(f"  {r[0]:<8} {r[1]}  {r[2]:+8.2f} ({r[3]:3d})  {r[4]:+8.2f}  {r[5]:+8.2f}  {r[6]:.2f}")
+        print("2.3 Å PP 1e-5 extrapolation over [v, 2v] (mHa vs target): run | series | state | last | extrapolated ± | v | pts")
+        for l, fig, rows in pp230_extrapolation():
+            fig.savefig(os.path.join(OUT, f"n2_230_pp_c1e-5{'' if l == '0' else '_s2pen' + l}_extrap.png"), dpi=170)
+            plt.close(fig)
+            for r in rows:
+                print(f"  {l:<5} {r[0]:<20} {r[1]:<6} {r[2]:+9.3f} {r[3]:+9.3f} ± {r[4]:.3f}  {r[5]:.2e} {r[6]}")
         print("λ | slot | state | <S^2> | last err (mHa) | stays below 1.6 / 0.1 / 0.03 mHa from iteration")
         for r in prow:
             print(f"  {r[0]:<5} {r[1]} {r[2]:<16} {r[3]:6.3f}  {r[4]:.2e}   {r[5]} / {r[6]} / {r[7]}")
