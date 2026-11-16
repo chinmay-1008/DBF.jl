@@ -6,6 +6,15 @@
 export PATH=$HOME/.juliaup/bin:$PATH
 JULIA=${JULIA:-julia}
 
+# Julia project for the run step: the DBF clone the PES runs use (chinmay-1008/DBF.jl,
+# branch qual_exam, with nmayhall/PauliOperators.jl next to it; ../cluster_pes/README.md,
+# step 3).  Its src/ is the same as excited_state's; run_block_pp.jl itself comes with this
+# bundle.  JSON comes from the default environment, as for the PES runs.  If that
+# directory does not exist, the bundled copy (DBF.jl/code/n2_pes, pinned) is used.
+# The replay step always uses the bundled DBF.jl/code/integrals environment.
+DBF_ENV=${DBF_ENV:-/N/u/cshrikh/BigRed200/Projects/n2_dbf/DBF.jl}
+[ -d "$DBF_ENV" ] || DBF_ENV=$BUNDLE/DBF.jl/code/n2_pes
+
 R=${R:-2.30}                        # the point; its inputs are staged by stage.sh (POINTS)
 COEFF=${COEFF:-1e-6}                # operator cutoff, CoeffTruncation
 MAX_ITER=${MAX_ITER:-500}           # as in the local 2.3 A runs at 1e-5

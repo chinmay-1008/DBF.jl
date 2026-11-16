@@ -34,4 +34,17 @@ for R in ${POINTS:-2.30}; do
         cp "$FC/$d/$f" "$DST/code/n2_pes/frozen_core/$d/"
     done
 done
+# reference for setup.sh's check: the first 3 iterations of the local bare-H run at 1e-5
+LOCALRUN=$FC/sv_results/uno_2.30_blockpp_c1e-5.json
+if [ -f "$LOCALRUN" ]; then
+    python3 - "$LOCALRUN" "$DST/check_reference.json" <<'EOF'
+import json, sys
+r, n = json.load(open(sys.argv[1])), 3
+k = sum(r["rots_per_iter"][:n + 1])
+json.dump({"from": r["label"], "iterations": n, "lam": r["history"]["lam"][:n + 1],
+           "generators": r["generators"][:k], "angles": r["angles"][:k]}, open(sys.argv[2], "w"))
+EOF
+else
+    echo "no $LOCALRUN: setup.sh's reproduction check will be skipped"
+fi
 echo "staged R = ${POINTS:-2.30} in $DST ($(du -sh "$DST" | cut -f1))"

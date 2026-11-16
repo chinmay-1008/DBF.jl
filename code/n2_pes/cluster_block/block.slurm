@@ -23,8 +23,9 @@
 hostname
 module reset
 cd "$SLURM_SUBMIT_DIR"
+BUNDLE=$SLURM_SUBMIT_DIR
 source config.sh
-echo "job $SLURM_JOB_ID: R $R, cutoff $COEFF, $MAX_ITER iterations, λ = $LAMBDAS, heap $HEAP per run"
+echo "job $SLURM_JOB_ID: R $R, cutoff $COEFF, $MAX_ITER iterations, λ = $LAMBDAS, heap $HEAP per run, env $DBF_ENV"
 pids=()
 for lam in $LAMBDAS; do
     bash run_one.sh "$lam" > "slurm_logs/run_${lam}_$SLURM_JOB_ID.log" 2>&1 &

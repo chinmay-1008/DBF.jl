@@ -33,14 +33,14 @@ timed() {
     fi
 }
 
-echo "$(date '+%F %T')  $LABEL  host $(hostname)  heap $HEAP"
+echo "$(date '+%F %T')  $LABEL  host $(hostname)  heap $HEAP  env $DBF_ENV"
 if [ -n "${REPLAY_ONLY:-}" ]; then
     [ -f "$OUT" ] || { echo "no run JSON $OUT" >&2; exit 1; }
 elif grep -q '"finished": *true' "$OUT" 2>/dev/null; then
     echo "finished run exists: $OUT"
 else
     cd "$N2"
-    timed "$LABEL run" "$JULIA" -t 1 --heap-size-hint="$HEAP" --project=. run_block_pp.jl \
+    timed "$LABEL run" "$JULIA" -t 1 --heap-size-hint="$HEAP" --project="$DBF_ENV" run_block_pp.jl \
         frozen_core/data_unocore/R_$R uno "$LABEL" "${ARGS[@]}" $EXTRA_ARGS > "$FC/logs/$LABEL.out" 2>&1
     tail -1 "$FC/logs/$LABEL.out"
 fi
