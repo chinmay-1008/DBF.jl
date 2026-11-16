@@ -6,6 +6,7 @@
 #   ET_m0   first excited state with Sz = 0 (orthogonal to the ground state): the same
 #           triplet's Ms = 0 component; it must equal ET_m1, which checks the DMRG
 #   E_neel  <Neel|H|Neel> = -J (N-1)/4, a check of the Hamiltonian convention
+#   block_weights  overlaps of these states with the block determinants of run_block_heisenberg.jl
 #
 #     julia --project=. dmrg_heisenberg.jl <N> [maxdim 400] [J 1.0]
 using ITensors, ITensorMPS, JSON, Printf
@@ -41,11 +42,31 @@ function main(args)
     t = @elapsed e2, psi2 = dmrg(H, [psi0], random_mps(sites, neel; linkdims=10); sw..., weight=20.0)
     @printf("ET_m0  = %.10f   gap %.10f   overlap with ground %.1e   (%.0f s)\n", e2, e2 - e0, abs(inner(psi0, psi2)), t)
 
+    # weights of the exact (DMRG) states on the block determinants of run_block_heisenberg.jl, in this
+    # script's convention (Néel = Up on odd sites; centre sites c = N/2 and c + 1):
+    #   |0> Néel, |f> centre pair exchanged (Sz = 0), |s> site c flipped Dn -> Up (Sz = +1)
+    c = N ÷ 2
+    fl = copy(neel); fl[c], fl[c+1] = neel[c+1], neel[c]
+    sf = copy(neel); sf[c] = neel[c] == "Up" ? "Dn" : "Up"
+    ov(psi, cfg) = inner(MPS(sites, cfg), psi)
+    w = Dict{String,Any}()
+    for (name, psi) in (("S0", psi0), ("T_m0", psi2))
+        a0, af = ov(psi, neel), ov(psi, fl)
+        w[name] = Dict("neel" => a0, "flipflop" => af, "span" => abs2(a0) + abs2(af),
+                       "plus" => abs2(a0 + af) / 2, "minus" => abs2(a0 - af) / 2)
+        @printf("%-5s <Néel|psi> = %+.4e   <f|psi> = %+.4e   weight on {Néel, f} %.3e   on (Néel ± f)/√2: %.3e / %.3e\n",
+                name, a0, af, w[name]["span"], w[name]["plus"], w[name]["minus"])
+    end
+    as = ov(psi1, sf)
+    w["T_m1"] = Dict("s" => as, "span" => abs2(as))
+    @printf("T_m1  <s|psi> = %+.4e   weight %.3e\n", as, abs2(as))
+
     mkpath(joinpath(@__DIR__, "results"))
     open(joinpath(@__DIR__, "results", "dmrg_N$(N).json"), "w") do io
         JSON.print(io, Dict("N" => N, "J" => J, "boundary" => "open", "maxdim" => maxdim, "E_neel" => e_neel,
                             "E0" => e0, "ET_m1" => e1, "ET_m0" => e2, "gap_m1" => e1 - e0, "gap_m0" => e2 - e0,
-                            "maxlinkdim" => [maxlinkdim(psi0), maxlinkdim(psi1), maxlinkdim(psi2)]), 2)
+                            "maxlinkdim" => [maxlinkdim(psi0), maxlinkdim(psi1), maxlinkdim(psi2)],
+                            "block_weights" => w), 2)
     end
 end
 

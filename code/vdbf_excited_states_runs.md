@@ -233,68 +233,7 @@ The same run at cutoff 10⁻⁶ is in progress.
 - **Symmetry.** $|a\rangle$ and $|b\rangle$ have a different spatial symmetry (Πg) from the ground state (Σg⁺), so H never couples them to $|0\rangle$. In practice both flows decouple $|0\rangle$ on its own and $\{|a\rangle, |b\rangle\}$ on their own.
 - **Which excited states come out.** Because 1πg is degenerate, ³Πg has two components at 297.17. Strictly, the lowest possible block sum would take both ³Πg components instead of ³Πg + ¹Πg. Neither flow goes there: H conserves spin, so nothing pulls the singlet toward a triplet, and it stays a singlet. The result is exactly the set we wanted: S0, one triplet and one singlet of the same excitation.
 
-## 10. Scaling up: the 1×100 Heisenberg chain
-
-**System.** Open spin-½ chain, $H = J\sum_i \mathbf S_i\cdot\mathbf S_{i+1}$, $N = 100$, $J = 1$. Energies are in units of $J$ and errors in mJ ($10^{-3} J$). At 100 qubits nothing can be checked exactly, so the references come from DMRG (ITensors, bond dimension up to 400, $S_z$ conserved):
-
-| | DMRG energy |
-|---|---|
-| S0, the ground state (a singlet) | −44.12774 |
-| T, the lowest triplet ($M_s = 0$ and $M_s = +1$ components) | −44.08730 |
-| spin gap T − S0 | 40.44 mJ |
-
-**Block.** The reference is the Néel state $|\!\uparrow\downarrow\uparrow\downarrow\cdots\rangle$, at −24.75, which is 19.4 J above the ground state. Flipping every other qubit maps it to $|00\cdots0\rangle$. The block holds three determinants:
-
-- $|0\rangle$: Néel ($S_z = 0$);
-- $|f\rangle$: Néel with the centre pair (sites 50 and 51) exchanged, a flip-flop, still $S_z = 0$;
-- $|s\rangle$: Néel with site 50 flipped ($S_z = +1$).
-
-H conserves $S_z$. So the flow targets S0 and T($M_s = 0$) in the $S_z = 0$ pair $\{|0\rangle, |f\rangle\}$, and T($M_s = +1$) on its own from $|s\rangle$. The two triplet components have the same exact energy, which gives a built-in check. D is the analogue of $D_{1c}$: $\sum Z_k$ over the other 98 sites plus a centre term $Z_c Z_{c+1} - Z_c + Z_{c+1}$. Its top eigenspace is exactly the three block states (checked against every single and double flip).
-
-**Run.** The same greedy Pauli-propagation loop as section 8, at cutoff $10^{-5}$ with 100 rotations per iteration. It was stopped at iteration 360: 36,000 rotations in 8.1 h, $\bar H$ at 16.5 million Pauli strings, and the last iterations taking about 140 s each.
-
-A run at cutoff $10^{-4}$ is left out. From about iteration 120 on, its truncation correction runs away: by iteration 160 corrected and raw S0 differ by 300 mJ, the corrected S0 variance turns negative at iteration 511, and the run ends with the corrected S0 853 mJ *below* the exact ground state.
-
-**Target: 1% of each state's energy**, $|E - E_\text{DMRG}| \le 0.01\,|E_\text{DMRG}| \approx 441$ mJ. It is the grey band in the figures.
-
-![1×100 Heisenberg: block eigenvalues against block variance](heisenberg/results/plots/heis_N100_energies.png)
-
-![1×100 Heisenberg: zoom on each state](heisenberg/results/plots/heis_N100_zoom.png)
-
-**Result** at iteration 360, in mJ from each state's own DMRG energy (relative error in brackets):
-
-| state | raw | corrected | inside 1% (corrected) since |
-|---|---|---|---|
-| S0 | +235 (0.53%) | +211 (0.48%) | iteration 44 |
-| T, $M_s = 0$ | +446 (1.01%) | +426 (0.97%) | iteration 326 |
-| T, $M_s = +1$ | +378 (0.86%) | +341 (0.77%) | iteration 156 |
-
-- **All three corrected energies are inside the 1% target**, T($M_s = 0$) only just. Raw T($M_s = 0$) is still 0.01% outside.
-- **Truncation is under control at $10^{-5}$:** raw and corrected differ by 20–40 mJ, and the corrected variances stay positive.
-
-**Extrapolation**, per state over $[v, 2v]$ as in sections 6 and 8:
-
-![1×100 Heisenberg: per-state extrapolation, corrected and raw](heisenberg/results/plots/heis_N100_extrap.png)
-
-| state | corrected | raw |
-|---|---|---|
-| S0 | −11 ± 41 (0.02%) | +63 ± 63 (0.14%) |
-| T, $M_s = 0$ | −102 ± 30 (0.23%) | −98 ± 69 (0.22%) |
-| T, $M_s = +1$ | −22 ± 28 (0.05%) | +58 ± 56 (0.13%) |
-
-- **Energy against variance is a straight line** over the last 300 iterations, as in ground-state vDBF, so the extrapolation is well defined.
-- **The errors shrink by about 10×.** All six extrapolated values are within 0.25% of DMRG. S0 and T($M_s = +1$) land within their error bars.
-- **T($M_s = 0$) overshoots**, to about −100 mJ, outside its error bar. Its line is steeper than the other two. It is the second state of the two-state $S_z = 0$ block, while T($M_s = +1$) is the lowest state of its own sector.
-
-![1×100 Heisenberg: spin-gap estimates against block variance](heisenberg/results/plots/heis_N100_gap.png)
-
-- **The spin gap is not resolved.** 40 mJ is 0.09% of the energy, well inside the 1% target.
-  - Directly at iteration 360, the estimates are 171 mJ ($M_s = +1$) and 256 mJ ($M_s = 0$).
-  - From the extrapolated corrected energies, they are 29 ± 49 mJ and −51 ± 50 mJ.
-  - Resolving it needs errors around 1–5 mJ, ten times below what extrapolation gives now.
-- **Why this is harder than N₂.** The Néel start is 19.4 J above the ground state, 480 times the gap. In N₂ the start was 0.16 Ha above, about half the excitation energies.
-
-## 11. N₂ again: does an S² penalty speed up convergence?
+## 10. Does an S² penalty speed up convergence?
 
 **Idea.** Run the flow on $H + \lambda S^2$ instead of $H$: the cost, the gradient and the angles all use $H + \lambda S^2$, while energies and $V_S$ are still reported for $H$. H conserves spin, so $H + \lambda S^2$ has the same eigenstates as H, with every spin-$S$ level raised by $\lambda S(S+1)$. If the flow spends rotations on spin-contaminated directions, the penalty should cut them out and converge faster.
 
@@ -394,6 +333,98 @@ Extrapolated over $[v, 2v]$, in mHa from exact:
 
 **So:** with truncation, the S² penalty helps a little. The circuit improves by 10–17%, and the corrected estimates and their extrapolation improve clearly. The raw estimate becomes less useful for excitation energies. The large gain is still the one seen in the exact runs at 2.3 Å, where states of another spin are close.
 
+## 11. Scaling up: the 1×100 Heisenberg chain
+
+**System.** Open spin-½ chain, $H = J\sum_i \mathbf S_i\cdot\mathbf S_{i+1}$, $N = 100$, $J = 1$. Energies are in units of $J$ and errors in mJ ($10^{-3} J$). At 100 qubits nothing can be checked exactly, so the references come from DMRG (ITensors, bond dimension up to 400, $S_z$ conserved):
+
+| | DMRG energy |
+|---|---|
+| S0, the ground state (a singlet) | −44.12774 |
+| T, the lowest triplet ($M_s = 0$ and $M_s = +1$ components) | −44.08730 |
+| spin gap T − S0 | 40.44 mJ |
+
+**Sites and qubits.** Site $i$ (1–100) is qubit $i - 1$. The reference is the Néel state: ↑ on odd sites, ↓ on even sites. Every bond is antiparallel and contributes $-J/4$, so its energy is $-(N-1)/4 = -24.75$, which is 19.4 J above the ground state. Flipping every other qubit maps Néel to $|00\cdots0\rangle$. So, as for N₂, a 1 on a qubit means that site's spin is flipped relative to Néel.
+
+**The block: three determinants at the centre.** Only sites 50 and 51 (qubits 49 and 50) differ between them; the other 98 sites stay Néel.
+
+| | … 48 | 49 | **50** | **51** | 52 | 53 … | $S_z$ | energy |
+|---|---|---|---|---|---|---|---|---|
+| $\lvert 0\rangle$, Néel | ↓ | ↑ | ↓ | ↑ | ↓ | ↑ | 0 | −24.75 |
+| $\lvert f\rangle$, flip-flop | ↓ | ↑ | **↑** | **↓** | ↓ | ↑ | 0 | −23.75 |
+| $\lvert s\rangle$, single flip | ↓ | ↑ | **↑** | ↑ | ↓ | ↑ | +1 | −23.75 |
+
+- **$|f\rangle$** exchanges the antiparallel centre pair. Bond 50–51 stays antiparallel, but bonds 49–50 and 51–52 become parallel, which costs $J/2$ each.
+- **$|s\rangle$** flips site 50 alone, which makes bonds 49–50 and 50–51 parallel.
+- **Coupling.** H connects $|0\rangle$ and $|f\rangle$ directly: the flip-flop term on bond 50–51 has matrix element $J/2$. $|s\rangle$ is in a different $S_z$ sector.
+
+**Exact states we target.**
+
+| exact state | $S_z$ sector | DMRG energy | grows from | weight of the exact state on those determinants |
+|---|---|---|---|---|
+| S0 | 0 | −44.12774 | $\lvert 0\rangle, \lvert f\rangle$ | 5.6 × 10⁻⁹ |
+| T, $M_s = 0$ | 0 | −44.08730 | $\lvert 0\rangle, \lvert f\rangle$ | 1.1 × 10⁻⁸ |
+| T, $M_s = +1$ | +1 | −44.08730 | $\lvert s\rangle$ | 6.4 × 10⁻¹² |
+
+- **Which state comes from where.** H conserves $S_z$, so S0 and T($M_s = 0$) are the two eigenvalues of the 2×2 $S_z = 0$ block $\{|0\rangle, |f\rangle\}$, and T($M_s = +1$) comes from $|s\rangle$ alone. The two triplet components have the same exact energy, which gives a built-in check.
+- **The start.** The $S_z = 0$ block is $\begin{pmatrix} -24.75 & 0.5 \\ 0.5 & -23.75 \end{pmatrix}$, with eigenvalues −24.96 and −23.54; $|s\rangle$ gives −23.75. These are 19.2, 20.5 and 20.3 J above their DMRG levels.
+- **The big difference from N₂ is the weight column.** In N₂ the three determinants already held about 90% of each target state. Here they hold about 10⁻⁸, because the exact 100-site states are spread over an enormous number of determinants. The flow has to rotate essentially all of the weight into the block.
+
+**What we change in D.** Ordinary DBF on the chain uses $D = \sum_k Z_k$ over all 100 qubits; its top value (100) belongs to Néel alone. We keep $Z_k$ on the other 98 sites and replace $Z_c + Z_{c+1}$ (sites 50 and 51) with
+
+$$D_\text{centre} = Z_c Z_{c+1} - Z_c + Z_{c+1} .$$
+
+| sites 50, 51 flipped? | spins | meaning | $D_\text{centre}$ |
+|---|---|---|---|
+| no, no | ↓↑ | $\lvert 0\rangle$, Néel | +1 |
+| yes, yes | ↑↓ | $\lvert f\rangle$ | +1 |
+| yes, no | ↑↑ | $\lvert s\rangle$, $S_z = +1$ | +1 |
+| no, yes | ↓↓ | the $S_z = -1$ partner of $\lvert s\rangle$ | −3 |
+
+Flipping any other site lowers $D$ by 2. So **the top value of $D$ (99) belongs to exactly $|0\rangle$, $|f\rangle$ and $|s\rangle$**, checked against every single and double flip. The −3 on ↓↓ keeps only one triplet component, $M_s = +1$, in the block. Without it, the block would get a fourth state, the $M_s = -1$ component, which would only repeat the triplet energy.
+
+**Run.** The same greedy Pauli-propagation loop as section 8, at cutoff $10^{-5}$ with 100 rotations per iteration. It was stopped at iteration 360: 36,000 rotations in 8.1 h, $\bar H$ at 16.5 million Pauli strings, and the last iterations taking about 140 s each.
+
+A run at cutoff $10^{-4}$ is left out. From about iteration 120 on, its truncation correction runs away: by iteration 160 corrected and raw S0 differ by 300 mJ, the corrected S0 variance turns negative at iteration 511, and the run ends with the corrected S0 853 mJ *below* the exact ground state.
+
+**Target: 1% of each state's energy**, $|E - E_\text{DMRG}| \le 0.01\,|E_\text{DMRG}| \approx 441$ mJ. It is the grey band in the figures.
+
+![1×100 Heisenberg: block eigenvalues against block variance](heisenberg/results/plots/heis_N100_energies.png)
+
+![1×100 Heisenberg: zoom on each state](heisenberg/results/plots/heis_N100_zoom.png)
+
+**Result** at iteration 360, in mJ from each state's own DMRG energy (relative error in brackets):
+
+| state | raw | corrected | inside 1% (corrected) since |
+|---|---|---|---|
+| S0 | +235 (0.53%) | +211 (0.48%) | iteration 44 |
+| T, $M_s = 0$ | +446 (1.01%) | +426 (0.97%) | iteration 326 |
+| T, $M_s = +1$ | +378 (0.86%) | +341 (0.77%) | iteration 156 |
+
+- **All three corrected energies are inside the 1% target**, T($M_s = 0$) only just. Raw T($M_s = 0$) is still 0.01% outside.
+- **Truncation is under control at $10^{-5}$:** raw and corrected differ by 20–40 mJ, and the corrected variances stay positive.
+
+**Extrapolation**, per state over $[v, 2v]$ as in sections 6 and 8:
+
+![1×100 Heisenberg: per-state extrapolation, corrected and raw](heisenberg/results/plots/heis_N100_extrap.png)
+
+| state | corrected | raw |
+|---|---|---|
+| S0 | −11 ± 41 (0.02%) | +63 ± 63 (0.14%) |
+| T, $M_s = 0$ | −102 ± 30 (0.23%) | −98 ± 69 (0.22%) |
+| T, $M_s = +1$ | −22 ± 28 (0.05%) | +58 ± 56 (0.13%) |
+
+- **Energy against variance is a straight line** over the last 300 iterations, as in ground-state vDBF, so the extrapolation is well defined.
+- **The errors shrink by about 10×.** All six extrapolated values are within 0.25% of DMRG. S0 and T($M_s = +1$) land within their error bars.
+- **T($M_s = 0$) overshoots**, to about −100 mJ, outside its error bar. Its line is steeper than the other two. It is the second state of the two-state $S_z = 0$ block, while T($M_s = +1$) is the lowest state of its own sector.
+
+![1×100 Heisenberg: spin-gap estimates against block variance](heisenberg/results/plots/heis_N100_gap.png)
+
+- **The spin gap is not resolved.** 40 mJ is 0.09% of the energy, well inside the 1% target.
+  - Directly at iteration 360, the estimates are 171 mJ ($M_s = +1$) and 256 mJ ($M_s = 0$).
+  - From the extrapolated corrected energies, they are 29 ± 49 mJ and −51 ± 50 mJ.
+  - Resolving it needs errors around 1–5 mJ, ten times below what extrapolation gives now.
+- **Why this is harder than N₂.** The Néel start is 19.4 J above the ground state, 480 times the gap. The block determinants hold about 10⁻⁸ of the target states, against about 90% in N₂. In N₂ the start was 0.16 Ha above, about half the excitation energies.
+
 ---
 
 Code in `code/n2_pes/frozen_core/`: greedy `sv_block.jl`, full flow `cflow_block.jl`, plots `plot_block.py` (written to `sv_results/plots/`, not in git).
@@ -407,7 +438,7 @@ python plot_block.py
 julia -t 8 --project=../../integrals sv_block.jl data_unocore/R_1.10 uno uno_1.10_block1c_exact_s2pen0.05 --s2-penalty 0.05
 cd .. && julia --project=. run_block_pp.jl frozen_core/data_unocore/R_1.10 uno uno_1.10_blockpp_c1e-5_s2pen0.05 --coeff 1e-5 --s2-penalty 0.05
 cd frozen_core && julia -t 4 --project=../../integrals replay_block.jl data_unocore/R_1.10 uno uno_1.10_blockpp_c1e-5_s2pen0.05 1
-python plot_block.py --penalty          # section 11 figures only
+python plot_block.py --penalty          # section 10 figures only
 ```
 
 Heisenberg chain, in `code/heisenberg/` (plots in `results/plots/`, not in git):
