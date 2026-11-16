@@ -179,7 +179,7 @@ One difference from the ground state: an excited state can also mix with states 
 - **At the same $V_S$, greedy is lower.** Where greedy stopped ($V_S = 2.5\times10^{-4}$) its errors are 0.019, 0.022, 0.037 mHa; the full flow at that $V_S$ has 0.035, 0.072, 0.29 mHa (0.042, 0.072, 0.31 with the block projector instead of $D_{1c}$). Likewise greedy has all three within 1.6 mHa by $V_S = 9.6\times10^{-3}$ (iteration 37), the full flow only by $V_S = 2.2\times10^{-3}$. So the greedy single-Pauli path loses nothing against the true flow; per unit of decoupling it does better.
 - **The full flow goes all the way.** Greedy stopped at 200 iterations; the full flow continues to $V_S \approx 10^{-20}$ and the exact energies. In both, the error falls roughly in proportion to $V_S$.
 
-## 8. Greedy vDBF with Pauli propagation (cutoff 10⁻⁵)
+## 8. Greedy vDBF with Pauli propagation (cutoffs 10⁻⁵ and 10⁻⁶)
 
 **Formalism.** The same greedy flow as section 6, now run the way vDBF runs on large systems: $\bar H$ is stored as a sum of Pauli strings, and after every rotation each string with coefficient $|c| \le 10^{-5}$ is dropped. Relative to ground-state vDBF only the block parts change: candidate rotations come from $[\bar H, D_{1c}]$, they are scored and their angles chosen on the block sum $C$, and at the end the 3×3 block is diagonalised.
 
@@ -226,7 +226,45 @@ Same layout as the earlier energy figures, with the run's own $V_S$ on the x-axi
 
 \* The corrected ¹Πg variance turns negative from iteration 188 on, so $[v, 2v]$ does not exist; that series is fitted over $[0, 0.2\times10^{-3}]$ Ha² instead (46 points, iterations 142–187).
 
-The same run at cutoff 10⁻⁶ is in progress.
+### Cutoff 10⁻⁶
+
+This is the same run with a cutoff 10 times smaller. 200 iterations × 50 rotations took 2.25 h, 5 times longer, and $\bar H$ grew to 6.8 million Pauli strings, 6 times more.
+
+**Result** (errors in mHa at the last iteration):
+
+| state | raw | corrected | true |
+|---|---|---|---|
+| S0 | +0.048 | +0.105 | +0.087 |
+| ³Πg | +0.029 | +0.085 | +0.097 |
+| ¹Πg | +0.256 | +0.085 | +0.115 |
+
+![Pauli propagation 10⁻⁶: block eigenvalues against block variance at 1.1 Å](n2_pes/frozen_core/sv_results/plots/n2_110_pp_c1e-6_energies.png)
+
+![Pauli propagation 10⁻⁶: zoom on each state, against the exact greedy run](n2_pes/frozen_core/sv_results/plots/n2_110_pp_c1e-6_zoom.png)
+
+- **The circuit is better at the same iteration:** the true errors are 0.09–0.12 mHa, against 0.14–0.20 at 10⁻⁵. Against $V_S$ it still lies on the exact greedy curve.
+- **The estimates now follow the true energies.** Corrected is within 0.03 mHa of true for all three states, and the corrected variances stay positive. Raw is within 0.07 mHa for S0 and ³Πg but still 0.14 mHa high for ¹Πg.
+
+**Extrapolation**, per state over $[v, 2v]$:
+
+![Pauli propagation 10⁻⁶: per-state extrapolation, true / corrected / raw](n2_pes/frozen_core/sv_results/plots/n2_110_pp_c1e-6_extrap.png)
+
+| state | true | corrected | raw |
+|---|---|---|---|
+| S0 | −0.008 ± 0.005 | −0.001 ± 0.007 | +0.013 ± 0.041 |
+| ³Πg | −0.011 ± 0.010 | −0.021 ± 0.009 | −0.054 ± 0.011 |
+| ¹Πg | −0.032 ± 0.039 | −0.041 ± 0.036 | +0.170 ± 0.030 |
+| ³Πg excitation | −0.003 | −0.020 | −0.067 |
+| ¹Πg excitation | −0.023 | −0.040 | +0.157 |
+
+- **At 10⁻⁶ the corrected estimate can be trusted.** It extrapolates to within 0.04 mHa of exact for all three states and both excitation energies, about as well as the true energies. That matters for large systems, where there is no exact replay and the corrected estimate is all we have.
+- **Raw is still biased for ¹Πg,** by +0.17 mHa.
+
+**Both cutoffs together:**
+
+![Pauli propagation, cutoffs 10⁻⁵ and 10⁻⁶ against the exact greedy run](n2_pes/frozen_core/sv_results/plots/n2_110_pp_compare_zoom.png)
+
+Going from 10⁻⁵ to 10⁻⁶ costs 5 times the time and 6 times the operator size. What it buys is mainly a reliable *estimate*: the corrected values go from overshooting by up to 0.44 mHa to tracking the true energies within 0.03 mHa. The circuit itself improves less, from 0.14–0.20 mHa above exact to 0.09–0.12 mHa at iteration 200.
 
 ## 9. Two things worth knowing
 
