@@ -1,6 +1,7 @@
 """Plots for the block vDBF runs on the open Heisenberg chain (run_block_heisenberg.jl), against DMRG.
 
-    python plot_heisenberg.py [N]          # from code/heisenberg/; reads results/heis_N<N>_block_c*.json
+    python plot_heisenberg.py [N] [--cuts 1e-5,...]   # from code/heisenberg/; reads results/heis_N<N>_block_c*.json
+                                                     # default: the runs whose corrected variances stayed positive
 
 Energies are in units of J; differences in mJ (10^-3 J).  The three block states are
 S0 (Sz = 0), the lowest triplet's Ms = 0 component (Sz = 0) and its Ms = +1 component (Sz = 1);
@@ -21,6 +22,7 @@ import sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.ticker  # noqa: E402
 import numpy as np  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -32,6 +34,14 @@ OUT = os.path.join(RES, "plots")
 SERIES, INK, MUTED, GRID = pb.SERIES, pb.INK, pb.MUTED, pb.GRID
 NAMES = ["S0", "T, Ms = 0", "T, Ms = +1"]
 CUT_LS = {"1e-4": (0, (5, 2)), "1e-5": "-", "1e-6": (0, (1, 1.5))}
+TOL = 0.01                     # target: error within 1% of the state's own energy, |E - E_DMRG| <= 0.01 |E_DMRG|
+BAND = "#c4c8cf"               # grey band marking that target
+
+
+def tol_band(ax, lo, hi, label=True):
+    """grey band [lo, hi] (mJ): the 1% target"""
+    ax.axhspan(lo, hi, color=BAND, alpha=0.4, lw=0, zorder=0,
+               label=f"within {TOL:.0%} of the exact energy" if label else None)
 
 
 def load_runs(N):
@@ -59,6 +69,8 @@ def energies(runs, dm, N):
                     label=f"{NAMES[i]}, cutoff {cut}" if True else None)
             ax.plot(vs[0], lam[0, i], "o", color=SERIES[i], ms=5, mfc="white", mew=1.1)
             ax.plot(vs[-1], lam[-1, i], "o", color=SERIES[i], ms=5, mec="white", mew=0.8)
+    g = (dm["ET_m1"] - e0) * 1e3
+    tol_band(ax, -TOL * abs(e0) * 1e3, g + TOL * abs(dm["ET_m1"]) * 1e3)
     for e, name in ((0.0, "DMRG E0"), ((dm["ET_m1"] - e0) * 1e3, f"DMRG triplet ({(dm['ET_m1'] - e0) * 1e3:.2f})")):
         ax.axhline(e, color=INK, lw=0.9, ls="--", zorder=1)
         ax.annotate(name, xy=(1.01, e), xycoords=("axes fraction", "data"), fontsize=7.5, va="center", color=INK)
@@ -72,7 +84,7 @@ def energies(runs, dm, N):
     fig.suptitle("Block eigenvalues (corrected) against block variance; DMRG energies dashed\n"
                  "starts on the right (hollow dots), converges to the left",
                  x=0.01, ha="left", fontsize=10, color=INK)
-    fig.tight_layout(rect=(0, 0, 0.86, 0.88))
+    fig.subplots_adjust(left=0.12, right=0.80, bottom=0.12, top=0.80)
     return fig
 
 
@@ -91,8 +103,14 @@ def zoom(runs, refs, N):
         lo_x = min(lo_x, vs.min())
     for i, ax in enumerate(axes[0]):
         ax.axhline(0, color=INK, lw=1, ls="--", zorder=1)
+        w = TOL * abs(refs[i]) * 1e3
+        tol_band(ax, -w, w, label=(i == 2))
+        W = max(W, 1.1 * w / 0.4)
         ax.set_xscale("log")
-        ax.set_xlim(lo_x / 1.5, 1.0)
+        ax.set_xlim(lo_x / 1.1, 3.0)
+        ax.set_xticks([0.8, 1.0, 1.5, 2.0, 3.0])
+        ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter("%g"))
+        ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
         ax.set_ylim(-0.4 * W, 1.2 * W)
         ax.set_title(f"N = {N}: {NAMES[i]}", fontsize=9, color=INK, loc="left")
         ax.set_xlabel("$V_S$ (J², log)")
@@ -101,9 +119,10 @@ def zoom(runs, refs, N):
     axes[0, 0].set_ylabel("energy − DMRG (mJ)")
     axes[0, -1].legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=7.5)
     fig.suptitle("Zoom on each state: error from the matching DMRG level; all panels share x and y ranges\n"
-                 "solid = corrected for truncation, thin = raw; starts on the right, converges to the left",
+                 "solid = corrected for truncation, thin = raw; grey = within 1% of the state's exact energy; "
+                 "starts on the right, converges to the left",
                  x=0.01, ha="left", fontsize=10, color=INK)
-    fig.tight_layout(rect=(0, 0, 1, 0.86))
+    fig.subplots_adjust(left=0.06, right=0.84, bottom=0.16, top=0.78, wspace=0.22)
     return fig
 
 
@@ -126,11 +145,16 @@ def gap(runs, dm, N):
     ax.annotate(f"DMRG gap {g_ref:.2f}", xy=(1.01, g_ref), xycoords=("axes fraction", "data"), fontsize=7.5,
                 va="center", color=INK)
     ax.set_xscale("log")
+    lo_x = min(np.min(d["history"]["VS"]) for d in runs.values())
+    ax.set_xlim(lo_x / 1.1, 3.0)                                   # same x range as the zoom figure
+    ax.set_xticks([0.8, 1.0, 1.5, 2.0, 3.0])
+    ax.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter("%g"))
+    ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     ax.set_ylim(0, top)
     ax.set_xlabel("block variance $V_S$ (J², log)")
     ax.set_ylabel("spin gap estimate (mJ)")
     ax.set_title(f"Heisenberg chain, N = {N}: lowest triplet − S0", fontsize=10, color=INK, loc="left")
-    ax.legend(fontsize=6.5, loc="upper right")
+    ax.legend(fontsize=6.5, loc="lower right", bbox_to_anchor=(1.0, 0.15))
     pb.style(ax)
     fig.tight_layout(rect=(0, 0, 0.88, 1))
     return fig
@@ -170,13 +194,16 @@ def extrap(runs, refs, N):
                 ax.plot(x[sel], y[sel], "o", color=SERIES[i], mfc=mfc, ms=3.0, mew=0.7, label=f"{kind} ({fit['k']} pts)")
                 xs = np.linspace(0, hi, 50)
                 ax.plot(xs, np.polyval(fit["lin"], xs), ls=ls, color=SERIES[i], lw=1.1)
-                ax.axvspan(lo, hi, color=GRID, alpha=0.35, lw=0, zorder=0)
+                ax.axvspan(lo, hi, color=SERIES[i], alpha=0.05, lw=0, zorder=0)
                 ax.errorbar(0, fit["e0"], yerr=0 if np.isnan(fit["half"]) else fit["half"], fmt="o", color=SERIES[i],
                             mfc=mfc, ms=6, mec=SERIES[i] if kind == "raw" else INK, mew=1.0, capsize=3, clip_on=False,
                             zorder=5)
                 rows.append((cut, kind, NAMES[i], y[-1], fit["e0"], fit["half"], fit["v"], fit["k"]))
                 txt.append(f"{kind}: last {y[-1]:+.0f}, extrapolated {fit['e0']:+.0f} ± {fit['half']:.0f}")
                 Y = [min(Y[0], y[ctx].min(), fit["e0"] - fit["half"]), max(Y[1], y[ctx].max(), fit["e0"] + fit["half"])]
+            w = TOL * abs(refs[i]) * 1e3
+            tol_band(ax, -w, w, label=(r_ == 0 and i == 0))
+            Y = [min(Y[0], -w), max(Y[1], w)]
             ax.text(0.98, 0.04, "\n".join(txt), transform=ax.transAxes, ha="right", va="bottom", fontsize=7, color=INK,
                     bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=GRID, lw=0.6))
             ax.set_title(f"cutoff {cut}: {NAMES[i]}", fontsize=9, color=INK, loc="left")
@@ -191,24 +218,30 @@ def extrap(runs, refs, N):
         ax.set_ylim(Y[0] - pad, Y[1] + pad)
     skipped = [c for c in runs if c not in cuts]
     fig.suptitle(f"Per-state extrapolation, N = {N}: each state's energy against its own variance, linear fit over [v, 2v] "
-                 "(shaded), v = its last variance\nfilled = corrected for truncation, hollow = raw; marker at 0 = "
-                 "extrapolated energy, error bar = half the difference from a quadratic fit; all panels share x and y"
+                 "(tinted), v = its last variance\nfilled = corrected for truncation, hollow = raw; marker at 0 = "
+                 "extrapolated energy, error bar = half the difference from a quadratic fit;\ngrey = within 1% of the state's exact energy; "
+                 "all panels share x and y"
                  + (f"\ncutoff {', '.join(skipped)} left out: its corrected variance turned negative (truncation "
                     "correction broke down)" if skipped else ""),
                  x=0.01, ha="left", fontsize=9.5, color=INK)
-    fig.subplots_adjust(left=0.065, right=0.985, bottom=0.13 / len(cuts), top=1 - 0.2 / len(cuts), wspace=0.22,
+    fig.subplots_adjust(left=0.065, right=0.985, bottom=0.13 / len(cuts), top=1 - 0.24 / len(cuts), wspace=0.22,
                         hspace=0.45)
     return fig, rows
 
 
 def main():
-    N = int(sys.argv[1]) if len(sys.argv) > 1 else 100
+    args = sys.argv[1:]
+    cuts = args[args.index("--cuts") + 1].split(",") if "--cuts" in args else None
+    N = int(args[0]) if args and args[0] != "--cuts" else 100
     os.makedirs(OUT, exist_ok=True)
     dm = json.load(open(os.path.join(RES, f"dmrg_N{N}.json")))
     refs = np.array([dm["E0"], dm["ET_m0"], dm["ET_m1"]])
     runs = load_runs(N)
     if not runs:
         sys.exit("no runs")
+    every = runs
+    runs = {c: d for c, d in every.items() if (c in cuts if cuts else healthy(d))}
+    print("plotting cutoffs", ", ".join(runs), "| left out:", ", ".join(c for c in every if c not in runs) or "none")
     energies(runs, dm, N).savefig(os.path.join(OUT, f"heis_N{N}_energies.png"), dpi=170)
     zoom(runs, refs, N).savefig(os.path.join(OUT, f"heis_N{N}_zoom.png"), dpi=170)
     gap(runs, dm, N).savefig(os.path.join(OUT, f"heis_N{N}_gap.png"), dpi=170)
@@ -216,12 +249,12 @@ def main():
     fig.savefig(os.path.join(OUT, f"heis_N{N}_extrap.png"), dpi=170)
     g_ref = (dm["ET_m1"] - dm["E0"]) * 1e3
     print(f"DMRG: E0 {dm['E0']:.8f}, gap {g_ref:.4f} mJ")
-    for cut, d in runs.items():
+    for cut, d in every.items():
         h = d["history"]
         it = len(h["lam"]) - 1
         lam, lamc = (np.array(h["lam"][-1]) - refs) * 1e3, (np.array(h["lam_corr"][-1]) - refs) * 1e3
         print(f"cutoff {cut}: iteration {it}, {d['n_rotations']} rotations, {h['terms'][-1]} terms, {h['time'][-1]:.0f} s, "
-              f"V_S {h['VS'][-1]:.2e}{'' if d.get('finished') else ' (running)'}")
+              f"V_S {h['VS'][-1]:.2e}{'' if d.get('finished') else ' (last checkpoint, run not finished)'}")
         print("   errors vs DMRG (mJ), raw:       " + "  ".join(f"{x:+9.3f}" for x in lam))
         print("   errors vs DMRG (mJ), corrected: " + "  ".join(f"{x:+9.3f}" for x in lamc))
     print("extrapolation over [v, 2v] (mJ vs DMRG): cutoff | series | state | last | extrapolated ± | v | points")
