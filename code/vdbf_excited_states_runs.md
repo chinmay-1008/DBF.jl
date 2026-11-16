@@ -294,6 +294,54 @@ A run at cutoff $10^{-4}$ is left out. From about iteration 120 on, its truncati
   - Resolving it needs errors around 1–5 mJ, ten times below what extrapolation gives now.
 - **Why this is harder than N₂.** The Néel start is 19.4 J above the ground state, 480 times the gap. In N₂ the start was 0.16 Ha above, about half the excitation energies.
 
+## 11. N₂ again: does an S² penalty speed up convergence?
+
+**Idea.** Run the flow on $H + \lambda S^2$ instead of $H$: the cost, the gradient and the angles all use $H + \lambda S^2$, while energies and $V_S$ are still reported for $H$. H conserves spin, so $H + \lambda S^2$ has the same eigenstates as H, with every spin-$S$ level raised by $\lambda S(S+1)$. If the flow spends rotations on spin-contaminated directions, the penalty should cut them out and converge faster.
+
+**1.1 Å.** This is the greedy exact flow of section 6 (200 iterations × 50 rotations) at four penalties, compared with bare H.
+
+- **The target.** At λ = 0.01 and 0.02 Ha the lowest-sum target is unchanged: S0 plus the two ³Πg components. At λ = 0.05 and 0.1, the 2λ = 100–200 mHa shift lifts the triplet above ¹Πg, which is only 50.2 mHa higher, so the target becomes the two ¹Πg components.
+- **Where the runs end.** All four still end on S0, ³Πg and ¹Πg, as the bare run does.
+
+![S² penalty at 1.1 Å: error against iteration, and its ratio to bare H](n2_pes/frozen_core/sv_results/plots/n2_110_s2pen_iter.png)
+
+![S² penalty at 1.1 Å: error against the block variance of H](n2_pes/frozen_core/sv_results/plots/n2_110_s2pen_vs.png)
+
+| | S0 | ³Πg | ¹Πg | below 0.1 mHa from iteration (S0 / ³Πg / ¹Πg) |
+|---|---|---|---|---|
+| bare H | 0.0194 | 0.0225 | 0.0369 | 116 / 121 / 146 |
+| λ = 0.01 | 0.0185 | 0.0232 | 0.0361 | 116 / 123 / 144 |
+| λ = 0.02 | 0.0182 | 0.0232 | 0.0354 | 112 / 122 / 144 |
+| λ = 0.05 | 0.0183 | 0.0243 | 0.0355 | 115 / 124 / 145 |
+| λ = 0.1 | 0.0195 | 0.0252 | 0.0359 | 117 / 125 / 145 |
+
+(The first three columns are errors in mHa at iteration 200.)
+
+- **There is no speedup at 1.1 Å.**
+  - At every iteration, every run is within 15% of bare H.
+  - At the end, S0 and ¹Πg are 2–6% ahead and ³Πg is 3–13% behind, with the lag growing with λ.
+  - Against $V_S$ the curves coincide.
+- **Why.**
+  - Near equilibrium the states are already spin-clean: in the bare run, the block states' ⟨S²⟩ stays within 0.011 of 0, 2 and 0 throughout.
+  - The nearest state of a different spin is far away: a quintet 623 mHa above S0 in the |0⟩ sector.
+  - So the penalty has nothing to remove. What sets the pace is dynamical correlation, which the penalty does not touch.
+
+**2.3 Å, where it does help.** These are the stretched-bond runs from earlier: bare H to 200 iterations, and λ = 0.05 and 0.1 to 500. Here states of different spin are close:
+
+- a quintet 9.0 mHa above S0 in the |0⟩ sector;
+- T1 2.8 mHa above S0, and a septet 20 mHa above S0, in the |a⟩, |b⟩ sector.
+
+![S² penalty at 2.3 Å: S0 energy and ⟨S²⟩ against iteration](n2_pes/frozen_core/sv_results/plots/n2_230_s2pen_s0.png)
+
+- **Bare H mixes spins.** The S0 block state reaches ⟨S²⟩ = 2.9 at iteration 9, mixing with the nearby quintet, and is still at 0.76 at iteration 200. S0 is then 1.56 mHa above FCI.
+- **λ = 0.05 is the right strength.**
+  - The quintet moves to 309 mHa above S0, and S0's ⟨S²⟩ stays below 0.01 from iteration 31 on.
+  - It overtakes bare H at iteration 24. At iteration 200 it is 0.33 mHa above FCI, 5× closer than bare H, and 0.010 mHa at iteration 500.
+  - T1 ends 0.03 mHa above its exact level, and the third state (a triplet at 120.6) 0.36 mHa.
+- **λ = 0.1 is too strong.** S0 is just as clean, but the second block state is pulled off the triplet and ends on singlets (228.0 and 264.0 mHa above FCI), so T1 is lost.
+
+**So:** the penalty pays off when states of a different spin sit close to the target, as with stretched bonds and open shells. It speeds things up there by turning a gap of a few mHa into hundreds. Near equilibrium it does nothing. λ has to stay small enough that the wanted spin states remain the lowest in their sector; here that means 0.05, not 0.1. Since the exact runs at 1.1 Å show nothing to gain, I did not repeat them with Pauli propagation.
+
 ---
 
 Code in `code/n2_pes/frozen_core/`: greedy `sv_block.jl`, full flow `cflow_block.jl`, plots `plot_block.py` (written to `sv_results/plots/`, not in git).
@@ -304,6 +352,8 @@ julia --project=../../integrals cflow_block.jl data_unocore/R_1.10 uno uno_1.10_
 julia --project=../../integrals cflow_block.jl data_unocore/R_1.10 uno uno_1.10_flow1c_d1c --gen d1c --coset a --s-max 60
 julia --project=../../integrals cflow_block.jl --merge uno_1.10_flow1c_d1c
 python plot_block.py
+julia -t 8 --project=../../integrals sv_block.jl data_unocore/R_1.10 uno uno_1.10_block1c_exact_s2pen0.05 --s2-penalty 0.05
+python plot_block.py --penalty          # section 11 figures only
 ```
 
 Heisenberg chain, in `code/heisenberg/` (plots in `results/plots/`, not in git):

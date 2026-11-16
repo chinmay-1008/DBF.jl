@@ -17,6 +17,7 @@ on a symmetry-protected saddle rather than on the Ky Fan target.
 """
 import json
 import os
+import sys
 
 import matplotlib
 import matplotlib.ticker
@@ -615,6 +616,106 @@ def greedy_vs_flow(methods, refs, names, title):
     return fig
 
 
+# ---------------------------------------------------------------- S^2 penalty at 1.1 A (sv_block.jl --s2-penalty)
+PEN = ["0.01", "0.02", "0.05", "0.1"]
+PEN_COL = {"0": INK, "0.01": "#9ec5f4", "0.02": "#5b9de6", "0.05": "#2a78d6", "0.1": "#16457f"}   # one hue, light -> dark
+
+
+def penalty_runs():
+    """[(λ string, run)] for the bare-H greedy run and the H + λ S^2 runs at 1.1 A that exist"""
+    out = [("0", load("uno_1.10_block1c_exact"))]
+    out += [(l, load(f"uno_1.10_block1c_exact_s2pen{l}")) for l in PEN]
+    return [(l, d) for l, d in out if d is not None]
+
+
+def penalty_figures(runs):
+    """1.1 A: error of each block state (from the exact level with its spin), one line per λ, panels per state.
+    Figure 1: against iteration, with a second row of the ratio to the bare-H run.  Figure 2: against V_S of H
+    (starts on the right, converges to the left).  x and y ranges shared by all panels of a row."""
+    data = [(l, d, run_data(d)) for l, d in runs]
+    base = next(r for l, d, r in data if l == "0")
+    rows = []
+    f1, ax1 = plt.subplots(2, 3, figsize=(11.5, 6.0), squeeze=False, gridspec_kw=dict(height_ratios=[1.6, 1]))
+    f2, ax2 = plt.subplots(1, 3, figsize=(11.5, 3.7), squeeze=False)
+    lo_y, hi_y = np.inf, 0.0
+    for l, d, (lam, vs, refs, names, s2) in data:
+        it = np.arange(len(lam))
+        for i in range(3):
+            err = lam[:, i] - refs[i]
+            kw = dict(color=PEN_COL[l], lw=1.7 if l == "0" else 1.3, ls=(0, (4, 2)) if l == "0" else "-",
+                      zorder=4 if l == "0" else 3, label=("bare H" if l == "0" else f"λ = {l}"))
+            ax1[0, i].plot(it, np.abs(err), **kw)
+            ax2[0, i].plot(vs, np.abs(err), **kw)
+            if l != "0":
+                b = base[0][:, i] - base[2][i]
+                n = min(len(b), len(err))
+                ax1[1, i].plot(it[1:n], err[1:n] / b[1:n], **kw)
+            lo_y, hi_y = min(lo_y, abs(err[-1])), max(hi_y, abs(err[min(3, len(err) - 1)]))
+            rows.append((l, i, names[i], s2[i], err[-1],
+                         *[next((int(it[k]) for k in range(len(err)) if np.all(np.abs(err[k:]) < t)), None)
+                           for t in (1.6, 0.1, 0.03)]))
+    slot = ["S0 (|0⟩ sector)", "³Πg (|a⟩, |b⟩ sector)", "¹Πg (|a⟩, |b⟩ sector)"]
+    for i in range(3):
+        for ax in (ax1[0, i], ax2[0, i]):
+            ax.set_yscale("log")
+            ax.set_ylim(lo_y / 2, hi_y * 1.5)
+            ax.set_title(slot[i], fontsize=9, color=INK, loc="left")
+            ax.tick_params(labelsize=7.5)
+            style(ax)
+        ax1[0, i].legend(fontsize=7, loc="upper right")
+        ax2[0, i].legend(fontsize=7, loc="lower right")
+        ax1[1, i].axhline(1, color=INK, lw=1, ls=(0, (4, 2)))
+        ax1[1, i].set_ylim(0.85, 1.15)
+        ax1[1, i].set_xlabel("iteration (50 rotations each)")
+        ax1[1, i].tick_params(labelsize=7.5)
+        style(ax1[1, i])
+        ax2[0, i].set_xscale("log")
+        ax2[0, i].set_xlabel("block variance $V_S$ of H (Ha², log)")
+    ax1[0, 0].set_ylabel("energy − exact (mHa, log)")
+    ax1[1, 0].set_ylabel("error / error of bare H")
+    ax2[0, 0].set_ylabel("energy − exact (mHa, log)")
+    f1.suptitle("1.1 Å, greedy vDBF (exact): flow on H + λ S² against bare H (dashed), energies of H\n"
+                "top: error of each block state from its exact level; bottom: that error divided by the bare-H error "
+                "at the same iteration (below 1 = penalty ahead)", x=0.01, ha="left", fontsize=10, color=INK)
+    f1.subplots_adjust(left=0.07, right=0.985, bottom=0.09, top=0.88, wspace=0.22, hspace=0.12)
+    for ax in ax1[0]:
+        ax.tick_params(labelbottom=False)
+    f2.suptitle("1.1 Å, the same runs against the block variance of H: starts on the right, converges to the left",
+                x=0.01, ha="left", fontsize=10, color=INK)
+    f2.subplots_adjust(left=0.07, right=0.985, bottom=0.15, top=0.84, wspace=0.22)
+    return (f1, f2), rows
+
+
+def penalty_230():
+    """2.3 A, where the start is spin-contaminated: S0's energy above FCI and its <S^2> against iteration,
+    bare H against λ = 0.05 and 0.1"""
+    runs = [("0", load("uno_2.30_block1c_exact")), ("0.05", load("uno_2.30_block1c_exact_s2pen0.05")),
+            ("0.1", load("uno_2.30_block1c_exact_s2pen0.1"))]
+    runs = [(l, d) for l, d in runs if d is not None]
+    fig, axes = plt.subplots(1, 2, figsize=(10.0, 3.6))
+    for l, d in runs:
+        h, f = d["history"], d["E_FCI"]
+        e = (np.array(h["lam"])[:, 0] - f) * 1e3
+        s2 = np.array(h["S2"])[:, 0]
+        kw = dict(color=PEN_COL[l], lw=1.7 if l == "0" else 1.4, ls=(0, (4, 2)) if l == "0" else "-",
+                  label="bare H" if l == "0" else f"λ = {l}")
+        axes[0].plot(np.arange(len(e)), np.maximum(e, 1e-6), **kw)
+        axes[1].plot(np.arange(len(s2)), s2, **kw)
+    axes[0].set_yscale("log")
+    axes[0].set_ylabel("S0 energy − FCI (mHa, log)")
+    axes[1].set_ylabel("⟨S²⟩ of the S0 block state")
+    axes[1].axhline(0, color=INK, lw=0.8)
+    for ax in axes:
+        ax.set_xlabel("iteration (50 rotations each)")
+        ax.legend(fontsize=7.5, loc="upper right")
+        ax.tick_params(labelsize=7.5)
+        style(ax)
+    fig.suptitle("2.3 Å (stretched, spin-contaminated start): the S0 block state with and without the penalty",
+                 x=0.01, ha="left", fontsize=10, color=INK)
+    fig.subplots_adjust(left=0.08, right=0.985, bottom=0.15, top=0.86, wspace=0.25)
+    return fig
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     # greedy vDBF vs the full flow at 1.1 A, against the same exact levels
@@ -715,4 +816,14 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if "--penalty" in sys.argv:
+        os.makedirs(OUT, exist_ok=True)
+        (fi, fv), prow = penalty_figures(penalty_runs())
+        fi.savefig(os.path.join(OUT, "n2_110_s2pen_iter.png"), dpi=170)
+        fv.savefig(os.path.join(OUT, "n2_110_s2pen_vs.png"), dpi=170)
+        penalty_230().savefig(os.path.join(OUT, "n2_230_s2pen_s0.png"), dpi=170)
+        print("λ | slot | state | <S^2> | last err (mHa) | stays below 1.6 / 0.1 / 0.03 mHa from iteration")
+        for r in prow:
+            print(f"  {r[0]:<5} {r[1]} {r[2]:<16} {r[3]:6.3f}  {r[4]:.2e}   {r[5]} / {r[6]} / {r[7]}")
+    else:
+        main()
