@@ -90,14 +90,69 @@ mutable struct BlockAccumulator
     b::Matrix{ComplexF64}       # B|k_j>, likewise
     inU::BitVector              # kets where B|k_j> lives or that are block kets
 end
-BlockAccumulator(n, N) = BlockAccumulator(zeros(n, n), zeros(n, n), 0, zeros(ComplexF64, 1 << N, n),
-                                          zeros(ComplexF64, 1 << N, n), falses(1 << N))
+# Dense scratch columns over the 2^N kets only for small N; beyond that the correction
+# keeps the amplitudes in hash maps (truncate_block_sparse!).  BLOCK_DENSE_MAX overrides.
+const DENSE_MAX = parse(Int, get(ENV, "BLOCK_DENSE_MAX", "22"))
+BlockAccumulator(n, N) = N <= DENSE_MAX ?
+    BlockAccumulator(zeros(n, n), zeros(n, n), 0, zeros(ComplexF64, 1 << N, n), zeros(ComplexF64, 1 << N, n), falses(1 << N)) :
+    BlockAccumulator(zeros(n, n), zeros(n, n), 0, zeros(ComplexF64, 0, n), zeros(ComplexF64, 0, n), falses(0))
+
+# the shared last step: from O_kept|k_j> (a) and B|k_j> (b) on the touched kets, the changes of M and V
+function accumulate_block!(acc::BlockAccumulator, n, Mafter, ΔM, ip)
+    ΔA = [real(-ip(:a, i, :b, j) - ip(:b, i, :a, j) - ip(:b, i, :b, j)) for i in 1:n, j in 1:n]
+    Mbefore = Mafter - ΔM
+    ΔV = ΔA - (Mafter * Mafter - Mbefore * Mbefore)
+    acc.M .+= (ΔM + ΔM') / 2
+    acc.V .+= (ΔV + ΔV') / 2
+end
+
+# Large N: the same correction with amplitudes in hash maps keyed by ket bits.
+function truncate_block_sparse!(O::SparsePauliVector{N,W}, kets::Vector{Ket{N}}, strategy::CoeffTruncation,
+                                acc::BlockAccumulator) where {N,W}
+    n, thr = length(kets), strategy.thresh
+    kv = [k.v % Int128 for k in kets]
+    b = [Dict{Int128,ComplexF64}() for _ in 1:n]
+    nd = 0
+    @inbounds for i in 1:O.n
+        c = O.c[i]
+        abs(c) <= thr || continue
+        nd += 1
+        z, x = O.z[i] % Int128, O.x[i] % Int128
+        for j in 1:n
+            ph, σ = PauliOperators._ket_action(z, x, kv[j])
+            b[j][σ] = get(b[j], σ, zero(ComplexF64)) + ph * c
+        end
+    end
+    truncate!(O, strategy)
+    nd == 0 && return O
+    acc.dropped += nd
+    U = Set{Int128}(kv)
+    foreach(bj -> union!(U, keys(bj)), b)
+    a = [Dict{Int128,ComplexF64}() for _ in 1:n]
+    @inbounds for i in 1:O.n
+        x = O.x[i] % Int128
+        for j in 1:n
+            σ = kv[j] ⊻ x
+            σ in U || continue
+            ph, _ = PauliOperators._ket_action(O.z[i] % Int128, x, kv[j])
+            a[j][σ] = get(a[j], σ, zero(ComplexF64)) + ph * O.c[i]
+        end
+    end
+    vecs = Dict(:a => a, :b => b)
+    ip(u, i, v, j) = (du = vecs[u][i]; sum((conj(get(du, s, zero(ComplexF64))) * x for (s, x) in vecs[v][j]);
+                                          init=zero(ComplexF64)))
+    Mafter = [real(get(a[j], kv[i], zero(ComplexF64))) for i in 1:n, j in 1:n]
+    ΔM = [-real(get(b[j], kv[i], zero(ComplexF64))) for i in 1:n, j in 1:n]
+    accumulate_block!(acc, n, Mafter, ΔM, ip)
+    return O
+end
 
 # Both passes read the SparsePauliVector's flat sorted arrays (z, x, c, n) and use
 # PauliOperators' raw-word ket action, so the work per term is a few bit operations;
 # amplitudes go into dense columns indexed by ket bits (16 qubits: 2^16 entries).
 function truncate_block!(O::SparsePauliVector{N,W}, kets::Vector{Ket{N}}, strategy::CoeffTruncation,
                          acc::BlockAccumulator) where {N,W}
+    N > DENSE_MAX && return truncate_block_sparse!(O, kets, strategy, acc)
     n, thr = length(kets), strategy.thresh
     kv = [k.v % Int128 for k in kets]
     a, b, inU = acc.a, acc.b, acc.inU
@@ -129,14 +184,11 @@ function truncate_block!(O::SparsePauliVector{N,W}, kets::Vector{Ket{N}}, strate
                 a[σ+1, j] += ph * O.c[i]
             end
         end
-        ip(u, i, v, j) = sum(conj(u[s+1, i]) * v[s+1, j] for s in U)    # <u_i|v_j> over the touched kets
+        cols = Dict(:a => a, :b => b)
+        ip(u, i, v, j) = sum(conj(cols[u][s+1, i]) * cols[v][s+1, j] for s in U)    # <u_i|v_j> over the touched kets
         Mafter = [real(a[kv[i]+1, j]) for i in 1:n, j in 1:n]
         ΔM = [-real(b[kv[i]+1, j]) for i in 1:n, j in 1:n]
-        ΔA = [real(-ip(a, i, b, j) - ip(b, i, a, j) - ip(b, i, b, j)) for i in 1:n, j in 1:n]
-        Mbefore = Mafter - ΔM
-        ΔV = ΔA - (Mafter * Mafter - Mbefore * Mbefore)
-        acc.M .+= (ΔM + ΔM') / 2
-        acc.V .+= (ΔV + ΔV') / 2
+        accumulate_block!(acc, n, Mafter, ΔM, ip)
     end
     @inbounds for s in U                                      # reset the scratch columns
         inU[s+1] = false
@@ -203,7 +255,10 @@ end
 
 # ---------------------------------------------------------------- the flow
 function dbf_block(Oin, kets::Vector{Ket{N}}, D; operator_truncation, gradient_truncation, max_iter, max_rots_per_grad,
-                   conv_thresh, grad_thresh=1e-6, e_ref=0.0, verbose=1) where N
+                   conv_thresh, grad_thresh=1e-6, e_ref=0.0, verbose=1, groups=nothing, on_iter=nothing) where N
+    # groups: block states that H connects, e.g. per symmetry sector; M and V are diagonalised group by
+    # group and the eigenvalues listed in group order.  Default: one group (eigenvalues sorted).
+    groups = groups === nothing ? [collect(eachindex(kets))] : groups
     O = deepcopy(Oin)
     acc = BlockAccumulator(length(kets), N)
     hist = Dict{String,Any}(k => Any[] for k in ("lam", "lam_corr", "var", "var_corr", "VS", "VS_corr", "C", "C_corr",
@@ -217,8 +272,9 @@ function dbf_block(Oin, kets::Vector{Ket{N}}, D; operator_truncation, gradient_t
         M = (M + M') / 2
         V = block_A(sv) - M * M
         Mc, Vc = M - acc.M, V - acc.V
-        lam, var = states_of(M, V)
-        lamc, varc = states_of(Mc, Vc)
+        per(Mx, Vx) = (r = [states_of(Mx[g, g], Vx[g, g]) for g in groups]; (vcat(first.(r)...), vcat(last.(r)...)))
+        lam, var = per(M, V)
+        lamc, varc = per(Mc, Vc)
         push!(hist["lam"], lam); push!(hist["var"], var)
         push!(hist["lam_corr"], lamc); push!(hist["var_corr"], varc)
         push!(hist["VS"], tr(V)); push!(hist["VS_corr"], tr(Vc))
@@ -253,6 +309,7 @@ function dbf_block(Oin, kets::Vector{Ket{N}}, D; operator_truncation, gradient_t
         end
         gnorm = norm(grad_vec)
         record!(gnorm, length(grad_vec), n_rots, time() - t0)
+        on_iter === nothing || on_iter(iter, hist, generators, angles, acc, O)
         if gnorm < conv_thresh
             verbose < 1 || println(" Converged.")
             break
