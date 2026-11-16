@@ -1,6 +1,8 @@
 # Excited-state energies from vDBF by block decoupling
 
-Idea notes, 13 Nov 2026. Status: nothing implemented or tested yet. Everything below is derivation and plan; items marked **(check)** are assumptions to confirm against the code.
+Idea notes, started 13 Nov 2026, last updated 16 Nov 2026.
+
+Status: first tests on N2 were run on 14 Nov 2026 (artifact "Block DBF on N2"); see section 11. Sections 1–8 are the original derivation and plan, written before any test; items marked **(check)** there were assumptions at the time. Sections 9–13 were added afterwards.
 
 ## 1. Goal
 
@@ -201,16 +203,49 @@ $[H,D]$ with a few-body $D$ is a proxy for the true gradient of $C_S$. Compare a
 
 ## 7. Staged plan
 
-All small-system stages: one self-contained notebook each, compared to exact diagonalisation, truncation off first.
+Decision (13 Nov 2026): test first on **N2 with the existing exact matrix-form DBF code**, then bring in the Pauli-propagation framework.
+
+One self-contained notebook per stage, compared to exact diagonalisation.
+
+### Phase A: exact matrix-form DBF on N2
+
+Purpose: test the block-decoupling idea itself, with no truncation and no greedy single-Pauli selection in the way.
+
+Recipe in matrix language. $H$ is the matrix in the determinant basis, $r$ the reference determinant. All of this is **(check)** against the existing N2 code, which these notes were written without seeing.
+
+- **$D$:** a diagonal matrix. Evaluate the operator from the section 4 table on each determinant with $Z_k \to 1-2x_k$, where $x_k=1$ if spin orbital $k$ has a different occupation from the reference determinant.
+- **Generator:** the full $W=[H,D]$, sign and exponentiation as the code already does it.
+- **Step size:** chosen to minimise $C_S=\sum_{x\in S}H_{xx}$ instead of $H_{rr}$.
+- **Convergence:** $V_S=\sum_{x\in S}\sum_{y\notin S}|H_{xy}|^2$.
+- **Block matrix:** $M = H[S,S]$, diagonalised at the end.
+- **Reference answer:** one full diagonalisation of the initial $H$, eigenstates labelled by $N$ and $S_z$ (and spatial irrep if available).
+
+Also run the "ideal" flow with $D=\Pi_S$, the projector onto $S$. $\Pi_S$ decouples only the block; the table operator is what the Pauli version will use. Comparing the two shows what the few-body proxy costs.
+
+N2-specific points:
+
+- **The frontier orbitals are degenerate.** The LUMO is the $1\pi_g$ pair $(x,y)$. The HOMO is $3\sigma_g$ or the $1\pi_u$ pair; Hartree–Fock can order these two differently from experiment, so read the orbital energies in the code's basis. "The HOMO–LUMO pair" is therefore a choice: name the two spatial orbitals explicitly.
+- **Suggested first block:** $3\sigma_g \to 1\pi_{g,x}$, variant 1c: $S=\{\text{ref},\ \sigma\alpha\to\pi_x\alpha,\ \sigma\beta\to\pi_x\beta\}$.
+- **Symmetry splits $M$.** If the orbitals are $D_{2h}$-adapted **(check)**, the two singles have a different irrep from the reference, so $M$ is 1 + 2: the reference entry gives S0 and the 2×2 gives the $S_z=0$ triplet and the singlet $\Pi_g$ components.
+- **Symmetry is exact here.** With the full generator and a diagonal $D$, the flow preserves $N$, $S_z$ and the $D_{2h}$ irrep. Each part of the block is driven to the lowest states of its own sector. Compare against exact eigenvalues sector by sector, not against the globally lowest three.
+- **Free check:** the $\pi_{g,y}$ block must give the same energies as the $\pi_{g,x}$ one.
+- **Later block:** $1\pi_u\to1\pi_g$ has 8 spin-conserving singles ($\Sigma_u^+$, $\Sigma_u^-$, $\Delta_u$ states). Larger, same recipe.
 
 | Stage | What | Pass criterion |
 |---|---|---|
-| 0 | Idea 2a on an 8–12 site Heisenberg chain from a converged ground-state run | Lowest shell eigenvalues vs ED in the matching $S_z$ sector; record the gap to ED and $V_S$ |
-| 1 | Idea 1a on a small molecule (minimal basis) or Hubbard cluster, no truncation | $C_S \to E_0 + E_1$ of the sector; $V_S \to 0$; 2×2 eigenvalues match ED |
-| 2 | Idea 1c on the same system | Three eigenvalues match S0, T1 ($S_z=0$), S1 from ED; $N$, $S_z$ drift stays small |
-| 3 | Idea 2b on the Stage 0 chain | Improvement over Stage 0; note where intruders appear |
-| 4 | Turn on coefficient truncation; scan thresholds | Excitation energies stable vs threshold; test extrapolation in $V_S$ |
-| 5 | Idea 2c, then larger systems | Only if 3 and 4 look good |
+| A1 | Idea 1c, $3\sigma_g\to1\pi_{g,x}$, equilibrium geometry, $D=\Pi_S$ | $C_S \to$ sum of the sector-lowest exact eigenvalues; $V_S\to0$; eigenvalues of $M$ match exact |
+| A2 | Same block with the table operator $D$ (scan $c$) | Same fixed point as A1; record the slowdown relative to $\Pi_S$ |
+| A3 | Idea 1b vs 1c at a stretched bond length | Shows whether dropping $1111$ stalls once doubles come down in energy |
+| A4 | Idea 2 on N2: $S$ = reference + all spin-conserving particle–hole singles. First the zero-cost baseline (2a) on the ground-state-decoupled $H$, then full decoupling (2b) | 2a: size of the error vs exact; 2b: improvement, and where intruders appear |
+
+### Phase B: Pauli propagation
+
+| Stage | What | Pass criterion |
+|---|---|---|
+| B1 | Repeat A1–A2 in vDBF with greedy single-Pauli rotations, truncation off | Reproduces Phase A energies; $N$, $S_z$ drift stays small; $[H,D]$ ranking agrees with the exact gradient $C_S(iPH_a)$ |
+| B2 | Turn on coefficient truncation; scan thresholds | Excitation energies stable vs threshold; test extrapolation in $V_S$ |
+| B3 | Idea 2a then 2b on an 8–12 site Heisenberg chain | Lowest shell eigenvalues vs ED in the matching $S_z$ sector |
+| B4 | Idea 2c, then larger systems | Only if B2 and B3 look good |
 
 Open questions to answer along the way:
 
@@ -219,56 +254,189 @@ Open questions to answer along the way:
 - Is block-cost flow from the start better or worse than warm-starting from the ground-state run?
 - Do errors cancel in energy differences, or is each block eigenvalue as inaccurate as a ground-state run at the same threshold?
 - For neutral excitations in idea 2, is the particle–hole part of weight 2 small enough to handle directly?
-- Which system for Stage 1? **Decided (14 Nov):** N2 / STO-3G, frozen core, UNO basis (16 qubits), at R = 1.1 and 2.3 Å, run first with the exact state-vector code (section 7a).
-
-## 7a. Status, 14 Nov 2026: idea 1c with exact DBF on N2
-
-Code: `code/n2_pes/frozen_core/sv_block.jl` (includes `sv_dbf.jl`). No truncation: W is a dense orthogonal matrix on a GF(2) sector, so everything below is the method's own error. Runs: `uno_{1.10,2.30}_block1c_{exact,d1c}`, 200 macro-iterations × 50 rotations, about 2 min each. HOMO = active orbital 4, LUMO = 5 (checked against the Fock diagonal at both geometries).
-
-**Things the plan did not anticipate.**
-
-- *The sector is symmetry-restricted.* `sv_dbf.jl` works in the span of H's x-strings, which only holds determinants with the reference's symmetry. HOMO→LUMO is a different symmetry here, so `sv_block.jl` adds $a, b$ to the span. H is block diagonal across the resulting cosets, the cross-coset block elements stay exactly 0, and the flow decouples $\{|0\rangle\}$ and $\{|a\rangle,|b\rangle\}$ separately.
-- *The Ky Fan target is not (S0, S1, T1).* At 1.1 Å the two lowest states of the HOMO→LUMO symmetry are both components of the degenerate ³Πg (297.17 mHa; the π orbitals are not symmetry-adapted, so x and y share a coset), with ¹Πg 50 mHa higher. At 2.3 Å they are ³Σu⁺ (2.84 mHa) and ⁷Σu⁺ (20.14 mHa), the stretched-N2 spin ladder; the HOMO→LUMO singlet is not in the lowest 8.
-
-**Results** (block eigenvalue vs the exact level with the same coset and spin, mHa above FCI):
-
-| R | ranking | S0 | T | 3rd state | $V_S$ |
-|---|---|---|---|---|---|
-| 1.1 | exact | +0.019 | 297.196 vs 297.174 (+0.022) | ¹Πg 347.421 vs 347.384 (+0.037) | 2.5e-4 |
-| 1.1 | d1c | +0.021 | +0.028 | ¹Πg +0.038 | 2.5e-4 |
-| 2.3 | exact | +1.56, ⟨S²⟩ 0.76 | 3.684 vs 2.842 (+0.84) | wanders near 120 (⟨S²⟩ 2.06) | 1.7e-3 |
-| 2.3 | d1c | +3.33, ⟨S²⟩ 1.37 | +1.74 | drifting toward the septet (⟨S²⟩ 5.9) | 1.6e-2 |
-
-- **1.1 Å works as intended.** The block holds S0, ³Πg and ¹Πg, spin-pure (⟨S²⟩ 0, 2, 0). The Ky Fan minimum would swap ¹Πg for the second ³Πg component, but that rotation has zero gradient by spin symmetry, so the flow stays on this saddle (plan §6.2): C − target plateaus at the 50.2 mHa ¹Πg–³Πg gap, and 1 − F_S at exactly 1/3. Excitation energies: ³Πg 297.177 vs 297.174, ¹Πg 347.402 vs 347.384 (errors partly cancel). Still converging at 200 iterations ($V_S$ falling).
-- **2.3 Å does not converge in 200 iterations.** The |0⟩ column picks up the ⁵Σg⁺ state 9 mHa above, the same spin contamination as the ground-state-only flow on bare H (`uno_2.30_onebody`, ⟨S²⟩ 0.32 after 200 iterations). There the fix was $H + 0.05\,S^2$.
-- **The d1c proxy ranks as well as the exact gradient** at 1.1 Å (curves nearly identical); at 2.3 Å it is worse.
-
-**Spin penalty at 2.3 Å** (`--s2-penalty`, 500 iterations, exact ranking; $[H, S^2]$ = 5e-16):
-
-- **λ = 0.05 converges:** S0 +0.0095, T1 +0.030 (2.873 vs 2.842), third state the triplet at 120.6 (+0.36), all spin-pure, $V_S^H$ 1.2e-4. This is the Ky Fan target for that λ.
-- **λ = 0.1 loses T1.** Its Ky Fan target is exactly (S0, T1, S1), but both HOMO→LUMO columns turn into singlets early (triplet character costs 2λ = 200 mHa) and spin conservation keeps them there: S0 +0.045, S1 +0.50, second singlet (263.3) +0.71; C − target stuck at 62 mHa. Same spin protection as at 1.1 Å, now against us.
-
-**Linear extrapolation in $V_S$** (open question 1; straight-line fit over the last 40% of iterations, `plot_block.py`): at 1.1 Å the tails are straight and extrapolation takes all three errors to ≤ 0.002 mHa. At 2.3 Å (+0.05 S²) it improves S0 and T1 (T1 +0.030 → −0.022) but the third state's tail still curves (+0.36 → +0.25).
-
-Explainer for these runs: `vdbf_excited_states_runs.md`. Plots: `python plot_block.py` → `frozen_core/sv_results/plots/`.
-
-**Next.**
-
-1. Getting (S0, T1, S1) at 2.3 Å needs per-column spin control, e.g. a penalty only on the columns meant to be singlets, or starting the HOMO→LUMO columns from the spin-adapted combinations $|a\rangle \mp |b\rangle$ and penalising each toward its own $S$.
-2. Per-state variance as the x-axis for extrapolation (currently the block total $V_S$).
-3. Stage 4: port the five swaps to `dbf_groundstate` with truncation at 1e-5 and 1e-6, starting at 1.1 Å, where the exact flow is clean.
+- In Phase A, how much slower is the table operator $D$ than the ideal projector $\Pi_S$?
+- N2 active space, basis and geometry used by the existing exact code: to be read from that code.
 
 ## 8. Implementation notes for whoever picks this up
 
-- Code lives in DBF.jl (vDBF) on top of PauliOperators.jl. Touch points: `src/groundstate.jl` (the loop and the truncation calls; there is no `src/truncation.jl`, truncation strategies such as `CoeffTruncation` come from PauliOperators); Hamiltonians and JW mapping in `src/hamiltonians.jl`. The exact state-vector counterpart is `code/n2_pes/frozen_core/sv_block.jl`.
+- Phase A starts from the existing N2 exact matrix-form DBF code. Its location is not recorded in these notes; ask.
+- Phase B code lives in DBF.jl (vDBF) on top of PauliOperators.jl. Likely touch points **(check)**: `src/groundstate.jl`, `src/truncation.jl`; Hamiltonians and JW mapping in `src/hamiltonians.jl`.
 - Use `SparsePauliVector`, not `PauliSum`, for propagation.
 - Before writing any helper, check whether the package already has it, and ask before adding new ones.
 - Make the minimal change: the five swaps in section 4, nothing adjacent.
 - Keep run files small and plain. Notebooks self-contained, with lattice and Hamiltonian written out in the notebook.
 - Work on a branch of the personal fork. Do not push to upstream.
-- Stage 0 can reuse the replay workflow: load the initial Hamiltonian plus saved generators and angles from `.jld2` and re-evolve.
+- The zero-cost baseline (2a) in Phase B can reuse the replay workflow: load the initial Hamiltonian plus saved generators and angles from `.jld2` and re-evolve.
 
-## 9. References
+## 9. Related work in chemistry (added 14 Nov 2026)
+
+Flow-equation and SRG methods exist in chemistry, with excited-state variants. A literature search found none that uses a Brockett-type flow with a designed diagonal operator to select a determinant block.
+
+| Method | What it does | Closest to |
+|---|---|---|
+| Canonical diagonalization, White [15] | Flow equations and Jacobi-like rotations on the second-quantised $H$, ab initio. Notes that excited states are reachable the same way | The overall approach |
+| DSRG, Evangelista [16] | SRG recast as a regularised amplitude equation at a finite flow parameter, to avoid intruders | Ground-state decoupling |
+| State-averaged DSRG [17] | One transformation for an ensemble of model-space states, then diagonalisation of the transformed $H$ | The equal-weight block cost $C_S$ plus final diagonalisation |
+| VCIS/VCISD-DSRG-PT2 [18] | Model space = singles (VCIS) or singles and doubles (VCISD) within a set of active orbitals, on closed-shell Hartree–Fock | The choice of block in idea 1 (1c vs 1b) |
+| EOM-DSRG [19] | Equation-of-motion on the DSRG-transformed $H$; so far for ionisation potentials | The zero-cost baseline, stage 2a |
+| QDSRG [20] | DSRG unitary downfolding to an active-space $H$, to be solved by a quantum algorithm | The active-space reading of idea 1 |
+| STEOM-CC [21] | A second, non-unitary similarity transformation weakens the coupling of singles to higher excitations; then a CIS-size diagonalisation | Idea 2b |
+| ACSE [22] | Iterative unitary updates driven by the anti-Hermitian residual, working on reduced density matrices; ground and excited states | The flow itself |
+| IMSRG for open-shell atoms [23] | Valence-space decoupling carried over from nuclear physics to atoms | Idea 1 |
+
+Differences from this work (our reading, not a statement from those papers):
+
+- **Truncation:** they truncate by operator rank (one- and two-body); here by Pauli coefficient.
+- **Flow:** DSRG stops at a finite flow parameter and is usually perturbative; here greedy variational rotations run toward full decoupling, with variance extrapolation.
+- **Block:** they define the model space by active orbitals and a reference ensemble; here by the degeneracy of a diagonal operator $D$.
+
+Caution carried over: state-averaged DSRG is described by its authors as assuming that all targeted states share similar correlation effects. One unitary for several block states makes the same assumption.
+
+## 10. Sizes of existing excited-state calculations, for comparison (added 14 Nov 2026)
+
+"Qubit equivalent" means twice the number of spatial orbitals in the active space.
+
+### DSRG
+
+| Year | Work | System and states | Active space | Qubit equivalent |
+|---|---|---|---|---|
+| 2025 | DMRG-DSRG, state-averaged PT2 and PT3 [24] | Singlet–triplet gaps, naphthalene to dodecacene | (50, 50) | 100 |
+| 2025 | Same paper, non-perturbative DSRG [24] | Nonacene | (38, 38) | 76 |
+| 2025 | Same paper [24] | Zeaxanthin vertical excitations | (22, 22) | 44 |
+| 2021 | DMRG + DSRG-MRPT2 [26] | Polyenes with 8–13 double bonds, three excited states | Up to 30 orbitals | Up to 60 |
+| 2018 | Selected CI + DSRG-MRPT2 [25] | Singlet–triplet gaps, acenes with 2–7 rings; up to 1350 basis functions | (30, 30) | 60 |
+
+- The (50, 50) dodecacene run is described by its authors as the largest active space used in an internally contracted multireference theory. Their best vertical singlet–triplet gap for dodecacene is 0.22 eV.
+- Largest basis rather than active space: state-averaged DSRG with frozen natural orbitals on chloroiron corrole, more than 1000 basis functions [27].
+
+How to read these against this work:
+
+- **DSRG does not solve the active space.** DMRG or selected CI does; DSRG adds the correlation from the orbitals outside it. Here the flow handles everything, so the fair comparison for the active space is DMRG.
+- **Not the same Hamiltonian.** The DSRG numbers include the full basis and dynamic correlation. A π-only block-vDBF run should be compared with π-only DMRG [29], not with the 0.22 eV.
+
+### Other approaches
+
+| Approach | Largest excited-state calculation found | Qubit equivalent |
+|---|---|---|
+| Pauli propagation | None found in a brief search, apart from this project's N2 run (STO-3G, frozen core, 3-state block) | 16 |
+| Quantum hardware, extended sample-based diagonalization [28] | S1 and T1 of N2; the [2Fe-2S] cluster | 58; 45 |
+| DMRG, strongly correlated [29] | Singlet–triplet gaps of acenes up to dodecacene, full π space | 100 |
+| Local STEOM-CC [30] | Chlorophyll a; the method is described as reaching several thousand basis functions | Thousands of spin orbitals, weakly correlated regime |
+
+The bar that matters for this method is the strongly correlated one: about 58 qubits on hardware and about 100 for DMRG on quasi-1D molecules.
+
+## 11. Results so far: N2 at 1.1 Å (14 Nov 2026)
+
+Source: artifact "Block DBF on N2", Part 1. Code in `code/n2_pes/frozen_core/` on the `excited_state` branch.
+
+Setup: STO-3G, frozen 1s, 16 qubits. Block = reference plus the two $3\sigma_g\to1\pi_g$ singles (variant 1c, $c=1$). Exact targets above $E_0$: $^3\Pi_g$ 297.17 mHa, $^1\Pi_g$ 347.38 mHa.
+
+| Run | Error in S0 / $^3\Pi_g$ / $^1\Pi_g$ (mHa) | Notes |
+|---|---|---|
+| Full continuous flow with $D_{1c}$, exact | < 10⁻⁶ for all three | About 3,000 steps per symmetry sector |
+| Greedy single-Pauli rotations, exact, 200 × 50 rotations | +0.019 / +0.022 / +0.037 | About 0.001 after per-state extrapolation |
+| Greedy with Pauli propagation, cutoff 10⁻⁵: true circuit energy | +0.14 / +0.15 / +0.20 | $\bar H$ grew to 1.1 million strings, 27 minutes |
+| Same run: raw block eigenvalues | +1.08 / +0.85 / +1.04 | Offset nearly common to all three |
+| Same run: corrected by accumulated truncation error | −0.18 / +0.03 / −0.46 | Goes below exact; corrected $^1\Pi_g$ variance turns negative |
+
+What the runs established:
+
+- Block decoupling works exactly, and greedy rotations lose nothing against the continuous flow.
+- Extrapolation works per state: each block eigenvector's energy against its own variance. The three variances add up to $V_S$. This replaces the suggestion in section 3.5.
+- The circuit survives truncation at 10⁻⁵. The energy estimate does not: raw is about 1 mHa high, corrected is unreliable. Raw excitation energies are good (+0.003 and −0.10 mHa after extrapolation) because the offset cancels.
+
+How to read them:
+
+- **This was the easy case by symmetry.** $|0\rangle$ has a different spatial symmetry from the two singles, and their two combinations differ under the α↔β swap, which $D_{1c}$ respects. Each block state is alone in its sector, so the run is three independent lowest-in-sector problems. Two block states competing in one sector is untested.
+- **Why the singlet stays a singlet:** the other $^3\Pi_g$ component is built from the other $\pi_g$ orbital, a different spatial irrep, so the flow cannot reach it.
+- **Why greedy beats the continuous flow at equal variance (a reading, not shown in the data):** the energy error is roughly coupling² over an energy gap. The continuous flow removes far-away couplings first and leaves the near-lying, expensive ones.
+- **Is the cancellation of the raw offset structural?** Hypothesis: the three determinants differ on 4 of 16 qubits, so dropped strings that do not touch those qubits shift all three equally. Test: split the truncation error by whether the string touches the active qubits.
+
+Open after these runs: a cutoff series (10⁻⁶ in progress), the stretched geometry (Part 2), and the rotation count of ground-state-only vDBF on the same system for the cost of the two extra states.
+
+## 12. The $Z_iZ_j$ terms in orbital language (added 16 Nov 2026)
+
+$D$ plays the role of a zeroth-order Hamiltonian. The Hamming weight is the quasiparticle number; the $Z_iZ_j$ terms are two-body terms that make the block degenerate. The Hamming weight is still used on all qubits outside the active four.
+
+With $n_k=(1-Z_k)/2$ counting a quasiparticle (a hole in an occupied orbital or a particle in a virtual one):
+
+$$\sum_k Z_k = N - 2Q,\qquad Q=\sum_k n_k .$$
+
+With $h_\sigma$ a hole in the HOMO and $p_\sigma$ a particle in the LUMO:
+
+$$Z_HZ_L = 1 - 2(h_\alpha+p_\alpha) + 4\,h_\alpha p_\alpha,\qquad Z_H+Z_{\bar H}-Z_HZ_{\bar H} = 1 - 4\,h_\alpha h_\beta .$$
+
+Read as an energy, $-D/2$ up to a constant:
+
+- Every quasiparticle costs 1.
+- A same-spin HOMO hole plus LUMO particle is bound by exactly −2, so that pair costs nothing: a zero-energy exciton, degenerate with the reference.
+- Two HOMO holes repel by $2c$, which pushes the double out of the block.
+
+| Other formalism | Hamming weight $\sum Z_i$ | The $Z_iZ_j$ version |
+|---|---|---|
+| Perturbation theory, effective Hamiltonians | $H_0$ with a non-degenerate ground state | $H_0$ with a degenerate model space (quasi-degenerate, Schrieffer–Wolff or Van Vleck type) |
+| SRG / IMSRG | Single-reference flow | Valence-space flow: couplings inside the block are kept |
+| DSRG | Single-reference DSRG | Multireference or state-averaged DSRG with H and L as active orbitals |
+| Coupled-cluster family | Decoupling by excitation rank | An active-space model space; dropping $1111$ makes it incomplete, as in VCIS |
+| Condensed-matter flow equations | The quasiparticle-number-conserving generator of Knetter and Uhrig [31], $[H_{\rm eff},Q]=0$ | Not standard there, as far as we know |
+
+- Knetter and Uhrig's one-triplet effective Hamiltonian, giving gaps and dispersions, is idea 2 done perturbatively for spin chains.
+- Two differences remain: SRG's Wegner generator uses the evolving diagonal of $H$, whereas $D$ here is fixed; and $[H,\sum Z_i]$ weights a term by how many quasiparticles it creates, whereas Knetter–Uhrig use only the sign.
+
+## 13. Benchmarks and paper plan (added 16 Nov 2026)
+
+The reference must be the same Hamiltonian: same basis and same frozen core or active space. Published best estimates in large basis sets say which states are interesting; the comparison number is an FCI or DMRG run on the same Hamiltonian.
+
+### 13.1 What the excited-state literature uses
+
+- **QUEST database** [32]: more than 500 vertical excitation energies of many kinds, most estimated within ±0.05 eV of FCI in aug-cc-pVTZ.
+- **Thiel set** [32]: 28 medium-sized organic molecules, 223 valence excited states. Used by the VCIS-DSRG and STEOM benchmarks.
+- **Double-excitation set** [33]: 47 transitions in 26 molecules in the extended version, including butadiene and hexatriene.
+- **Classic small FCI benchmarks:** CH⁺ excited-state curves [34]; older FCI studies of BH, CH₂, H₂O, N₂, C₂.
+- **Nearby quantum-algorithm papers:** q-sc-EOM used H₂, H₄, H₂O, LiH [10]; the multireference unitary-CC EOM paper used BeH₂, HF and water under symmetric dissociation.
+
+### 13.2 Largest sizes with a trusted excited-state reference
+
+| Reference type | Largest size | Examples |
+|---|---|---|
+| Exactly solvable models | Any size | Transverse-field Ising chain, XXZ chain, 1D Hubbard charge gap |
+| DMRG on chains and ladders | Hundreds of sites | Heisenberg chain or 2×64 ladder spin gap; 64-site Hubbard chain |
+| Quantum Monte Carlo, sign-free | Hundreds to thousands of spins | 2D Heisenberg on bipartite lattices, 2D transverse-field Ising |
+| DMRG on quasi-1D molecules | About 100–116 qubits published | Acene π space [29]; hydrogen chains if DMRG is run in-house |
+| Selected CI near FCI, small molecules | Roughly 50–100 qubits | Water in aug-cc-pVDZ (82 qubits), N₂ in cc-pVDZ (56) |
+| Exact FCI | About 40–48 qubits at the record end, 32–36 routinely | Anything diagonalised in-house |
+
+Apart from the acene sizes, this table is from general knowledge and was not checked by a search. 2D Hubbard (8×8 = 128 qubits) has good ground-state references, but excited-state references of the same quality are not known to us away from half filling.
+
+### 13.3 Headline examples for a paper
+
+| Example | What it shows | Reference | Main risk |
+|---|---|---|---|
+| Acene singlet–triplet gaps, full π space, up to dodecacene | Scale: 100 qubits, about twice the largest hardware excited-state run | Published DMRG [29] | Long acenes are polyradical, so a single-determinant reference gets harder with length |
+| Polyene dark state against bright state, butadiene up to C₂₄H₂₆ | A qualitative win where standard EOM-CCSD is known to struggle | DMRG, up to 24 electrons in 24 orbitals [35] | The dark state shares the ground state's symmetry: the untested case |
+| A full excitation band from one flow, ladder or 2D lattice at 100+ qubits | The whole one-flip shell gives a dispersion curve, not one gap | Quantum Monte Carlo or DMRG | Intruders at the top of the band |
+
+- **Acenes** are the lowest-risk headline: the gap needs only the lowest state in each of two sectors, which the N2 run already delivered. Honest framing: parity with DMRG at lower cost, since quasi-1D is DMRG's home ground.
+- **Polyenes** are the scientific heart: this is where 1b against 1c matters physically.
+- **The dispersion** is the most distinctive figure. A 2D unfrustrated lattice gives exact Monte Carlo references where DMRG is weak.
+
+### 13.4 Supporting examples
+
+- Stretched N₂ excited-state curves (Part 2 of the artifact).
+- 1D Hubbard charge gap at 64 sites: exactly known, uses all 128 qubits, same shell as the dispersion.
+- Small exact checks aimed at what N₂ did not test: C₂ or CH⁺ (double-excitation character, same-sector block states); H₂O symmetric stretch and BeH₂ insertion (multireference ground state).
+
+### 13.5 To solve before the headline runs
+
+1. A block with two states in one symmetry sector.
+2. An energy estimator that can be trusted without the "true" column. One option: choose rotations at a loose cutoff, then replay the saved generators and angles at a tighter cutoff only to read off energies.
+3. Cost of the starting Hamiltonian. An ab initio π-space Hamiltonian for dodecacene has a very large number of Pauli terms before any rotation; a Pariser–Parr–Pople model has far fewer and also has DMRG references.
+
+### 13.6 Framing
+
+The paper's idea: the diagonal operator is a design choice. Each example should use a visibly different operator: a spin-pair block for acenes, a block with the double for polyenes, the full shell for the band.
+
+## 14. References
 
 Double-bracket flows and the method itself
 
@@ -295,3 +463,33 @@ Active-space / valence-space decoupling (closest prior art for idea 1)
 
 13. S. R. Stroberg, H. Hergert, S. K. Bogner, J. D. Holt, "Nonempirical Interactions for the Nuclear Shell Model: An Update," Annu. Rev. Nucl. Part. Sci. **69**, 307 (2019); arXiv:1902.06154.
 14. N. P. Bauman et al., "Downfolding of many-body Hamiltonians using active-space models: Extension of the sub-system embedding sub-algebras approach to unitary coupled cluster formalisms," J. Chem. Phys. **151**, 014107 (2019); arXiv:1902.01553.
+
+Flow equations and SRG in chemistry (section 9)
+
+15. S. R. White, "Numerical canonical transformation approach to quantum many-body problems," J. Chem. Phys. **117**, 7472 (2002); arXiv:cond-mat/0201346.
+16. F. A. Evangelista, "A driven similarity renormalization group approach to quantum many-body problems," J. Chem. Phys. **141**, 054109 (2014); arXiv:1406.0114. *(Journal volume and page from memory, not re-checked.)*
+17. C. Li and F. A. Evangelista, "Driven similarity renormalization group for excited states: A state-averaged perturbation theory," J. Chem. Phys. **148**, 124106 (2018). https://doi.org/10.1063/1.5019793
+18. C. Li et al., "A low-cost approach to electronic excitation energies based on the driven similarity renormalization group," J. Chem. Phys. **147**, 074107 (2017).
+19. Z. Zhao, S. Li, F. A. Evangelista, "Multireference equation-of-motion driven similarity renormalization group: theoretical foundations and applications to ionized states," J. Chem. Theory Comput. (2025), https://doi.org/10.1021/acs.jctc.5c00992; arXiv:2506.13693.
+20. R. Huang, C. Li, F. A. Evangelista, "Leveraging small-scale quantum computers with unitarily downfolded Hamiltonians," PRX Quantum **4**, 020313 (2023); arXiv:2208.08591.
+21. M. Nooijen and R. J. Bartlett, "A new method for excited states: Similarity transformed equation-of-motion coupled-cluster theory," J. Chem. Phys. **106**, 6441 (1997); "Similarity transformed equation-of-motion coupled-cluster theory: Details, examples, and comparisons," J. Chem. Phys. **107**, 6812 (1997).
+22. D. A. Mazziotti, Phys. Rev. Lett. **97**, 143002 (2006) (ACSE); S. E. Smart and D. A. Mazziotti, arXiv:2004.11416 (quantum solver, cites the ground- and excited-state ACSE work). For excited states specifically: G. Gidofalvi and D. A. Mazziotti, Phys. Rev. A **80**, 022507 (2009) *(from memory, not re-checked)*.
+23. "Ab initio in-medium similarity renormalization group for open-shell atomic systems," arXiv:2212.08188.
+
+Sizes of existing excited-state calculations (section 10)
+
+24. "Driven similarity renormalization group with a large active space: Applications to oligoacenes, zeaxanthin, and chromium dimer," J. Chem. Theory Comput. **21**, 5445 (2025); arXiv:2503.01299.
+25. J. B. Schriber, K. P. Hannon, F. A. Evangelista, "A combined selected configuration interaction and many-body treatment of static and dynamical correlation in oligoacenes," J. Chem. Theory Comput. (2018); arXiv:1808.09403.
+26. Khokhlov and Belov, "Toward an accurate ab initio description of low-lying singlet excited states of polyenes" (2021). https://pubmed.ncbi.nlm.nih.gov/34125516/ *(Journal not checked.)*
+27. C. Li, S. Mao, R. Huang, F. A. Evangelista, "Frozen natural orbitals for the state-averaged driven similarity renormalization group," J. Chem. Theory Comput. (2024); arXiv:2312.07008.
+28. S. Barison, J. Robledo Moreno, M. Motta, "Quantum-centric computation of molecular excited states with extended sample-based quantum diagonalization," Quantum Sci. Technol. **10**, 025034 (2025); arXiv:2411.00468. The 58- and 45-qubit figures are from the review arXiv:2608.05314.
+29. J. Hachmann, J. J. Dorando, M. Avilés, G. K.-L. Chan, "The radical character of the acenes: A density matrix renormalization group study," J. Chem. Phys. **127**, 134309 (2007); arXiv:0707.3120.
+30. DLPNO-STEOM-CCSD study of the Q and B bands of chlorophyll a, J. Phys. Chem. B (2020), https://doi.org/10.1021/acs.jpcb.0c05761; method overview at https://kofo.mpg.de/665010/excited-states.
+
+Sections 12 and 13
+
+31. C. Knetter and G. S. Uhrig, "Perturbation theory by flow equations: dimerized and frustrated S = 1/2 chain," arXiv:cond-mat/9906243.
+32. P.-F. Loos, M. Boggio-Pasqua, A. Blondel, F. Lipparini, D. Jacquemin, "The QUEST database of highly-accurate excitation energies," arXiv:2506.11590 (2025); M. Véril et al., "QUESTDB: a database of highly-accurate excitation energies for the electronic structure community," WIREs Comput. Mol. Sci. **11**, e1517 (2021), arXiv:2011.14675 (also describes the Thiel set).
+33. P.-F. Loos, M. Boggio-Pasqua, A. Scemama, M. Caffarel, D. Jacquemin, "Reference energies for double excitations," J. Chem. Theory Comput. **15**, 1939 (2019), arXiv:1811.12861; F. Kossoski, M. Boggio-Pasqua, P.-F. Loos, D. Jacquemin, "Reference energies for double excitations: improvement and extension," arXiv:2403.19597.
+34. K. Kowalski and P. Piecuch, "Excited-state potential energy curves of CH⁺: a comparison of the EOMCCSDt and full EOMCCSDT results," Chem. Phys. Lett. **347**, 237 (2001).
+35. "Orbital optimization in the density matrix renormalization group, with applications to polyenes and β-carotene," arXiv:0712.2475.
