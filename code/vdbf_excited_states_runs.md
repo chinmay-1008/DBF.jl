@@ -371,6 +371,41 @@ Extrapolated over $[v, 2v]$, in mHa from exact:
 
 **So:** with truncation, the S² penalty helps a little. The circuit improves by 10–17%, and the corrected estimates and their extrapolation improve clearly. The raw estimate becomes less useful for excitation energies. The large gain is still the one seen in the exact runs at 2.3 Å, where states of another spin are close.
 
+### With Pauli propagation (2.3 Å, cutoff 10⁻⁵)
+
+The same comparison at 2.3 Å: bare H, λ = 0.02 and λ = 0.05, 500 iterations each, taking 1.7, 2.7 and 3.0 hours. Every iteration is replayed exactly.
+
+- **Order of the states.** The three block states are kept in the run's own energy order.
+- **Targets.** For bare H they are S0, T1 and the septet at 20.1 mHa. With the penalty the septet moves up by 12λ (240 or 600 mHa), so the third target becomes the triplet at 120.6.
+- **Grey line.** This is the exact λ = 0.05 run from above, with no truncation.
+
+![Pauli propagation at 2.3 Å with and without the S² penalty: true energy, corrected estimate and ⟨S²⟩ against iteration](n2_pes/frozen_core/sv_results/plots/n2_230_pp_s2pen.png)
+
+True energy of the circuit, in mHa from each run's own target:
+
+| | S0 | T1 | third state |
+|---|---|---|---|
+| bare H, best (at iteration) | +57 (164) | +148 (27) | +229 (150) |
+| bare H, iteration 500 | +97 | +194 | +246 |
+| λ = 0.02, best | +32 (119) | +30 (179) | +38 (147) |
+| λ = 0.02, iteration 500 | +78 | +73 | +105 |
+| λ = 0.05, best | +17 (133) | +134 (108) | +127 (366) |
+| λ = 0.05, iteration 500 | +44 | +211 | +127 |
+
+- **Bare H fails.** S0 mixes with the quintet 9 mHa above it: its ⟨S²⟩ is about 5 for most of the run. Its best is 57 mHa above FCI.
+- **The penalty keeps S0 clean and brings it closer.**
+  - λ = 0.05: ⟨S²⟩ stays below 0.2 and S0 gets to 17 mHa, 3× closer than bare H.
+  - λ = 0.02: ⟨S²⟩ is about 0.7 and S0 gets to 32 mHa.
+- **Only λ = 0.02 reaches all three targets.**
+  - Around iteration 100 it makes the same drop as the exact run, a little later, and gets within 30–40 mHa of all three.
+  - λ = 0.05 never makes that drop. Its second state stays on a triplet about 135 mHa up, where the exact run also waits until iteration 90. Its third state is a singlet.
+- **No run converges.** Every run is at its best around iterations 110–180 and gets worse after that.
+- **The corrected estimate cannot be trusted here.** It keeps going down while the true energy goes up. At iteration 500, λ = 0.05 has corrected S0 and T1 within 8 mHa of exact (−2.8 and −8.2), while the real circuit is 44 and 211 mHa away.
+
+**So:** at 2.3 Å the penalty helps the truncated runs as well: S0 is 2–3× closer and stays spin-clean. But cutoff 10⁻⁵ is far too coarse for the stretched bond, with or without the penalty. The best errors are tens of mHa, against 0.01 mHa without truncation and 0.1–0.2 mHa at 1.1 Å with the same cutoff.
+
+A tighter cutoff is the obvious next step. At 1.1 Å, going from 10⁻⁵ to 10⁻⁶ multiplied the operator size by 6 and the run time by 5. At 2.3 Å that would mean about 25–30 million Pauli terms and about 13 hours per run. That is close to this machine's 32 GB of memory.
+
 ## 11. Scaling up: the 1×100 Heisenberg chain
 
 **System.** Open spin-½ chain, $H = J\sum_i \mathbf S_i\cdot\mathbf S_{i+1}$, $N = 100$, $J = 1$. Energies are in units of $J$ and errors in mJ ($10^{-3} J$). At 100 qubits nothing can be checked exactly, so the references come from DMRG (ITensors, bond dimension up to 400, $S_z$ conserved):
@@ -493,6 +528,8 @@ python plot_block.py
 julia -t 8 --project=../../integrals sv_block.jl data_unocore/R_1.10 uno uno_1.10_block1c_exact_s2pen0.05 --s2-penalty 0.05
 cd .. && julia --project=. run_block_pp.jl frozen_core/data_unocore/R_1.10 uno uno_1.10_blockpp_c1e-5_s2pen0.05 --coeff 1e-5 --s2-penalty 0.05
 cd frozen_core && julia -t 4 --project=../../integrals replay_block.jl data_unocore/R_1.10 uno uno_1.10_blockpp_c1e-5_s2pen0.05 1
+cd .. && julia --project=. run_block_pp.jl frozen_core/data_unocore/R_2.30 uno uno_2.30_blockpp_c1e-5_s2pen0.02 --coeff 1e-5 --s2-penalty 0.02 --max-iter 500
+cd frozen_core && julia -t 3 --project=../../integrals replay_block.jl data_unocore/R_2.30 uno uno_2.30_blockpp_c1e-5_s2pen0.02 1
 python plot_block.py --penalty          # section 10 figures only
 ```
 

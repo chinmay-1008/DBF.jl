@@ -797,6 +797,92 @@ def pp_penalty_trajectories(runs, refs, names):
     return fig
 
 
+# ---------------------------------------------------------------- Pauli propagation on H + λ S^2 at 2.3 A
+def pp_penalty_230():
+    """2.3 A, Pauli propagation at cutoff 1e-5, bare H against H + λ S^2, against iteration.  The three block
+    states are kept in the run's own energy order (with the penalty that order is S0 < T1 < triplet).
+    Rows: the true energy of H of the circuit's states (exact replay), the run's corrected estimate (penalty runs:
+    eigenvalue of H + λS² minus λS(S+1) of the target, S(S+1) = 0, 2, 2), and the circuit's <S^2>.
+    Energies in mHa above exact S0, exact levels dashed, the exact greedy run on H + 0.05 S² (no truncation) in grey.
+    Returns (fig, rows), rows = (run, state, best true error, its iteration, true error at the end,
+    corrected error at the end, <S^2> at the end), errors from the run's own target level."""
+    runs = []
+    for l in ("0", "0.02", "0.05"):
+        lab = "uno_2.30_blockpp_c1e-5" + ("" if l == "0" else f"_s2pen{l}")
+        pp, rep = load(lab), load(lab + "_replay")
+        if pp is None or rep is None:
+            continue
+        lam, f, rr = float(l), pp["E_FCI"], rep["rows"]
+        shift = lam * 1e3 * np.array([0.0, 2.0, 2.0])
+        runs.append(dict(l=l, it=np.array([r["iter"] for r in rr]), s2=np.array([r["S2"] for r in rr]),
+                         tru=(np.array([r["lam_H" if lam else "lam"] for r in rr]) - f) * 1e3,
+                         cor=(np.array(pp["history"]["lam_corr"]) - f) * 1e3 - shift))
+    if not runs:
+        return None, []
+    tg = {}
+    for key, lab in (("0", "uno_2.30_block1c_exact"), ("pen", "uno_2.30_block1c_exact_s2pen0.05")):
+        d = load(lab)
+        tg[key] = (np.array([t["E"] for t in d["targets"]]) - d["E_FCI"]) * 1e3
+    ex = load("uno_2.30_block1c_exact_s2pen0.05")
+    ex_lam = (np.array(ex["history"]["lam"]) - ex["E_FCI"]) * 1e3
+    ex_s2 = np.array(ex["history"]["S2"])
+    levels = [[(tg["0"][0], "S0")], [(tg["0"][1], "T1")],
+              [(tg["0"][2], "septet (bare-H target)"), (tg["pen"][2], "triplet (penalty target)")]]
+    s2_lines = [[0.0], [2.0], [2.0]]
+    fig, axes = plt.subplots(3, 3, figsize=(11.5, 8.8), squeeze=False, gridspec_kw=dict(height_ratios=[1.3, 1.3, 1]))
+    title = ["lowest block state (target S0)", "second (target T1)", "third (target: see the dashed lines)"]
+    col = dict(PEN_COL, **{"0.05": PEN_COL["0.1"]})     # only 0.02 and 0.05 here: spread them further apart
+    rows, lo, hi = [], 0.0, 0.0
+    for i in range(3):
+        g = dict(color=MUTED, lw=1.1, alpha=0.7, label="no truncation, λ = 0.05")
+        for r_ in (0, 1):
+            axes[r_, i].plot(np.arange(len(ex_lam)), ex_lam[:, i], **g)
+        axes[2, i].plot(np.arange(len(ex_s2)), ex_s2[:, i], **g)
+        for s in runs:
+            kw = dict(color=col[s["l"]], lw=1.6 if s["l"] == "0" else 1.3, ls=(0, (4, 2)) if s["l"] == "0" else "-",
+                      label="bare H" if s["l"] == "0" else f"λ = {s['l']}")
+            axes[0, i].plot(s["it"], s["tru"][:, i], **kw)
+            axes[1, i].plot(np.arange(len(s["cor"])), s["cor"][:, i], **kw)
+            axes[2, i].plot(s["it"], s["s2"][:, i], **kw)
+            late = s["it"] >= 20
+            lo = min(lo, s["tru"][late, i].min(), s["cor"][20:, i].min())
+            hi = max(hi, s["tru"][late, i].max(), s["cor"][20:, i].max())
+            t = tg["0" if s["l"] == "0" else "pen"][i]
+            err = s["tru"][1:, i] - t
+            k = int(np.argmin(err))
+            rows.append(("bare H" if s["l"] == "0" else f"λ = {s['l']}", i, err[k], int(s["it"][1:][k]), err[-1],
+                         s["cor"][-1, i] - t, s["s2"][-1, i]))
+        for e, name in levels[i]:
+            for r_ in (0, 1):
+                axes[r_, i].axhline(e, color=INK, lw=0.9, ls=(0, (4, 2)), zorder=1)
+                axes[r_, i].annotate(name, xy=(0.99, e), xycoords=("axes fraction", "data"), xytext=(0, 2),
+                                     textcoords="offset points", ha="right", va="bottom", fontsize=7, color=INK)
+        for v in s2_lines[i]:
+            axes[2, i].axhline(v, color=INK, lw=0.9, ls=(0, (4, 2)), zorder=1)
+    pad = 0.06 * (hi - lo)
+    for i in range(3):
+        for r_ in range(3):
+            ax = axes[r_, i]
+            ax.set_xlim(0, 500)
+            ax.tick_params(labelsize=7.5)
+            style(ax)
+            if r_ < 2:
+                ax.set_ylim(lo - pad, hi + pad)
+        axes[0, i].set_title(title[i], fontsize=9, color=INK, loc="left")
+        axes[2, i].set_ylim(-0.2, 6.5)
+        axes[2, i].set_xlabel("iteration (50 rotations each)")
+    axes[0, 0].set_ylabel("true energy of H\n(mHa above exact S0)")
+    axes[1, 0].set_ylabel("corrected estimate\n(mHa above exact S0)")
+    axes[2, 0].set_ylabel("true ⟨S²⟩")
+    axes[0, 0].legend(fontsize=7.5, loc="upper right")
+    fig.suptitle("2.3 Å, Pauli propagation at cutoff 10⁻⁵, without and with the S² penalty, against iteration\n"
+                 "top: true energy of the circuit's block states (exact replay); middle: the run's corrected estimate; "
+                 "bottom: the circuit's ⟨S²⟩ (septet = 12, off scale); exact levels dashed",
+                 x=0.01, ha="left", fontsize=10, color=INK)
+    fig.subplots_adjust(left=0.08, right=0.985, bottom=0.06, top=0.9, wspace=0.2, hspace=0.25)
+    return fig, rows
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     # greedy vDBF vs the full flow at 1.1 A, against the same exact levels
@@ -933,6 +1019,13 @@ if __name__ == "__main__":
             print("PP 1e-5 extrapolation over [v, 2v] (mHa vs exact): run | series | state | last | extrapolated ± | v | pts")
             for r in xrows:
                 print(f"  {r[0]:<8} {r[1]:<20} {r[2]:<4} {r[3]:+9.4f} {r[4]:+9.4f} ± {r[5]:.4f}  {r[6]:.2e} {r[7]}")
+        fig, rows230 = pp_penalty_230()
+        if fig is not None:
+            fig.savefig(os.path.join(OUT, "n2_230_pp_s2pen.png"), dpi=170)
+            print("2.3 Å PP 1e-5 (mHa from the run's own target): run | state | best true (iteration) | true at the end"
+                  " | corrected at the end | <S^2> at the end")
+            for r in rows230:
+                print(f"  {r[0]:<8} {r[1]}  {r[2]:+8.2f} ({r[3]:3d})  {r[4]:+8.2f}  {r[5]:+8.2f}  {r[6]:.2f}")
         print("λ | slot | state | <S^2> | last err (mHa) | stays below 1.6 / 0.1 / 0.03 mHa from iteration")
         for r in prow:
             print(f"  {r[0]:<5} {r[1]} {r[2]:<16} {r[3]:6.3f}  {r[4]:.2e}   {r[5]} / {r[6]} / {r[7]}")
