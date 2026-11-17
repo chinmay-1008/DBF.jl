@@ -43,8 +43,10 @@
 # Diagnostics per iteration (all exact): block cost minus its Ky Fan target,
 # eigenvalues of M minus the target eigenvalues, block variance
 # V_S = sum_y |(1 - Π_S) O e_y|^2 of the flow operator and of H,
-# subspace infidelity 1 - |P_target P_block|^2/|S|, and <S^2> and the weight
-# outside 10 electrons for each eigenvector of M.
+# subspace infidelity 1 - |P_target P_block|^2/|S| (targets: the Ky Fan levels of the block's own
+# sectors), F_low = |P_low P_block|^2/|S| with P_low the |S| lowest levels of the flow operator over
+# ALL symmetry sectors (below 1 at convergence: the block states are the wrong determinants for the
+# lowest |S| levels), and <S^2> and the weight outside 10 electrons for each eigenvector of M.
 #
 #     julia -t 8 --project=../../integrals sv_block.jl <point dir> <basis> <label>
 #         [--homo n_alpha-1] [--lumo n_alpha] [--rank exact] [--c 1.0] [--s2-penalty 0]
@@ -93,6 +95,102 @@ function gf2_solve(rows, rhs)
         push!(piv, (r, b, t))
     end
     return reduce(|, (pb for (_, pb, pt) in piv if pt); init=UInt64(0))
+end
+
+# sector_matrix for a list of determinants that is closed under particle number but not under
+# every x string: a term that leaves the list must have zero amplitude on it
+function number_matrix(terms, states, pos)
+    D = length(states)
+    groups = Dict{UInt64,Vector{Tuple{PauliBasis{N},ComplexF64}}}()
+    for (p, c) in terms
+        push!(get!(groups, UInt64(p.x), []), (p, ComplexF64(c)))
+    end
+    I, J, V = Int[], Int[], Float64[]
+    for (x, ps) in groups, (j, b) in enumerate(states)
+        val = 0.0im
+        for (p, c) in ps
+            ph, _ = p * Ket{N}(b)
+            val += c * ph
+        end
+        k = pos[(b ⊻ x)+1]
+        if k == 0
+            abs(val) < 1e-10 || error("x string $x changes the particle numbers")
+            continue
+        end
+        abs(imag(val)) < 1e-10 || error("complex matrix element $val")
+        abs(val) > 1e-14 || continue
+        push!(I, k); push!(J, j); push!(V, real(val))
+    end
+    return sparse(I, J, V, D, D)
+end
+
+# The subspace a block of nS states should end up spanning, for the fidelity check of the choice of
+# block states: the nS lowest levels of H + λ S^2 among all determinants with na alpha and nb beta
+# electrons, in every symmetry sector (coset of V0, the span of H's x strings), not only the sectors
+# of the block states, plus any level within 1e-6 Ha of the last.  Each sector is diagonalised on its
+# own, so degenerate levels of different sectors stay apart.  Sorted by eigenvalue of H + λ S^2; each
+# level carries its determinants and coefficients.  Ovl === nothing: no S^2 (λ must be 0; S2 = NaN).
+function lowest_levels(H, ref, Ovl, na, nb, λ, nS, V0; tol=1e-6)
+    amask = (UInt64(1) << NORB) - 1
+    full = [o ⊻ ref for o in UInt64(0):UInt64((1 << N) - 1)
+            if count_ones(o & amask) == na && count_ones(o >> NORB) == nb]
+    fpos = zeros(Int32, 1 << N)
+    for (k, b) in enumerate(full)
+        fpos[b+1] = k
+    end
+    Hf = number_matrix(H, full, fpos)
+    (Ovl === nothing && λ != 0) && error("the S^2 penalty needs the alpha-beta overlap")
+    S2f = Ovl === nothing ? spzeros(length(full), length(full)) : s2_matrix(full, fpos, ref, Ovl)
+    sec = [reduce_span(b, V0) for b in full]
+    all(sec[i] == sec[j] for (i, j) in zip(findnz(S2f)[1:2]...)) || error("S^2 couples symmetry sectors")
+    lv = []
+    for c in unique(sec)
+        ks = findall(==(c), sec)
+        Hc, S2c = Hf[ks, ks], S2f[ks, ks]
+        F = eigen(Symmetric(Matrix(Hc + λ * S2c)))
+        for i in 1:min(nS + 4, length(ks))
+            v = F.vectors[:, i]
+            push!(lv, (E=dot(v, Hc * v), Eopt=F.values[i], S2=Ovl === nothing ? NaN : dot(v, S2c * v),
+                       sector=c, dets=full[ks], v=v))
+        end
+    end
+    sort!(lv; by=l -> l.Eopt)
+    return [l for l in lv if l.Eopt < lv[nS].Eopt + tol]
+end
+
+# the levels as columns over a sector's determinants; parts outside the sector are dropped, since
+# the block, which stays in its sector, has no overlap with them
+function embed_levels(levels, states, pos)
+    Φ = zeros(length(states), length(levels))
+    for (i, l) in enumerate(levels), (b, x) in zip(l.dets, l.v)
+        k = pos[b+1]
+        k == 0 || (Φ[k, i] = x)
+    end
+    return Φ
+end
+
+# Print the levels of lowest_levels with the symmetry sector each lies in.  The flow never leaves a
+# sector, so sector by sector the block can hold at most min(its states there, lowest levels there):
+# the sum over sectors / |S| is the best fidelity these block states allow (below 1: the wrong
+# determinants for the lowest levels, however long the flow runs).  Returns (JSON records, best).
+function report_levels(levels, Φ, λ, e_fci, S, V0)
+    nS = length(S)
+    names = nS == 3 ? ["|0>", "|a>", "|b>"] : ["block state $j" for j in 1:nS]
+    bsec = [reduce_span(y, V0) for y in S]
+    where(c) = c in bsec ? "sector of " * join(names[bsec .== c], ", ") : "a sector with no block state"
+    @printf("fidelity target: the %d lowest levels of H + %.3g S^2 in all symmetry sectors (E of H, mHa above FCI)\n",
+            nS, λ)
+    recs = []
+    for (i, l) in enumerate(levels)
+        @printf("   %10.3f   <S^2> %6.3f   %s\n", 1e3 * (l.E - e_fci), l.S2, where(l.sector))
+        push!(recs, Dict("E" => l.E, "Eopt" => l.Eopt, "S2" => l.S2, "sector" => l.sector,
+                         "block_states_in_sector" => count(==(l.sector), bsec)))
+    end
+    lsec = [l.sector for l in levels]
+    best = min(nS, sum(min(count(==(c), bsec), count(==(c), lsec)) for c in unique(bsec))) / nS
+    @printf("   best fidelity these block states allow: %.4f%s\n", best,
+            best < 0.9 ? "  (below 0.9: the block states are in the wrong symmetry sectors for these levels)" : "")
+    return recs, best
 end
 
 function block_main(args)
@@ -185,6 +283,11 @@ function block_main(args)
         Φ[l.ks, i] = l.v
     end
     blk_idx = [findall(==(c), cos_S) for c in cosets]
+    # fidelity against the lowest levels over all sectors: below 1 at convergence means the block states
+    # sit in the wrong symmetry sectors for the lowest nS levels
+    glev = lowest_levels(H, ref, Ovl, na0, nb0, λ, nS, V0)
+    Φg = embed_levels(glev, states, pos)
+    grecs, gbest = report_levels(glev, Φg, λ, e_fci, S, V0)
 
     # eigenvalues of the 1c operator, for --rank d1c
     zq(b, q) = (b >> q) & 1 == 0 ? 1.0 : -1.0
@@ -199,8 +302,8 @@ function block_main(args)
     # flow
     W = Matrix{Float64}(I, D, D)
     hS = [Hopt * W[:, k] for k in kS]          # (H + λ S^2) w_y for the block columns
-    hist = Dict{String,Any}(k => Any[] for k in ("C", "lam", "var", "VS", "VS_H", "infid", "S2", "leak", "cross",
-                                                  "max_grad", "time"))
+    hist = Dict{String,Any}(k => Any[] for k in ("C", "lam", "var", "VS", "VS_H", "infid", "fid", "fid_states", "S2",
+                                                  "leak", "cross", "max_grad", "time"))
     function record!(g, t)
         Wb = W[:, kS]
         Mopt = Wb' * hcat(hS...)
@@ -225,22 +328,24 @@ function block_main(args)
         push!(hist["VS"], sum(dot(h, h) for h in hS) - sum(abs2, Mopt))
         push!(hist["VS_H"], sum(dot(h, h) for h in hH) - sum(abs2, M))
         push!(hist["infid"], 1 - sum(abs2, Φ' * Wb) / nS)
+        ov = vec(sum(abs2, Φg' * Wb; dims=2))       # weight of each lowest level inside the block
+        push!(hist["fid"], sum(ov) / nS); push!(hist["fid_states"], ov)
         push!(hist["S2"], [dot(φ[:, i], S2s * φ[:, i]) for i in 1:nS])
         push!(hist["leak"], [leak(φ[:, i], states, ref, nel) for i in 1:nS])
         push!(hist["max_grad"], g); push!(hist["time"], t)
     end
     function report(iter, drift)
-        @printf("%5d %+11.4f %s %10.3e %10.3e %10.3e %9.2e %s %8.1e %8s %6.1f\n", iter, 1e3 * (hist["C"][end] - kyfan),
+        @printf("%5d %+11.4f %s %10.3e %10.3e %10.3e %9.2e %6.4f %s %8.1e %8s %6.1f\n", iter, 1e3 * (hist["C"][end] - kyfan),
                 join([@sprintf("%+10.4f", 1e3 * x) for x in hist["lam"][end] .- E_tgt], " "),
-                hist["VS"][end], hist["VS_H"][end], hist["max_grad"][end], hist["infid"][end],
+                hist["VS"][end], hist["VS_H"][end], hist["max_grad"][end], hist["infid"][end], hist["fid"][end],
                 join([@sprintf("%6.3f", s) for s in hist["S2"][end]], " "), maximum(hist["leak"][end]),
                 drift === nothing ? "" : @sprintf("%8.1e", drift), hist["time"][end])
         flush(stdout)
     end
     @printf("target: %s mHa above FCI (Ky Fan sum of H + λ S^2: %.10f)\n",
             join([@sprintf("%.3f", 1e3 * (e - e_fci)) for e in E_tgt], ", "), kyfan)
-    @printf("%5s %11s %32s %10s %10s %10s %9s %20s %8s %8s %6s\n", "iter", "C-target", "lambda_i - target_i (mHa)",
-            "V_S", "V_S^H", "max|grad|", "1-F_S", "<S^2> of M's states", "leak", "drift", "time")
+    @printf("%5s %11s %32s %10s %10s %10s %9s %6s %20s %8s %8s %6s\n", "iter", "C-target", "lambda_i - target_i (mHa)",
+            "V_S", "V_S^H", "max|grad|", "1-F_S", "F_low", "<S^2> of M's states", "leak", "drift", "time")
     record!(0.0, 0.0)
     report(0, nothing)
     t0 = time()
@@ -336,7 +441,7 @@ function block_main(args)
                             "levels" => Dict(string(c) => [Dict("E" => l.E, "Eopt" => l.Eopt, "S2" => l.S2,
                                                                 "n_alpha" => l.na, "n_beta" => l.nb)
                                                            for l in levels[c]] for c in cosets),
-                            "history" => hist, "orthogonality" => orth), 1)
+                            "fid_targets" => grecs, "fid_best" => gbest, "history" => hist, "orthogonality" => orth), 1)
     end
 end
 

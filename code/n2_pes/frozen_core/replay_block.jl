@@ -3,6 +3,8 @@
 # the true eigenvalues of the 3x3 block of H and the true block variance V_S at
 # the end of each macro-iteration.  For a run on H + λ S^2 the block is that of H + λ S^2,
 # and lam_H, var_H, VS_H and S2 give H and S^2 on its eigenvectors.  The block analogue of replay_fc.jl.
+# fid = |P_low P_block|^2 / 3 is the fidelity of the block with the 3 lowest levels of the flow operator
+# over all symmetry sectors (sv_block.jl's lowest_levels); fid_states is each level's weight in the block.
 #
 # The run evolves O <- U' O U with U_k = exp(-i θ_k G_k / 2), so after K rotations
 # the block columns are U_1 U_2 ... U_K |y>: U_K acts first.  Each checkpoint is
@@ -27,6 +29,10 @@ function replay_main(args)
     bit(q) = UInt64(1) << q
     S = UInt64[0, bit(na - 1) | bit(na), bit(NORB + na - 1) | bit(NORB + na)]
     hx = unique(UInt64(p.x) for p in keys(H))
+    V0 = gf2_basis(hx)                                      # symmetry sectors of H
+    ovlfile = joinpath(dir, "$(basis)_ab_overlap.npy")
+    Ovl = isfile(ovlfile) ? npzread(ovlfile) : nothing
+    Ovl === nothing || (Ovl[abs.(Ovl) .< 1e-6] .= 0)       # as in sv_dbf.jl
     # a run on H + λ S^2 (run_block_pp.jl --s2-penalty): replay the same flow operator, and report the
     # H energies, <S^2> and H variances of its block eigenvectors as well
     λs2 = parse(Float64, string(get(run["settings"], "s2-penalty", "0")))
@@ -41,13 +47,14 @@ function replay_main(args)
     Hs = sector_matrix(H, states, pos)
     S2s = nothing
     if λs2 != 0 || isfile(s2file)
-        Ovl = npzread(joinpath(dir, "$(basis)_ab_overlap.npy"))
-        Ovl[abs.(Ovl) .< 1e-6] .= 0                         # as in sv_dbf.jl
         S2s = s2_matrix(states, pos, ref, Ovl)
         norm(S2s - S2s') < 1e-10 || error("sector S^2 is not symmetric")
     end
     Os = λs2 == 0 ? Hs : Hs + λs2 * S2s
     @printf("flow operator H + %g S^2%s\n", λs2, S2s === nothing ? "" : "; <S^2> reported")
+    glev = lowest_levels(H, ref, Ovl, na, meta["n_beta"], λs2, length(S), V0)
+    Φg = embed_levels(glev, states, pos)
+    grecs, gbest = report_levels(glev, Φg, λs2, e_fci, S, V0)
     gens = [PauliBasis{N}(Int128(g[1]), Int128(g[2])) for g in run["generators"]]
     angs = Float64.(run["angles"])
     nper = Int.(run["rots_per_iter"])                       # entry 1 is iteration 0 (no rotations)
@@ -99,7 +106,9 @@ function replay_main(args)
         var = [dot(F.vectors[:, i], Vmat * F.vectors[:, i]) for i in 1:3]
         vs = sum(abs2, HV - V * Matrix(M))
         orth = maximum(abs, V' * V - I)
-        row = Dict("iter" => it, "rotations" => K, "lam" => lam, "var" => var, "VS" => vs)
+        ov = vec(sum(abs2, Φg' * V; dims=2))                   # weight of each lowest level inside the block
+        row = Dict("iter" => it, "rotations" => K, "lam" => lam, "var" => var, "VS" => vs,
+                   "fid" => sum(ov) / length(S), "fid_states" => ov)
         if S2s !== nothing                                      # H and S^2 on the same eigenvectors of O's block
             HHV = Hs * V
             MH = V' * HHV
@@ -112,14 +121,15 @@ function replay_main(args)
             row["VS_H"] = sum(abs2, HHV - V * MH)
         end
         push!(rows, row)
-        @printf("%5d  %6d rot  true λ - E_FCI (mHa) %s  true var %s  V_S %.3e  orth %.1e  (%.0f s)\n", it, K,
-                join([@sprintf("%10.4f", 1e3 * (l - e_fci)) for l in lam], " "),
-                join([@sprintf("%.3e", x) for x in var], " "), vs, orth, time() - t0)
+        @printf("%5d  %6d rot  true λ - E_FCI (mHa) %s  true var %s  V_S %.3e  F_low %.4f  orth %.1e  (%.0f s)\n",
+                it, K, join([@sprintf("%10.4f", 1e3 * (l - e_fci)) for l in lam], " "),
+                join([@sprintf("%.3e", x) for x in var], " "), vs, row["fid"], orth, time() - t0)
         flush(stdout)
     end
     out = length(args) >= 5 ? args[5] : "$(label)_replay"
     open(joinpath(@__DIR__, "sv_results", "$(out).json"), "w") do io
-        JSON.print(io, Dict("label" => label, "E_FCI" => e_fci, "s2_penalty" => λs2, "rows" => rows), 1)
+        JSON.print(io, Dict("label" => label, "E_FCI" => e_fci, "s2_penalty" => λs2, "fid_targets" => grecs, "fid_best" => gbest,
+                            "rows" => rows), 1)
     end
 end
 

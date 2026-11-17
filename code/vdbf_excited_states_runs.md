@@ -10,6 +10,32 @@ We want a few **excited states** from the same machinery. The idea: instead of d
 
 For this first test we use the **exact** version of DBF (state vector, no Pauli truncation), so whatever error we see belongs to the method itself.
 
+### In pictures: a random 4-qubit matrix
+
+The same idea on a random 4-qubit Hamiltonian (16 × 16), drawn as heatmaps of $|H_{ij}|$. The double-bracket flow rotates $H$; the generator $D$ decides what ends up decoupled.
+
+![Toy model: what each generator D decouples](toy_block/results/toy_generators.png)
+
+- $D = \mathrm{diag}\,H$: everything is decoupled, so $H$ ends diagonal.
+- $D = |0\rangle\langle 0|$ (ground-state vDBF): only row and column 0 are decoupled.
+- $D = \sum_i Z_i$: blocks by Hamming weight (1 + 4 + 6 + 4 + 1).
+- $D = \sum_{y \in S} |y\rangle\langle y|$ (block DBF): exactly the chosen kets $S$ (marked) are decoupled.
+
+![Toy model: the block flow for two different choices of kets](toy_block/results/toy_block.png)
+
+- Rows and columns are ordered with the chosen kets first. As the flow runs, the coupling between the block and the rest goes to zero.
+- Whichever three kets we choose, the block ends with the **3 lowest eigenvalues** of $H$. Diagonalising the 3 × 3 block then gives the three states.
+
+![Toy model: with a symmetry, the kets must sit in the right sectors](toy_block/results/toy_symmetry.png)
+
+- The catch is symmetry. This $H$ conserves the Hamming weight, so it is block diagonal from the start, and the flow never moves weight between sectors.
+- So the block can only collect the lowest levels **of the sectors its kets are in**.
+- Top row: the 3 kets with the lowest diagonal energies sit in sectors of weight 0, 2, 1, but the 3 lowest levels are in sectors 2, 1, 2. The block ends with −1.38, −1.02, −0.51 instead of −1.38, −1.02, −0.84. Its fidelity with the 3 lowest states is $F = 2/3$.
+- Bottom row: one ket per lowest level, in that level's sector, gives $F = 1$.
+- Section 11 runs this check on N₂.
+
+Script: `code/toy_block/block_heatmaps.py`.
+
 ## 2. The molecule: N₂ at 1.1 Å
 
 **Model.** STO-3G basis, the two 1s cores frozen. That leaves 8 spatial orbitals (16 spin orbitals = 16 qubits: α on qubits 0–7, β on 8–15) and 10 electrons.
@@ -435,7 +461,42 @@ Extrapolated, in mHa from each run's own target ("no window" means fewer than 3 
 
 A tighter cutoff is the obvious next step. At 1.1 Å, going from 10⁻⁵ to 10⁻⁶ multiplied the operator size by 6 and the run time by 5. At 2.3 Å that would mean about 25–30 million Pauli terms and about 13 hours per run. That is close to this machine's 32 GB of memory.
 
-## 11. Scaling up: the 1×100 Heisenberg chain
+## 11. Does the block span the right states?
+
+For N₂ we can diagonalise the whole 10-electron space, so we can check directly whether the block ends up spanning the 3 lowest exact states:
+
+$$F = \|P_{\rm low}\, P_{\rm block}\|^2 / 3 .$$
+
+- $P_{\rm low}$ projects on the 3 lowest levels of the flow operator ($H$, or $H + \lambda S^2$) over **all** symmetry sectors, plus any level degenerate with the third.
+- $F = 1$ means the block spans exactly those states. $F$ below 0.9 means we chose the wrong kets (the third picture of section 1).
+- The flow never leaves a ket's symmetry sector. So in each sector the block holds at most min(kets there, lowest levels there), and $F$ is capped by that count. `sv_block.jl` and `replay_block.jl` print the cap at the start.
+
+![Fidelity of the block with the 3 lowest exact levels, all N₂ runs](n2_pes/frozen_core/sv_results/plots/n2_fidelity.png)
+
+| run | 3 lowest levels (mHa above S0) | cap | exact greedy | Pauli prop. 10⁻⁵ (end / best) |
+|---|---|---|---|---|
+| 1.1 Å, H | S0, ³Πg 297.17 ×2 | 1 | 0.667 | 0.667 / 0.667 |
+| 1.1 Å, H + 0.02 S² | S0, ³Πg 297.17 ×2 | 1 | 0.667 | 0.667 / 0.667 |
+| 1.1 Å, H + 0.05 S² | S0, ¹Πg 347.38 ×2 | 1 | 0.667 | 0.667 / 0.667 |
+| 2.3 Å, H | S0, T1 2.84, quintet 8.99 | 0.667 | 0.657 | 0.091 / 0.228 |
+| 2.3 Å, H + 0.02 S² | S0, T1 2.84, quintet 8.99 | 0.667 | 0.667 | 0.527 / 0.595 |
+| 2.3 Å, H + 0.05 S² | S0, T1 2.84, triplet 120.61 ×2 | 1 | **0.999** | 0.507 / 0.625 |
+
+(×2: two degenerate levels; the block needs only one of them. 1.1 Å at cutoff 10⁻⁶: 0.667. The 2.3 Å exact run with λ = 0.02 is new; the others are the runs of sections 6 and 10.)
+
+- **Only one run passes: 2.3 Å with λ = 0.05, without truncation.** The penalty pushes the quintet above the second triplet, so the 3 lowest levels of H + 0.05 S² are the ones our kets can reach.
+- **2.3 Å, bare H and λ = 0.02: wrong sectors.**
+  - The 3 lowest levels are S0 and the quintet, both in the |0⟩ sector, and T1, in the |a⟩, |b⟩ sector. Our kets are split 1 + 2, the other way round.
+  - So F stays at or below 2/3 however long the flow runs. In both runs the third block state ends on the triplet at 120.6 mHa instead of the quintet.
+  - Right kets (not yet tested): two in the |0⟩ sector, for example |0⟩ and a double excitation, and one in the |a⟩, |b⟩ sector.
+- **1.1 Å: right sectors, wrong pair.**
+  - The two lowest excited levels are the two components of ³Πg: 3σg → 1πg and 3σg → 1πg (other component), qubits 4 → 5 and 4 → 7.
+  - |a⟩ and |b⟩ are both 4 → 5, in α and β. So they make one triplet and one singlet of the same orbitals, ³Πg and ¹Πg, and never reach the other ³Πg component. F is 2/3 from the first iterations.
+  - The energies of section 6 are right; they are just not the 3 lowest levels. The cap (1) misses this because it counts sectors, not spin.
+  - Right kets (not yet tested): |0⟩, 4 → 5 and 4 → 7, in the same spin. With λ = 0.05 the singlet pair is lowest, and the same thing happens with singlet and triplet swapped.
+- **Pauli propagation at 2.3 Å loses fidelity as the run goes on.** Every run ends below its best, as its energies did (section 10).
+
+## 12. Scaling up: the 1×100 Heisenberg chain
 
 **System.** Open spin-½ chain, $H = J\sum_i \mathbf S_i\cdot\mathbf S_{i+1}$, $N = 100$, $J = 1$. Energies are in units of $J$ and errors in mJ ($10^{-3} J$). At 100 qubits nothing can be checked exactly, so the references come from DMRG (ITensors, bond dimension up to 400, $S_z$ conserved):
 

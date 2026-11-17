@@ -1,6 +1,7 @@
 """Plots for the sv_block.jl runs (idea 1c, exact block DBF on frozen-core N2).
 
     python plot_block.py            # from frozen_core/; writes sv_results/plots/*.png
+    python plot_block.py --fidelity # only n2_fidelity.png: fidelity of every N2 block run with the 3 lowest levels
 
 1. energies_vs_variance.png  the block eigenvalues against the block variance V_S of H
                              (log; each run starts on the right), exact levels as horizontal lines
@@ -920,6 +921,99 @@ def pp230_extrapolation():
     return out
 
 
+# ---------------------------------------------------------------- subspace fidelity (all N2 block runs)
+def level_names(targets, f):
+    """'singlet 0, triplet 2.84, ...' for the fidelity targets, degenerate levels merged (×2)"""
+    groups = []
+    for t in targets:
+        if groups and abs(t["Eopt"] - groups[-1][0]["Eopt"]) < 1e-6:
+            groups[-1].append(t)
+        else:
+            groups.append([t])
+    out = []
+    for g in groups:
+        e = (g[0]["E"] - f) * 1e3
+        name = SPIN.get(round(g[0]["S2"]), "?") + (" S0" if abs(e) < 1e-6 else f" {e:.2f}")
+        out.append(name + (f" ×{len(g)}" if len(g) > 1 else ""))
+    return groups, out
+
+
+def fidelity_figure():
+    """F = |P_low P_block|^2 / 3 against iteration, P_low the 3 lowest levels of the flow operator over all
+    symmetry sectors (fid in sv_block.jl and replay_block.jl).  Rows: 1.1 and 2.3 A; columns: H, H + 0.02 S²,
+    H + 0.05 S².  Exact greedy run and the Pauli-propagation circuits (exact replay).  Returns (fig, rows),
+    rows = (R, λ, run, F at the end, largest F, weight of each lowest level in the block at the end, best F)."""
+    pts, lams = ("1.10", "2.30"), ("0", "0.02", "0.05")
+    series = [("exact greedy (no truncation)", "block1c_exact", INK, "-", 1.7),
+              ("Pauli prop. 10⁻⁵, true circuit", "blockpp_c1e-5", SERIES[0], "-", 1.4),
+              ("Pauli prop. 10⁻⁶, true circuit", "blockpp_c1e-6", SERIES[1], (0, (5, 2)), 1.4)]
+    fig, axes = plt.subplots(2, 3, figsize=(11.5, 6.6), sharey=True)
+    rows = []
+    for r_, R in enumerate(pts):
+        for c_, l in enumerate(lams):
+            ax = axes[r_, c_]
+            suf = "" if l == "0" else f"_s2pen{l}"
+            info = None
+            for name, kind, col, ls, lw in series:
+                lab = f"uno_{R}_{kind}{suf}"
+                if kind.startswith("blockpp"):
+                    d = load(lab + "_replay1") or load(lab + "_replay")
+                    if d is None or "fid" not in d["rows"][0]:
+                        continue
+                    it = np.array([r["iter"] for r in d["rows"]])
+                    F = np.array([r["fid"] for r in d["rows"]])
+                    w = np.array(d["rows"][-1]["fid_states"])
+                else:
+                    d = load(lab)
+                    if d is None or "fid" not in d["history"]:
+                        continue
+                    F = np.array(d["history"]["fid"])
+                    it = np.arange(len(F))
+                    w = np.array(d["history"]["fid_states"][-1])
+                info = info or d
+                ax.plot(it, F, color=col, ls=ls, lw=lw, label=name)
+                groups, _ = level_names(d["fid_targets"], d["E_FCI"])
+                k, ws = 0, []
+                for g in groups:
+                    ws.append(w[k:k + len(g)].sum())
+                    k += len(g)
+                rows.append((R, l, name, F[-1], F.max(), ws, d["fid_best"]))
+            ax.axhline(0.9, color=MUTED, lw=0.9, ls=(0, (4, 2)), zorder=1)
+            ax.annotate("0.9", xy=(1.0, 0.9), xycoords=("axes fraction", "data"), xytext=(-2, 2),
+                        textcoords="offset points", ha="right", va="bottom", fontsize=7, color=MUTED)
+            if info is not None:
+                best = info["fid_best"]
+                fin = [r for r in rows if r[0] == R and r[1] == l]
+                if best > 0.999 and fin and max(r[3] for r in fin) < 0.7:
+                    ax.annotate("stuck at 2/3: the block holds only one of the ×2 pair", xy=(1.0, 0.62),
+                                xycoords="axes fraction", xytext=(-2, 0), textcoords="offset points", ha="right",
+                                va="top", fontsize=7, color=INK)
+                if best < 0.999:
+                    ax.axhline(best, color=INK, lw=0.9, ls=":", zorder=1)
+                    ax.annotate(f"most these block states can reach: {best:.2f}", xy=(1.0, best),
+                                xycoords=("axes fraction", "data"), xytext=(-2, -3), textcoords="offset points",
+                                ha="right", va="top", fontsize=7, color=INK)
+                _, names = level_names(info["fid_targets"], info["E_FCI"])
+                op = "H" if l == "0" else f"H + {l} S²"
+                ax.set_title(f"{R.rstrip('0')} Å, {op}\nlowest 3 (mHa): " + ", ".join(names), fontsize=8.5,
+                             color=INK, loc="left")
+            ax.set_xlim(0, 200 if R == "1.10" else 500)
+            ax.set_ylim(0, 1.02)
+            ax.tick_params(labelsize=7.5)
+            style(ax)
+            if r_ == 1:
+                ax.set_xlabel("iteration (50 rotations each)")
+        axes[r_, 0].set_ylabel("fidelity F with the 3 lowest levels")
+    axes[0, 0].legend(fontsize=7.5, loc="lower right")
+    fig.suptitle("N₂: is the block spanning the 3 lowest exact levels?  "
+                 r"$F = \|P_{\rm low}\,P_{\rm block}\|^2/3$, with $P_{\rm low}$ over all symmetry sectors of the flow "
+                 "operator (H, or H + λS²)\nthe flow never leaves a block state's symmetry sector, so F is capped at "
+                 "(lowest levels the block's sectors can hold) / 3, dotted",
+                 x=0.01, ha="left", fontsize=10, color=INK)
+    fig.subplots_adjust(left=0.07, right=0.985, bottom=0.08, top=0.83, wspace=0.12, hspace=0.45)
+    return fig, rows
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     # greedy vDBF vs the full flow at 1.1 A, against the same exact levels
@@ -1019,8 +1113,20 @@ def main():
     print("wrote", OUT)
 
 
+def fidelity_main():
+    os.makedirs(OUT, exist_ok=True)
+    fig, rows = fidelity_figure()
+    fig.savefig(os.path.join(OUT, "n2_fidelity.png"), dpi=170)
+    print("fidelity with the 3 lowest levels: R | λ | run | F at the end | largest F | weight of each lowest level "
+          "in the block at the end | most F these block states allow")
+    for r in rows:
+        print(f"  {r[0]} {r[1]:<5} {r[2]:<32} {r[3]:.3f}  {r[4]:.3f}  [{', '.join(f'{x:.3f}' for x in r[5])}]  {r[6]:.3f}")
+
+
 if __name__ == "__main__":
-    if "--penalty" in sys.argv:
+    if "--fidelity" in sys.argv:
+        fidelity_main()
+    elif "--penalty" in sys.argv:
         os.makedirs(OUT, exist_ok=True)
         (fi, fv), prow = penalty_figures(penalty_runs())
         fi.savefig(os.path.join(OUT, "n2_110_s2pen_iter.png"), dpi=170)
