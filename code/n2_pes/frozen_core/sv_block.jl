@@ -48,13 +48,18 @@
 # ALL symmetry sectors (below 1 at convergence: the block states are the wrong determinants for the
 # lowest |S| levels), and <S^2> and the weight outside 10 electrons for each eigenvector of M.
 #
+# --kets replaces the block {|0>, |a>, |b>} by any determinants: comma-separated, "ref" for |0>,
+# otherwise the qubits to flip in the vacuum frame joined by dots (alpha 0-7, beta 8-15; an occupied
+# qubit becomes a hole, a virtual one a particle), e.g. --kets ref,4.5,4.7 = |0>, HOMO -> LUMO alpha
+# and HOMO -> the other 1pi_g alpha.  Each must keep n_alpha and n_beta.  Only with --rank exact.
+#
 #     julia -t 8 --project=../../integrals sv_block.jl <point dir> <basis> <label>
-#         [--homo n_alpha-1] [--lumo n_alpha] [--rank exact] [--c 1.0] [--s2-penalty 0]
+#         [--homo n_alpha-1] [--lumo n_alpha] [--rank exact] [--c 1.0] [--s2-penalty 0] [--kets ...]
 #         [--max-rots 50] [--max-iter 200] [--grad-thresh 1e-6]
 include(joinpath(@__DIR__, "sv_dbf.jl"))   # sector, S^2, rotate_W!, μ; its main() does not run
 
 function parse_block_cli(args)
-    opts = Dict("homo" => "", "lumo" => "", "rank" => "exact", "c" => "1.0", "s2-penalty" => "0", "max-rots" => "50",
+    opts = Dict("homo" => "", "lumo" => "", "kets" => "", "rank" => "exact", "c" => "1.0", "s2-penalty" => "0", "max-rots" => "50",
                 "max-iter" => "200", "grad-thresh" => "1e-6", "outdir" => joinpath(@__DIR__, "sv_results"))
     pos = String[]
     i = 1
@@ -173,9 +178,9 @@ end
 # sector, so sector by sector the block can hold at most min(its states there, lowest levels there):
 # the sum over sectors / |S| is the best fidelity these block states allow (below 1: the wrong
 # determinants for the lowest levels, however long the flow runs).  Returns (JSON records, best).
-function report_levels(levels, Φ, λ, e_fci, S, V0)
+function report_levels(levels, Φ, λ, e_fci, S, V0; names=nothing)
     nS = length(S)
-    names = nS == 3 ? ["|0>", "|a>", "|b>"] : ["block state $j" for j in 1:nS]
+    names = names !== nothing ? names : nS == 3 ? ["|0>", "|a>", "|b>"] : ["block state $j" for j in 1:nS]
     bsec = [reduce_span(y, V0) for y in S]
     where(c) = c in bsec ? "sector of " * join(names[bsec .== c], ", ") : "a sector with no block state"
     @printf("fidelity target: the %d lowest levels of H + %.3g S^2 in all symmetry sectors (E of H, mHa above FCI)\n",
@@ -220,6 +225,20 @@ function block_main(args)
     ref & bit(qH) != 0 && ref & bit(qHb) != 0 || error("orbital $homo is not occupied in the reference")
     ref & bit(qL) == 0 && ref & bit(qLb) == 0 || error("orbital $lumo is occupied in the reference")
     S = UInt64[0, bit(qH) | bit(qL), bit(qHb) | bit(qLb)]
+    knames = ["|0>", "|a>", "|b>"]
+    if !isempty(opts["kets"])                  # any determinants instead (see the header)
+        rank == "exact" || error("--kets needs --rank exact (the 1c operator is built for |0>, |a>, |b>)")
+        S, knames = UInt64[], String[]
+        for k in split(opts["kets"], ",")
+            y = k == "ref" ? UInt64(0) : reduce(|, (bit(parse(Int, q)) for q in split(k, ".")); init=UInt64(0))
+            o = y ⊻ ref
+            count_ones(o & (bit(NORB) - 1)) == na0 && count_ones(o >> NORB) == nb0 ||
+                error("ket $k changes the number of alpha or beta electrons")
+            push!(S, y); push!(knames, k == "ref" ? "|0>" : "|$k>")
+        end
+        allunique(S) || error("--kets lists a determinant twice")
+        @printf("block: %s\n", join(knames, ", "))
+    end
     nS = length(S)
 
     # sector: span of H's x strings and of the block states
@@ -266,7 +285,7 @@ function block_main(args)
         sort!(levels[c]; by=l -> l.Eopt)
         nc = count(==(c), cos_S)
         @printf("coset of %s (%d block state%s): lowest levels of H + %.3g S^2; E of H in mHa above FCI\n",
-                c == 0 ? "|0>" : "|a>", nc, nc == 1 ? "" : "s", λ)
+                join(knames[cos_S .== c], ", "), nc, nc == 1 ? "" : "s", λ)
         for (i, l) in enumerate(levels[c][1:min(8, end)])
             @printf("   %s %10.3f   <S^2> %6.3f   (%d,%d)\n", i <= nc ? "*" : " ", 1e3 * (l.E - e_fci), l.S2, l.na, l.nb)
         end
@@ -275,7 +294,7 @@ function block_main(args)
         # target space for the fidelity: the targets plus any level degenerate with the last one
         append!(edge, [l for l in levels[c] if l.Eopt < levels[c][nc].Eopt + 1e-6])
     end
-    abs(levels[UInt64(0)][1].E - e_fci) < 1e-8 || error("lowest level of the |0> coset is not FCI")
+    UInt64(0) in cosets && (abs(levels[UInt64(0)][1].E - e_fci) < 1e-8 || error("lowest level of the |0> coset is not FCI"))
     E_tgt = [l.E for l in targets]             # coset by coset, ascending within each
     kyfan = sum(l.Eopt for l in targets)
     Φ = zeros(D, length(edge))
@@ -287,7 +306,7 @@ function block_main(args)
     # sit in the wrong symmetry sectors for the lowest nS levels
     glev = lowest_levels(H, ref, Ovl, na0, nb0, λ, nS, V0)
     Φg = embed_levels(glev, states, pos)
-    grecs, gbest = report_levels(glev, Φg, λ, e_fci, S, V0)
+    grecs, gbest = report_levels(glev, Φg, λ, e_fci, S, V0; names=knames)
 
     # eigenvalues of the 1c operator, for --rank d1c
     zq(b, q) = (b >> q) & 1 == 0 ? 1.0 : -1.0
@@ -296,7 +315,7 @@ function block_main(args)
               cpar * (zq(b, qH) + zq(b, qHb) - zq(b, qH) * zq(b, qHb))
     dvec = dval.(states)
     dtop = dvec[kS[1]]
-    all(dvec[kS] .== dtop) && count(dvec .>= dtop - 1e-12) == nS ||
+    rank == "d1c" && !(all(dvec[kS] .== dtop) && count(dvec .>= dtop - 1e-12) == nS) &&
         error("the block is not the top eigenspace of the 1c operator (c = $cpar)")
 
     # flow
@@ -434,7 +453,7 @@ function block_main(args)
     mkpath(opts["outdir"])
     open(joinpath(opts["outdir"], "$(label).json"), "w") do io
         JSON.print(io, Dict("label" => label, "R" => meta["R_angstrom"], "basis" => basis,
-                            "homo" => homo, "lumo" => lumo, "rank" => rank, "c" => cpar, "s2_penalty" => λ,
+                            "homo" => homo, "lumo" => lumo, "kets" => knames, "rank" => rank, "c" => cpar, "s2_penalty" => λ,
                             "max_rots" => max_rots, "E_FCI" => e_fci, "sector_dim" => D,
                             "targets" => [Dict("E" => l.E, "Eopt" => l.Eopt, "S2" => l.S2, "n_alpha" => l.na, "n_beta" => l.nb)
                                           for l in targets],

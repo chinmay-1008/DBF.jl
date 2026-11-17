@@ -488,13 +488,40 @@ $$F = \|P_{\rm low}\, P_{\rm block}\|^2 / 3 .$$
 - **2.3 Å, bare H and λ = 0.02: wrong sectors.**
   - The 3 lowest levels are S0 and the quintet, both in the |0⟩ sector, and T1, in the |a⟩, |b⟩ sector. Our kets are split 1 + 2, the other way round.
   - So F stays at or below 2/3 however long the flow runs. In both runs the third block state ends on the triplet at 120.6 mHa instead of the quintet.
-  - Right kets (not yet tested): two in the |0⟩ sector, for example |0⟩ and a double excitation, and one in the |a⟩, |b⟩ sector.
+  - Better kets: two in the |0⟩ sector and one in the |a⟩, |b⟩ sector (tested below).
 - **1.1 Å: right sectors, wrong pair.**
   - The two lowest excited levels are the two components of ³Πg: 3σg → 1πg and 3σg → 1πg (other component), qubits 4 → 5 and 4 → 7.
   - |a⟩ and |b⟩ are both 4 → 5, in α and β. So they make one triplet and one singlet of the same orbitals, ³Πg and ¹Πg, and never reach the other ³Πg component. F is 2/3 from the first iterations.
   - The energies of section 6 are right; they are just not the 3 lowest levels. The cap (1) misses this because it counts sectors, not spin.
-  - Right kets (not yet tested): |0⟩, 4 → 5 and 4 → 7, in the same spin. With λ = 0.05 the singlet pair is lowest, and the same thing happens with singlet and triplet swapped.
+  - Better kets: |0⟩, 4 → 5 and 4 → 7, in the same spin (tested below). With λ = 0.05 the singlet pair is lowest, and the same thing happens with singlet and triplet swapped.
 - **Pauli propagation at 2.3 Å loses fidelity as the run goes on.** Every run ends below its best, as its energies did (section 10).
+
+### Testing better kets
+
+Same exact greedy runs, with kets chosen from the sectors (and spins) of the 3 lowest levels. Each ket is written as the qubits flipped from the reference, all in α (`sv_block.jl --kets`):
+
+- 1.1 Å: |0⟩, 4 → 5 and 4 → 7, i.e. 3σg → 1πg into each of the two πg orbitals (`--kets ref,4.5,4.7`);
+- 2.3 Å: |0⟩, the double excitation 3,4 → 5,6 (the kind of determinant the quintet is made of) and the single excitation 3 → 5 (part of T1) (`--kets ref,3.4.5.6,3.5`).
+
+![Fidelity of the old kets against the new kets, exact greedy runs](n2_pes/frozen_core/sv_results/plots/n2_fidelity_kets.png)
+
+| run | F at the end (old kets) | F > 0.9 from iteration | error at the end (mHa) |
+|---|---|---|---|
+| 1.1 Å, H | **0.992** (0.667) | 45 | S0 +0.14, ³Πg +0.41, ³Πg +1.37 |
+| 1.1 Å, H + 0.05 S² | **0.991** (0.667) | 51 | S0 +0.15, ¹Πg −0.80, ¹Πg +0.15 |
+| 2.3 Å, H | **0.998** (0.657) | 14 | S0 +0.009, T1 +0.031, quintet +0.004 |
+| 2.3 Å, H + 0.02 S² | **0.998** (0.667) | 16 | S0 +0.001, T1 +0.001, quintet +0.022 |
+
+(1.1 Å: 200 iterations; 2.3 Å: 500. Errors are from each state's own exact level.)
+
+- **Both pass.** Choosing kets by the sectors and spins of the lowest levels gives the right subspace.
+- **2.3 Å now works with bare H, no penalty needed.**
+  - At iteration 200, S0 is 0.07 mHa off and spin-clean. With the old kets it was 1.56 mHa off with ⟨S²⟩ = 0.76.
+  - That old spin mixing was the quintet, which the old block had no room for. Now the quintet is one of the block states.
+- **1.1 Å converges more slowly than with the old kets.**
+  - At iteration 200: S0 0.14 mHa against 0.02, and the two ³Πg components 0.4 and 1.4 mHa.
+  - Each new ket (one α excitation) is half triplet and half singlet, so the flow also has to separate the spins.
+  - With λ = 0.05 one ¹Πg ends 0.8 mHa below its exact level, because it still holds ⟨S²⟩ = 0.05 of triplet.
 
 ## 12. Scaling up: the 1×100 Heisenberg chain
 

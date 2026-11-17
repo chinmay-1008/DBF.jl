@@ -1,7 +1,7 @@
 """Plots for the sv_block.jl runs (idea 1c, exact block DBF on frozen-core N2).
 
     python plot_block.py            # from frozen_core/; writes sv_results/plots/*.png
-    python plot_block.py --fidelity # only n2_fidelity.png: fidelity of every N2 block run with the 3 lowest levels
+    python plot_block.py --fidelity # only n2_fidelity.png (every N2 block run) and n2_fidelity_kets.png (old vs new kets)
 
 1. energies_vs_variance.png  the block eigenvalues against the block variance V_S of H
                              (log; each run starts on the right), exact levels as horizontal lines
@@ -1113,6 +1113,44 @@ def main():
     print("wrote", OUT)
 
 
+def kets_figure():
+    """Old block {|0>, |a>, |b>} against new kets chosen from the sectors (and spins) of the 3 lowest levels
+    (sv_block.jl --kets): F against iteration, one panel per bond length.  Returns (fig, rows), rows = (R, run,
+    λ, F at the end, first iteration with F > 0.9, block energies of H at the end (mHa above S0), <S^2> at the end,
+    the 3 lowest levels of the flow operator (E of H, mHa above S0))."""
+    pts = [("1.10", "k45_47", "|0⟩, 4→5, 4→7", ["0", "0.05"]), ("2.30", "k3456_35", "|0⟩, 3,4→5,6, 3→5", ["0", "0.02"])]
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), sharey=True)
+    rows = []
+    for ax, (R, tag, kets, lams) in zip(axes, pts):
+        for which, lab, col in (("old", f"uno_{R}_block1c_exact", INK), ("new", f"uno_{R}_block_{tag}", SERIES[0])):
+            for l in lams:
+                d = load(lab + ("" if l == "0" else f"_s2pen{l}"))
+                if d is None or "fid" not in d["history"]:
+                    continue
+                F = np.array(d["history"]["fid"])
+                name = ("|0⟩, |a⟩, |b⟩" if which == "old" else kets) + ("" if l == "0" else f", H + {l} S²")
+                ax.plot(np.arange(len(F)), F, color=col, lw=1.6, ls="-" if l == "0" else (0, (4, 2)), label=name)
+                f = d["E_FCI"]
+                hit = np.nonzero(F > 0.9)[0]
+                rows.append((R, which, l, F[-1], int(hit[0]) if len(hit) else None,
+                             (np.array(d["history"]["lam"][-1]) - f) * 1e3, np.array(d["history"]["S2"][-1]),
+                             [(t["E"] - f) * 1e3 for t in d["fid_targets"]]))
+        ax.axhline(0.9, color=MUTED, lw=0.9, ls=(0, (4, 2)), zorder=1)
+        ax.set_xlim(0, 200 if R == "1.10" else 500)
+        ax.set_ylim(0, 1.02)
+        ax.set_title(f"{R.rstrip('0')} Å", fontsize=10, color=INK, loc="left")
+        ax.set_xlabel("iteration (50 rotations each)")
+        ax.legend(fontsize=7.5, loc="lower right")
+        ax.tick_params(labelsize=7.5)
+        style(ax)
+    axes[0].set_ylabel("fidelity F with the 3 lowest levels")
+    fig.suptitle("Exact greedy block DBF: the old kets |0⟩, |a⟩, |b⟩ (black) against kets chosen from the sectors of the "
+                 "3 lowest levels (blue)\nqubits flipped from the reference, all α; F against the 3 lowest levels of the "
+                 "flow operator (H, or H + λS²); dashed grey: 0.9", x=0.01, ha="left", fontsize=10, color=INK)
+    fig.subplots_adjust(left=0.07, right=0.985, bottom=0.13, top=0.82, wspace=0.08)
+    return fig, rows
+
+
 def fidelity_main():
     os.makedirs(OUT, exist_ok=True)
     fig, rows = fidelity_figure()
@@ -1121,6 +1159,13 @@ def fidelity_main():
           "in the block at the end | most F these block states allow")
     for r in rows:
         print(f"  {r[0]} {r[1]:<5} {r[2]:<32} {r[3]:.3f}  {r[4]:.3f}  [{', '.join(f'{x:.3f}' for x in r[5])}]  {r[6]:.3f}")
+    fig, rows = kets_figure()
+    fig.savefig(os.path.join(OUT, "n2_fidelity_kets.png"), dpi=170)
+    print("old against new kets: R | kets | λ | F at the end | first iteration F > 0.9 | block energies (mHa above S0) "
+          "| <S^2> | 3 lowest levels")
+    for r in rows:
+        print(f"  {r[0]} {r[1]:<4} {r[2]:<5} {r[3]:.4f}  {str(r[4]):>4}  [{', '.join(f'{x:.3f}' for x in r[5])}]  "
+              f"[{', '.join(f'{x:.2f}' for x in r[6])}]  [{', '.join(f'{x:.3f}' for x in r[7])}]")
 
 
 if __name__ == "__main__":
