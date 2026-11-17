@@ -13,6 +13,11 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 SRC=$(cd "$HERE/../../.." && pwd)          # the DBF.jl repo
 FC=$SRC/code/n2_pes/frozen_core
 DST=$HERE/DBF.jl
+# outside the repo (e.g. on the cluster) the rm below would delete the staged bundle and copy nothing back
+if [ ! -f "$SRC/code/n2_pes/run_block_pp.jl" ] || [ ! -d "$SRC/src" ]; then
+    echo "stage.sh runs only from code/n2_pes/cluster_block inside the local DBF.jl repo; nothing changed" >&2
+    exit 1
+fi
 rm -rf "$DST"
 mkdir -p "$DST/code/integrals" "$DST/code/n2_pes/frozen_core/sv_results" "$DST/code/n2_pes/frozen_core/logs"
 
