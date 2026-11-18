@@ -1,7 +1,7 @@
 """Plots for the sv_block.jl runs (idea 1c, exact block DBF on frozen-core N2).
 
     python plot_block.py            # from frozen_core/; writes sv_results/plots/*.png
-    python plot_block.py --fidelity # only n2_fidelity.png (every N2 block run) and n2_fidelity_kets.png (old vs new kets)
+    python plot_block.py --fidelity # only n2_fidelity.png (every N2 block run) and n2_fidelity_kets.png and n2_fidelity_kets_pp.png (old vs new kets, exact and Pauli propagation)
 
 1. energies_vs_variance.png  the block eigenvalues against the block variance V_S of H
                              (log; each run starts on the right), exact levels as horizontal lines
@@ -1151,6 +1151,44 @@ def kets_figure():
     return fig, rows
 
 
+def kets_pp_figure():
+    """kets_figure for the Pauli-propagation runs at cutoff 1e-5 (run_block_pp.jl; --kets for the new ones), bare H:
+    F of the true circuit (exact replay) against iteration.  Returns (fig, rows), rows = (R, old/new, F at the end,
+    first replayed iteration with F > 0.9, true block energies of H at the end (mHa above S0), <S^2> at the end)."""
+    pts = [("1.10", "k45_47", "|0⟩, 4→5, 4→7"), ("2.30", "k3456_35", "|0⟩, 3,4→5,6, 3→5")]
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), sharey=True)
+    rows = []
+    for ax, (R, tag, kets) in zip(axes, pts):
+        for which, lab, col, name in (("old", f"uno_{R}_blockpp_c1e-5", INK, "|0⟩, |a⟩, |b⟩ (D1c ranking)"),
+                                      ("new", f"uno_{R}_blockpp_c1e-5_{tag}", SERIES[0], kets + " (exact ranking)")):
+            d = load(lab + "_replay1") or load(lab + "_replay")
+            if d is None or "fid" not in d["rows"][0]:
+                continue
+            it = np.array([r["iter"] for r in d["rows"]])
+            F = np.array([r["fid"] for r in d["rows"]])
+            ax.plot(it, F, color=col, lw=1.6, label=name)
+            f = d["E_FCI"]
+            hit = it[F > 0.9]
+            last = d["rows"][-1]
+            rows.append((R, which, F[-1], int(hit[0]) if len(hit) else None,
+                         (np.array(last.get("lam_H", last["lam"])) - f) * 1e3, np.array(last.get("S2", []))))
+        ax.axhline(0.9, color=MUTED, lw=0.9, ls=(0, (4, 2)), zorder=1)
+        ax.set_xlim(0, 200 if R == "1.10" else 500)
+        ax.set_ylim(0, 1.02)
+        ax.set_title(f"{R.rstrip('0')} Å", fontsize=10, color=INK, loc="left")
+        ax.set_xlabel("iteration (50 rotations each)")
+        ax.legend(fontsize=7.5, loc="lower right") if R == "1.10" else \
+            ax.legend(fontsize=7.5, loc="upper right", bbox_to_anchor=(1.0, 0.85))
+        ax.tick_params(labelsize=7.5)
+        style(ax)
+    axes[0].set_ylabel("fidelity F with the 3 lowest levels")
+    fig.suptitle("Pauli propagation, cutoff 10⁻⁵, H: the old kets (black) against the new kets (blue)\n"
+                 "F of the true circuit (exact replay every 5 iterations); dashed grey: 0.9", x=0.01, ha="left",
+                 fontsize=10, color=INK)
+    fig.subplots_adjust(left=0.07, right=0.985, bottom=0.13, top=0.82, wspace=0.08)
+    return fig, rows
+
+
 def fidelity_main():
     os.makedirs(OUT, exist_ok=True)
     fig, rows = fidelity_figure()
@@ -1166,6 +1204,13 @@ def fidelity_main():
     for r in rows:
         print(f"  {r[0]} {r[1]:<4} {r[2]:<5} {r[3]:.4f}  {str(r[4]):>4}  [{', '.join(f'{x:.3f}' for x in r[5])}]  "
               f"[{', '.join(f'{x:.2f}' for x in r[6])}]  [{', '.join(f'{x:.3f}' for x in r[7])}]")
+    fig, rows = kets_pp_figure()
+    fig.savefig(os.path.join(OUT, "n2_fidelity_kets_pp.png"), dpi=170)
+    print("Pauli propagation 1e-5, old against new kets: R | kets | F at the end | first iteration F > 0.9 | "
+          "true block energies of H (mHa above S0) | <S^2>")
+    for r in rows:
+        print(f"  {r[0]} {r[1]:<4} {r[2]:.4f}  {str(r[3]):>4}  [{', '.join(f'{x:.3f}' for x in r[4])}]  "
+              f"[{', '.join(f'{x:.2f}' for x in r[5])}]")
 
 
 if __name__ == "__main__":

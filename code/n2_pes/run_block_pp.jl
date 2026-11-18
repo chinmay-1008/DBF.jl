@@ -31,9 +31,25 @@
 # Truncation is applied after every rotation (evolve!, then the drop-based
 # correction, then truncate! with the same cutoff).
 #
+# --kets replaces the block {|0>, |a>, |b>} by any determinants, written as for
+# frozen_core/sv_block.jl: comma-separated, "ref" for |0>, otherwise the qubits flipped
+# from the reference (vacuum frame) joined by dots, e.g. --kets ref,4.5,4.7.  Swap 1 then
+# needs a ranking that does not depend on |a>, |b> (D1c's top eigenspace is that block):
+#
+#  1'. ranking --rank exact (sv_block.jl's 'exact'): for every x string that O connects a
+#      block ket y to a ket outside the block, g(x) = sum_y |<y^x|O|y>|, read off the
+#      vectors O|y> already computed for M and V.  The generator for x has z chosen by a
+#      GF(2) solve so that all the terms of the block gradient have one sign (|gradient|
+#      = g(x)) and an odd number of Y's (a real rotation), as in sv_block.jl; the signs
+#      come from O at the start of the iteration.  Candidates are taken in order of g.
+#
+# --rank exact also works with the default block.  The run JSON stores the block as
+# "kets" (vacuum-frame bits) for replay_block.jl.
+#
 #     julia --project=. run_block_pp.jl <point dir> <basis> <label>
 #         [--coeff 1e-5] [--grad 1e-6] [--max-iter 200] [--max-rots 50]
 #         [--conv 1e-5] [--c 1.0] [--s2-penalty 0] [--save-every 50] [--outdir frozen_core/sv_results]
+#         [--kets ref,4.5,4.7] [--rank d1c|exact]   (default d1c; exact with --kets)
 #     The result <outdir>/<label>.json is also written every --save-every iterations (0: only at
 #     the end) with "finished": false; the final write has "finished": true.
 #     e.g. julia --project=. run_block_pp.jl frozen_core/data_unocore/R_1.10 uno uno_1.10_blockpp_c1e-5
@@ -46,6 +62,7 @@ const NORB = 8
 function parse_cli(args)
     opts = Dict("coeff" => "1e-5", "grad" => "1e-6", "max-iter" => "200", "max-rots" => "50",
                 "conv" => "1e-5", "c" => "1.0", "s2-penalty" => "0", "save-every" => "50",
+                "kets" => "", "rank" => "",
                 "outdir" => joinpath(@__DIR__, "frozen_core", "sv_results"))
     pos = String[]
     i = 1
@@ -244,6 +261,58 @@ function optimize_theta_block(O, G::PauliBasis{N}, kets::Vector{Ket{N}}) where N
     return θ, a + b * cos(θ) + c * sin(θ), a + b
 end
 
+# z with z.r = h (mod 2) for every row r, or nothing if none exists (frozen_core/sv_block.jl)
+function gf2_solve(rows, rhs)
+    piv = Tuple{UInt64,UInt64,Bool}[]          # (row, pivot bit, rhs); a pivot bit is in no other row
+    for (r, t) in zip(rows, rhs)
+        for (pr, pb, pt) in piv
+            r & pb == 0 || (r ⊻= pr; t ⊻= pt)
+        end
+        if r == 0
+            t && return nothing
+            continue
+        end
+        b = r & (~r + 1)
+        for i in eachindex(piv)
+            pr, pb, pt = piv[i]
+            pr & b == 0 || (piv[i] = (pr ⊻ r, pb, pt ⊻ t))
+        end
+        push!(piv, (r, b, t))
+    end
+    return reduce(|, (pb for (_, pb, pt) in piv if pt); init=UInt64(0))
+end
+
+# swap 1' (--rank exact): candidates and scores g(x) = sum_y |<y^x|O|y>| from σvs = O|y>, over the
+# block kets y whose partner y^x is outside the block; z by GF(2) so that the gradient's terms
+# share one sign (largest terms first; a sign that cannot be met is dropped) with an odd Y count.
+function exact_gradient(σvs, kets::Vector{Ket{N}}, thresh) where N
+    kv = [UInt64(k.v) for k in kets]
+    inS = Set(kv)
+    terms = Dict{UInt64,Vector{Tuple{Int,Float64}}}()          # x => [(j, <y_j^x|O|y_j>)]
+    for (j, σv) in enumerate(σvs), (s, a) in σv
+        b = UInt64(s.v)
+        b in inS && continue
+        push!(get!(terms, b ⊻ kv[j], Tuple{Int,Float64}[]), (j, real(a)))
+    end
+    grad_vec, grad_ops = Float64[], PauliBasis{N}[]
+    for (x, ts) in terms
+        g = sum(abs(m) for (_, m) in ts)
+        g > thresh || continue
+        sort!(ts; by=t -> -abs(t[2]))
+        jr, mr = ts[1]
+        rows, rhs = UInt64[x], Bool[true]                       # odd number of Y's
+        for (j, m) in ts[2:end]
+            r2, h2 = vcat(rows, kv[j] ⊻ kv[jr]), vcat(rhs, (m < 0) != (mr < 0))
+            gf2_solve(r2, h2) === nothing && continue
+            rows, rhs = r2, h2
+        end
+        z = gf2_solve(rows, rhs)
+        push!(grad_vec, g)
+        push!(grad_ops, PauliBasis{N}(Int128(z), Int128(x)))
+    end
+    return grad_vec, grad_ops
+end
+
 # the plan's 1c operator, as a PauliSum (Pauli(N, Z=[q+1]) acts on bit q)
 function d1c_operator(N, qH, qL, qHb, qLb, cpar)
     D = PauliSum(N)
@@ -292,13 +361,18 @@ function dbf_block(Oin, kets::Vector{Ket{N}}, D; operator_truncation, gradient_t
             flush(stdout)
         end
     end
-    Dop = O isa SparsePauliVector ? SparsePauliVector(D; T=ComplexF64) : D
+    # D === nothing: swap 1' (exact ranking from the block vectors O|y>), no commutator with D
+    Dop = D === nothing ? nothing : O isa SparsePauliVector ? SparsePauliVector(D; T=ComplexF64) : D
     record!(0.0, 0, 0, 0.0)
     t0 = time()
     for iter in 1:max_iter
-        G = commutator_clipped(Dop, O)
-        truncate!(G, gradient_truncation)
-        grad_vec, grad_ops = block_gradient(G, σvs, kets, grad_thresh)
+        if Dop === nothing
+            grad_vec, grad_ops = exact_gradient(σvs, kets, grad_thresh)
+        else
+            G = commutator_clipped(Dop, O)
+            truncate!(G, gradient_truncation)
+            grad_vec, grad_ops = block_gradient(G, σvs, kets, grad_thresh)
+        end
         order = sort(collect(eachindex(grad_vec)), by=i -> (-abs(grad_vec[i]), grad_ops[i].z, grad_ops[i].x))
         n_rots = 0
         for gi in order
@@ -345,26 +419,52 @@ function main(args)
         @printf(" Penalty: H + %g S^2   (<ref|S^2|ref> = %.6f, %d terms in total)\n", λs2,
                 real(expectation_value(S2, ψ0)), length(H))
     end
-    na = meta["n_alpha"]
+    na, nb = meta["n_alpha"], meta["n_beta"]
     qH, qL, qHb, qLb = na - 1, na, NORB + na - 1, NORB + na
     bitk(qs...) = Ket{N_Q}(reduce(|, (Int128(1) << q for q in qs); init=Int128(0)))
     kets = [Ket{N_Q}(0), bitk(qH, qL), bitk(qHb, qLb)]
+    knames = ["|0>", "|a>", "|b>"]
+    if !isempty(opts["kets"])                   # any determinants instead (see the header)
+        ref = UInt64(data["reference_ket"].v)
+        kets, knames = Ket{N_Q}[], String[]
+        for k in split(opts["kets"], ",")
+            qs = k == "ref" ? Int[] : [parse(Int, q) for q in split(k, ".")]
+            y = bitk(qs...)
+            o = UInt64(y.v) ⊻ ref
+            count_ones(o & ((UInt64(1) << NORB) - 1)) == na && count_ones(o >> NORB) == nb ||
+                error("ket $k changes the number of alpha or beta electrons")
+            push!(kets, y); push!(knames, k == "ref" ? "|0>" : "|$k>")
+        end
+        allunique(kets) || error("--kets lists a determinant twice")
+    end
+    rank = isempty(opts["rank"]) ? (isempty(opts["kets"]) ? "d1c" : "exact") : opts["rank"]
+    rank in ("d1c", "exact") || error("--rank must be d1c or exact")
+    (rank == "d1c" && !isempty(opts["kets"])) && error("--kets needs --rank exact (D1c's top eigenspace is |0>, |a>, |b>)")
+    opts["rank"] = rank
     cpar = parse(Float64, opts["c"])
-    D = d1c_operator(N_Q, qH, qL, qHb, qLb, cpar)
-    # the block must be D's top eigenspace: check the block kets and every single and double flip
-    dtop = real(expectation_value(D, kets[1]))
-    all(abs(real(expectation_value(D, k)) - dtop) < 1e-12 for k in kets) || error("block kets differ in D")
-    others = [bitk(q) for q in 0:N_Q-1]
-    append!(others, [bitk(q1, q2) for q1 in 0:N_Q-1 for q2 in q1+1:N_Q-1])
-    filter!(k -> !(k in kets), others)
-    maximum(real(expectation_value(D, k)) for k in others) < dtop - 1e-9 || error("block is not D's top eigenspace")
+    D, dtop = nothing, NaN
+    if rank == "d1c"
+        D = d1c_operator(N_Q, qH, qL, qHb, qLb, cpar)
+        # the block must be D's top eigenspace: check the block kets and every single and double flip
+        dtop = real(expectation_value(D, kets[1]))
+        all(abs(real(expectation_value(D, k)) - dtop) < 1e-12 for k in kets) || error("block kets differ in D")
+        others = [bitk(q) for q in 0:N_Q-1]
+        append!(others, [bitk(q1, q2) for q1 in 0:N_Q-1 for q2 in q1+1:N_Q-1])
+        filter!(k -> !(k in kets), others)
+        maximum(real(expectation_value(D, k)) for k in others) < dtop - 1e-9 || error("block is not D's top eigenspace")
+    end
 
     Hop = SparsePauliVector(H)
     op_trunc = CoeffTruncation(parse(Float64, opts["coeff"]))
     grad_trunc = CoeffTruncation(parse(Float64, opts["grad"]))
     println("="^100)
-    @printf(" R = %.2f %s  %d Pauli terms  E_FCI = %.10f  block = |0>, |%s>, |%s>  D top value %.1f\n",
-            meta["R_angstrom"], basis, length(H), e_fci, string(kets[2].v, base=2), string(kets[3].v, base=2), dtop)
+    if rank == "d1c"
+        @printf(" R = %.2f %s  %d Pauli terms  E_FCI = %.10f  block = |0>, |%s>, |%s>  D top value %.1f\n",
+                meta["R_angstrom"], basis, length(H), e_fci, string(kets[2].v, base=2), string(kets[3].v, base=2), dtop)
+    else
+        @printf(" R = %.2f %s  %d Pauli terms  E_FCI = %.10f  block = %s  ranking: exact\n",
+                meta["R_angstrom"], basis, length(H), e_fci, join(knames, ", "))
+    end
     @printf(" operator cutoff %s, gradient cutoff %s, %s rotations per gradient, max %s iterations; energies in mHa above E_FCI\n",
             opts["coeff"], opts["grad"], opts["max-rots"], opts["max-iter"])
     println("="^100)
@@ -378,6 +478,7 @@ function main(args)
         open(out * ".tmp", "w") do io
             JSON.print(io, Dict("label" => label, "R" => meta["R_angstrom"], "basis" => basis, "E_FCI" => e_fci,
                                 "settings" => opts, "finished" => finished, "n_rotations" => length(angs),
+                                "kets" => [Int(k.v) for k in kets], "ket_names" => knames,
                                 "wall_time_s" => t, "final_terms" => length(O),
                                 "accumulated_M" => acc.M, "accumulated_V" => acc.V,
                                 "rots_per_iter" => hist["n_rots"],

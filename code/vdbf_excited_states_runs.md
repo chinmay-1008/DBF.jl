@@ -561,7 +561,50 @@ As a baseline with no flow, the same rule is applied to the plain diagonal ⟨y|
   - `dbf_diag` takes angles in (0, π). Angles above π/2 swap two determinants' labels. The cost is the same, but the dressed energies end up on the wrong determinants, so the angle is taken in (−π/2, π/2].
   - `dbf_diag` stops when truncation makes the same generator come back.
   - Without the penalty, energies can come out below E_FCI. That is truncation error or other electron numbers mixed in.
-- **What would target the low end instead:** a loose block run with spare kets. For example, start with 6 candidates (the lowest plain-diagonal determinants of the lowest sectors) and keep the 3 that come out lowest. That needs `--kets` in `run_block_pp.jl`, the same change needed to move the Pauli-propagation runs to the new kets.
+- **A loose block run with spare kets doesn't work either.** That one targets the low end, and was tried after adding `--kets` to `run_block_pp.jl` (next subsection, at the end).
+
+### The new kets with Pauli propagation (cutoff 10⁻⁵)
+
+`run_block_pp.jl` now takes `--kets` too, with the same syntax as `sv_block.jl`.
+- **Ranking.** The D1c ranking is built around |0⟩, |a⟩, |b⟩, so with other kets the rotations are ranked by the exact block gradient instead (`--rank exact`, as in the exact runs). Each candidate flip x scores Σ_y |⟨y⊕x|O|y⟩| over the block kets y. The scores come from the vectors O|y⟩ the run already computes.
+- **Old runs unchanged.** Without `--kets` a run is unchanged: 3 iterations reproduce the stored 1.1 Å run exactly.
+- **Replay.** The run JSON stores its kets, and `replay_block.jl` replays them.
+
+![Fidelity of the Pauli-propagation circuits, old kets against new kets](n2_pes/frozen_core/sv_results/plots/n2_fidelity_kets_pp.png)
+
+| run (H, 10⁻⁵) | F > 0.9 from iteration | largest F | true error at the best point (mHa) | true error at the end (mHa) |
+|---|---|---|---|---|
+| 1.1 Å, old kets | never | 0.667 | — | S0 +0.14, ³Πg +0.15, third state on ¹Πg |
+| 1.1 Å, **new kets** | 40 | **0.992** | S0 +1.5, ³Πg +3.6, ³Πg +4.0 (iteration 115) | +2.6, +5.2, +6.2 (F 0.984) |
+| 2.3 Å, old kets | never | 0.23 | S0 +59 (iteration 150) | S0 +97 (F 0.09) |
+| 2.3 Å, **new kets** | 15 | **0.975** | S0 +3.4, T1 +3.2, quintet +3.9 (iteration 50) | +106, +120, +139 (F 0.21) |
+
+(True energies from the exact replay, every 5 iterations; the best point is where the true block sum is lowest. 1.1 Å: 200 iterations, 16 min; 2.3 Å: 500 iterations, 39 min.)
+
+- **The new kets give the right subspace with Pauli propagation too.** F reaches 0.99 at 1.1 Å and 0.975 at 2.3 Å. With the old kets it stays at 0.667 and below 0.23.
+- **The energies are a few mHa off, set by the truncation.**
+  - At the best point the errors are 1.5–4 mHa at 1.1 Å and 3–4 mHa at 2.3 Å.
+  - The exact flow with the same kets gets 0.1–1.4 mHa at 1.1 Å (iteration 200) and 0.01–0.03 mHa at 2.3 Å (iteration 500).
+- **At 2.3 Å the run then drifts away.**
+  - After about iteration 60, the truncation errors take over. From iteration 74 the run's own energies fall below E_FCI, while the true ones rise.
+  - It ends 106–139 mHa off with F = 0.21. The old-kets run drifts in the same way.
+  - At 1.1 Å the drift is slow: S0 goes from 1.5 mHa off at iteration 115 to 2.6 at 200.
+- **A possible stop signal.** The run's truncation-corrected variance first goes negative at iteration 55 at 2.3 Å, which is right at the best point. At 1.1 Å it happens at iteration 182. The run can see this sign itself, without an exact answer. It is checked on these two runs only.
+
+**Spare kets at a loose cutoff (the screen idea).**
+- **The candidates.** For each geometry I took the 2 lowest plain-diagonal determinants of each of the 4 sectors, skipping α↔β mirrors. That gives 8 kets that include every sector, chosen without the exact answer.
+- **The test.** A loose block run should put the low levels on the right kets, and its 3 lowest energies would then pick the sectors.
+- **The result: the truncated block flow breaks down at these cutoffs.**
+
+| 8 kets, 200 iterations | lowest energy, run's own estimate (mHa) | lowest energy, true (mHa) |
+|---|---|---|
+| 1.1 Å, 10⁻³ | −404 | +385 |
+| 1.1 Å, 10⁻⁴ | +94 (corrected: −732) | +45 |
+| 2.3 Å, 10⁻³ | −582 | +1194 |
+| 2.3 Å, 10⁻⁴ | −1217 | +843 |
+
+- The run's own energies end up far below E_FCI while the true states end up far above it, so they can't rank anything.
+- A block run needs about 10⁻⁵ to behave, and at 2.3 Å even that holds for only about 50 iterations. So a block run won't give a cheap screen either.
 
 ## 12. Scaling up: the 1×100 Heisenberg chain
 

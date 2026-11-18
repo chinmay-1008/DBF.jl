@@ -1,15 +1,15 @@
 # Exact replay of a truncated block vDBF run (../run_block_pp.jl): apply its stored
-# generators and angles to the three block states with no truncation, and report
+# generators and angles to the block states (the run's "kets", default |0>, |a>, |b>) with no truncation, and report
 # the true eigenvalues of the 3x3 block of H and the true block variance V_S at
 # the end of each macro-iteration.  For a run on H + λ S^2 the block is that of H + λ S^2,
 # and lam_H, var_H, VS_H and S2 give H and S^2 on its eigenvectors.  The block analogue of replay_fc.jl.
-# fid = |P_low P_block|^2 / 3 is the fidelity of the block with the 3 lowest levels of the flow operator
+# fid = |P_low P_block|^2 / |S| is the fidelity of the block with the |S| lowest levels of the flow operator
 # over all symmetry sectors (sv_block.jl's lowest_levels); fid_states is each level's weight in the block.
 #
 # The run evolves O <- U' O U with U_k = exp(-i θ_k G_k / 2), so after K rotations
 # the block columns are U_1 U_2 ... U_K |y>: U_K acts first.  Each checkpoint is
 # replayed from the bare block states.  Every generator has an odd number of Y's
-# (it comes from [D, O] with D diagonal and O real), so the rotation is real:
+# (it comes from [D, O] with D diagonal and O real, or from --rank exact's GF(2) choice), so the rotation is real:
 # U|b> = cos(θ/2)|b> + sin(θ/2) μ(b) |b xor x>, μ(b) = μ(0) (-1)^{z.b}.
 #
 #     julia -t 4 --project=../../integrals replay_block.jl <point dir> <basis> <run label> [every] [output label]
@@ -28,6 +28,10 @@ function replay_main(args)
     na = meta["n_alpha"]
     bit(q) = UInt64(1) << q
     S = UInt64[0, bit(na - 1) | bit(na), bit(NORB + na - 1) | bit(NORB + na)]
+    knames = ["|0>", "|a>", "|b>"]
+    if haskey(run, "kets")                                  # run_block_pp.jl stores its block (--kets)
+        S, knames = UInt64.(run["kets"]), String.(run["ket_names"])
+    end
     hx = unique(UInt64(p.x) for p in keys(H))
     V0 = gf2_basis(hx)                                      # symmetry sectors of H
     ovlfile = joinpath(dir, "$(basis)_ab_overlap.npy")
@@ -54,7 +58,7 @@ function replay_main(args)
     @printf("flow operator H + %g S^2%s\n", λs2, S2s === nothing ? "" : "; <S^2> reported")
     glev = lowest_levels(H, ref, Ovl, na, meta["n_beta"], λs2, length(S), V0)
     Φg = embed_levels(glev, states, pos)
-    grecs, gbest = report_levels(glev, Φg, λs2, e_fci, S, V0)
+    grecs, gbest = report_levels(glev, Φg, λs2, e_fci, S, V0; names=knames)
     gens = [PauliBasis{N}(Int128(g[1]), Int128(g[2])) for g in run["generators"]]
     angs = Float64.(run["angles"])
     nper = Int.(run["rots_per_iter"])                       # entry 1 is iteration 0 (no rotations)
@@ -72,7 +76,7 @@ function replay_main(args)
             label, length(gens), length(nper) - 1, D, every)
     flip = Vector{Int32}(undef, D)
     sgn = Vector{Float64}(undef, D)
-    function apply!(V, k)                                   # V <- U_k V, all three columns
+    function apply!(V, k)                                   # V <- U_k V, every block column
         x, z, m = xs[k], zs[k], μ0[k]
         c, s = cos(angs[k] / 2), sin(angs[k] / 2)
         @inbounds for (j, b) in enumerate(states)
@@ -91,7 +95,7 @@ function replay_main(args)
     t0 = time()
     for it in its
         K = ends[it+1]
-        V = zeros(D, 3)
+        V = zeros(D, length(S))
         for (c, y) in enumerate(S)
             V[pos[y+1], c] = 1.0
         end
@@ -103,7 +107,7 @@ function replay_main(args)
         F = eigen(M)
         lam = F.values
         Vmat = HV' * HV - Matrix(M) * Matrix(M)                 # <y|O(1 - Π_S)O|y'>
-        var = [dot(F.vectors[:, i], Vmat * F.vectors[:, i]) for i in 1:3]
+        var = [dot(F.vectors[:, i], Vmat * F.vectors[:, i]) for i in eachindex(S)]
         vs = sum(abs2, HV - V * Matrix(M))
         orth = maximum(abs, V' * V - I)
         ov = vec(sum(abs2, Φg' * V; dims=2))                   # weight of each lowest level inside the block
@@ -115,9 +119,9 @@ function replay_main(args)
             VH = HHV' * HHV - MH * MH
             S2b = V' * (S2s * V)
             φ = F.vectors
-            row["lam_H"] = [dot(φ[:, i], MH * φ[:, i]) for i in 1:3]
-            row["var_H"] = [dot(φ[:, i], VH * φ[:, i]) for i in 1:3]
-            row["S2"] = [dot(φ[:, i], S2b * φ[:, i]) for i in 1:3]
+            row["lam_H"] = [dot(φ[:, i], MH * φ[:, i]) for i in eachindex(S)]
+            row["var_H"] = [dot(φ[:, i], VH * φ[:, i]) for i in eachindex(S)]
+            row["S2"] = [dot(φ[:, i], S2b * φ[:, i]) for i in eachindex(S)]
             row["VS_H"] = sum(abs2, HHV - V * MH)
         end
         push!(rows, row)
