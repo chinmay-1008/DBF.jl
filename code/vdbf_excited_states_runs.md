@@ -662,7 +662,48 @@ The new-kets Pauli-propagation runs above changed two things at once: the kets, 
 
 In each case the pair term Z_iZ_j makes the excitation i→j free, as Z_H Z_L does in D1c. The other terms balance the kets to the same height.
 
-**A note on "D_S".** The D_S of the Pauli-propagation runs above (`--rank ds`) is the block projector written out in Z strings. That form needs three- and four-qubit terms: at 1.1 Å it is Σ Z_k + ¼(the dz terms) + ¾ Z₄Z₅Z₇ + const. An exact projector has to be flat on every other pattern; DBF only needs the kets on top, so dz drops those terms.
+**D_S and dz, step by step** (the new kets at 1.1 Å: |0⟩, 4→5, 4→7):
+
+1. **What D is for.** D gives every determinant a score. The flow keeps together the determinants with the highest score, so the 3 kets, and nothing else, have to be at the top.
+2. **The qubits no ket touches.** Z_k is +1 if qubit k is as in the reference and −1 if it is flipped. So Σ Z_k over those 13 qubits gives +1 per untouched qubit, and each flip costs 2. The kets touch none of them, so they all score 13 here.
+3. **The qubits the kets touch: 4, 5, 7.** There are 8 possible patterns on them; a bonus rewards exactly the kets':
+
+   | pattern on (4, 5, 7) | 000 = \|0⟩ | 110 = 4→5 | 101 = 4→7 | the other 5 |
+   |---|---|---|---|---|
+   | bonus | 2 | 2 | 2 | 0 |
+
+   D_S = (step 2) + (this bonus). The kets score 13 + 2 = 15; anything else scores at most 13.
+4. **Writing the table with Z's.** For one qubit, "is it unflipped?" = (1 + Z)/2 and "is it flipped?" = (1 − Z)/2. A whole pattern check is a product of these: "is it 000?" = (1 + Z₄)(1 + Z₅)(1 + Z₇)/8. The bonus is 2 × ["is it 000?" + "is it 110?" + "is it 101?"].
+5. **Multiplying out gives the formula.** One product already contains a three-qubit term: (1 + Z₄)(1 + Z₅)(1 + Z₇)/8 = (1 + Z₄ + Z₅ + Z₇ + Z₄Z₅ + Z₄Z₇ + Z₅Z₇ + Z₄Z₅Z₇)/8. Doing the same for the other two patterns (minus signs on the flipped qubits), adding and doubling:
+
+   bonus = ¾ + ¼(−Z₄ + Z₅ + Z₇ + Z₄Z₅ + Z₄Z₇ − Z₅Z₇) + ¾ Z₄Z₅Z₇
+6. **Check.**
+   - Pattern 000 (every Z = +1): ¾ + ¼·2 + ¾ = 2.
+   - Pattern 100 (Z₄ = −1): ¾ + ¼·0 − ¾ = 0.
+7. **Why D_S has a three-qubit term and dz does not.** D_S insists on the table exactly: 2 on the kets and exactly 0 on all five other patterns. That flatness is what needs Z₄Z₅Z₇. dz only asks that the kets win, so single and pair terms are enough:
+
+   | pattern | 000 | 110 | 101 | the other 5 |
+   |---|---|---|---|---|
+   | D_S bonus | 2 | 2 | 2 | 0, 0, 0, 0, 0 |
+   | dz bonus: −Z₄ + Z₅ + Z₇ + Z₄Z₅ + Z₄Z₇ − Z₅Z₇ | 2 | 2 | 2 | 0, 0, 0, 0, −6 |
+
+   **The two share the same single and pair terms**: D_S's are exactly ¼ of dz's. D_S just adds ¾ Z₄Z₅Z₇ and a constant.
+
+**Same top set, different paths.** Both put the same kets on top, so the exact runs end in the same place. They differ in which rotations look most worth doing along the way, and under truncation that changes the result.
+
+**D_S in general.** Write A for the qubits some ket flips, and s_q(y) = −1 if ket y flips qubit q, +1 otherwise. Then
+
+D_S = Σ_{k ∉ A} Z_k + 2 Σ_{y ∈ kets} Π_{q ∈ A} ½(1 + s_q(y) Z_q)
+
+The product of Z's over a subset T of A gets the coefficient (2/2^|A|) Σ_y Π_{q∈T} s_q(y). Written out (constants dropped):
+
+| block | D_S on the qubits the kets touch | D1c / dz there |
+|---|---|---|
+| old: \|0⟩, 4→5, 12→13 | 1/8 (Z₄ + Z₅ + Z₁₂ + Z₁₃) + 3/8 (Z₄Z₅ + Z₁₂Z₁₃) − 1/8 (Z₄Z₁₂ + Z₄Z₁₃ + Z₅Z₁₂ + Z₅Z₁₃) + 1/8 (Z₄Z₅Z₁₂ + Z₄Z₅Z₁₃ + Z₄Z₁₂Z₁₃ + Z₅Z₁₂Z₁₃) + 3/8 Z₄Z₅Z₁₂Z₁₃ | D1c: Z₄Z₅ + Z₁₂Z₁₃ + Z₄ + Z₁₂ − Z₄Z₁₂ |
+| 1.1 Å new: \|0⟩, 4→5, 4→7 | ¼(−Z₄ + Z₅ + Z₇ + Z₄Z₅ + Z₄Z₇ − Z₅Z₇) + ¾ Z₄Z₅Z₇ | dz: −Z₄ + Z₅ + Z₇ + Z₄Z₅ + Z₄Z₇ − Z₅Z₇ |
+| 2.3 Å new: \|0⟩, 3,4→5,6, 3→5 | 1/8 (−Z₃ + Z₄ − Z₅ + Z₆) + 3/8 (Z₃Z₅ + Z₄Z₆) + 1/8 (Z₃Z₄ + Z₃Z₆ + Z₄Z₅ + Z₅Z₆) + 1/8 (Z₃Z₄Z₅ − Z₃Z₄Z₆ + Z₃Z₅Z₆ − Z₄Z₅Z₆) + 3/8 Z₃Z₄Z₅Z₆ | dz: −Z₃ + Z₄ + Z₃Z₄ + Z₃Z₅ + Z₄Z₆ |
+
+The largest pair coefficients of D_S sit on the pairs that a ket flips together (Z₄Z₅ and Z₁₂Z₁₃; Z₃Z₅ and Z₄Z₆). Those are exactly the pairs D1c and dz build in directly.
 
 **Exact greedy runs** (no truncation), against the 3 lowest levels:
 

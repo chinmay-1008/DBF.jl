@@ -1289,8 +1289,10 @@ def kets_main():
               f"[{', '.join(f'{x:+.1f}' for x in r[7])}]  {r[8]}")
 
 
-RANKINGS = [("old", "", "D1c", INK, "-"), ("old", "_ds", "D_S", INK, (0, (5, 2))), ("old", "_rexact", "exact", INK, ":"),
-            ("new", "_ds", "D_S", SERIES[0], "-"), ("new", "", "exact", SERIES[0], (0, (5, 2)))]
+RANKINGS = [("old", "", "D1c", INK, "-"), ("old", "_ds", "D_S", INK, (0, (6, 2, 1, 2))),
+            ("old", "_rexact", "projector", INK, ":"),
+            ("new", "_dz", "Z operator", SERIES[0], (0, (5, 2))), ("new", "_ds", "D_S", SERIES[0], (0, (6, 2, 1, 2))),
+            ("new", "", "projector", SERIES[0], ":")]
 
 
 def kets_ranking_figure():
@@ -1338,8 +1340,8 @@ def kets_ranking_figure():
     axes[1, 0].set_ylabel("Σ block energies − Σ 3 lowest levels (mHa)")
     axes[1, 0].legend(fontsize=7.5, loc="upper right")
     fig.suptitle("Pauli propagation, cutoff 10⁻⁵, H: which matters, the kets or the ranking?\n"
-                 "colour = kets (black: old |0⟩, |a⟩, |b⟩; blue: new), line = ranking (D1c, D_S built from the kets, "
-                 "exact gradient); true energies (exact replay)", x=0.01, ha="left", fontsize=10, color=INK)
+                 "colour = kets (black: old |0⟩, |a⟩, |b⟩; blue: new), line = D (D1c; the block's Z operator; D_S, the "
+                 "projector in Z strings; the projector = exact gradient); true energies (exact replay)", x=0.01, ha="left", fontsize=10, color=INK)
     fig.subplots_adjust(left=0.08, right=0.985, bottom=0.08, top=0.88, hspace=0.12, wspace=0.12)
     return fig, rows
 
