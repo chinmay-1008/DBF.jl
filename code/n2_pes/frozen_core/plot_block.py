@@ -430,15 +430,17 @@ def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
     """per state: energy against that state's own variance, fitted linearly over the window [v, 2v] with v the
     state's variance at the last iteration, and extrapolated to zero variance.
     entries: [(name, lam (iterations x states, mHa above FCI), var (iterations x states, Ha²), marker, linestyle)].
-    Iteration 0 is left out.  Returns (fig, rows); rows hold (series, state, last error, E0, ±, v, #points)."""
+    Iteration 0 is left out.  Every panel has the same x and y range: the union over all panels of the fit
+    windows, the extrapolated energies and 0 (points outside are clipped; a panel with no fit only sets the range
+    when no panel has one).  Returns (fig, rows); rows hold (series, state, last error, E0, ±, v, #points)."""
     nS = len(refs)
-    nr = len(entries) if grid else 1                  # grid: one row per series, each panel on its own axes
+    nr = len(entries) if grid else 1                  # grid: one row per series
     fig, axes = plt.subplots(nr, nS, figsize=(11.5, 3.3 * nr + 0.6), squeeze=False)
     rows = []
+    core, spare = [], []                              # (y lo, y hi, x hi) of fitted series / of series with no fit
     for r_, i in [(r_, i) for r_ in range(nr) for i in range(nS)]:
         ax = axes[r_, i]
         ax.axhline(0, color=INK, lw=1, ls="--", zorder=1)
-        xmax = 0.0
         for name, lam, var, marker, ls in (entries[r_:r_ + 1] if grid else entries):
             x, y = var[1:, i], lam[1:, i] - refs[i]
             fit = window_fit(x, y, factor)
@@ -450,9 +452,7 @@ def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
                 if ok.any():
                     ax.plot(x[ok], y[ok], marker, color=SERIES[i], ms=2.5, mec="none", alpha=0.3)
                     ax.plot(x[-1], y[-1], marker, color=SERIES[i], ms=6, mec=INK, mew=0.6, zorder=5)
-                    xmax = max(xmax, 1.05 * x[ok].max())
-                    lo, hi = min(y[ok].min(), 0), max(y[ok].max(), 0)
-                    ax.set_ylim(lo - 0.08 * (hi - lo + 1e-9), hi + 0.12 * (hi - lo + 1e-9))
+                    spare.append((min(y[ok].min(), 0), max(y[ok].max(), 0), 1.05 * x[ok].max()))
                 continue
             v, sel, lo, hi = fit["v"], fit["sel"], fit["lo"], fit["hi"]
             ctx = (x > 0) & (x <= 2 * hi)             # context: points up to twice the window's top, lighter
@@ -468,12 +468,7 @@ def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
                         capsize=3, zorder=5)
             ax.plot(0, fit["e0"], marker, color=SERIES[i], ms=6, mec=INK, mew=0.6, clip_on=False, zorder=6)
             rows.append((name, names[i], y[-1], fit["e0"], fit["half"], v, fit["k"]))
-            xmax = max(xmax, 2 * hi)
-            yy = y[ctx]
-            lo, hi = min(yy.min(), fit["e0"], 0), max(yy.max(), fit["e0"], 0)
-            ax.set_ylim(lo - 0.08 * (hi - lo + 1e-9), hi + 0.12 * (hi - lo + 1e-9))
-        if xmax > 0:
-            ax.set_xlim(0, xmax)
+            core.append((min(y[sel].min(), fit["e0"], 0), max(y[sel].max(), fit["e0"], 0), 2 * hi))
         ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0))
         ax.set_title(f"{title}: {names[i]}" + (f", {entries[r_][0]}" if grid else ""), fontsize=9, color=INK, loc="left")
         ax.set_xlabel("energy variance of this state (Ha²)")
@@ -483,6 +478,12 @@ def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
             ax.set_ylabel("energy − exact (mHa)")
         if ax.get_legend_handles_labels()[0]:
             ax.legend(fontsize=7, loc="upper left")
+    lims = core or spare                              # one x and y range for every panel
+    if lims:
+        lo, hi, X = min(l[0] for l in lims), max(l[1] for l in lims), max(l[2] for l in lims)
+        for ax in axes.flat:
+            ax.set_xlim(0, X)
+            ax.set_ylim(lo - 0.08 * (hi - lo + 1e-9), hi + 0.12 * (hi - lo + 1e-9))
     fig.suptitle("Per-state extrapolation: each block state's energy against its own variance\n"
                  "linear fit over [v, 2v] (shaded), v = the state's variance at the last iteration ([0, 2e-4] if v < 0); "
                  "marker at 0 = extrapolated energy, error bar = half the difference from a quadratic fit",
