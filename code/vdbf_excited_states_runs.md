@@ -732,11 +732,13 @@ The largest pair coefficients of D_S sit on the pairs that a ket flips together 
 | old kets, D_S | 0.667 | +0.10, +0.12, +50.4 |
 | old kets, projector | 0.667 | +0.23, +0.21, +50.5 |
 | new kets, D_S | **0.997** | **+1.2, +2.3, +3.0** (still falling) |
+| new kets, Z operator (dz) | 0.986 | +2.5, +4.1, +4.8 (still falling) |
 | new kets, projector | 0.992 | +2.6, +5.2, +6.2 (lowest +1.6, +3.6, +4.0 at iteration 118) |
 
 - **Fidelity comes from the kets.** All three operators leave the old kets at 2/3.
 - **Under truncation the operator does matter.** With the new kets, D_S beats the projector: the energies are 2× better, they are still improving at iteration 200, and the run never trips its stop signal. The projector run is best at iteration 118 and then drifts up.
-- **Still to run.** The 2.3 Å runs and Pauli propagation with dz.
+- **dz is steady but slower than D_S.** Like D_S it improves through iteration 200 with no drift and never trips the stop signal. Its errors at iteration 200 are about twice D_S's, close to the projector run at its best. In the exact runs, too, dz was a little slower than the projector.
+- **Still to run.** The 2.3 Å runs.
 
 ## 12. Scaling up: the 1×100 Heisenberg chain
 
