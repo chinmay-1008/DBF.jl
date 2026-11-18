@@ -499,10 +499,10 @@ def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
             ax.set_xlim(0, X)
             ax.set_ylim(lo - 0.08 * (hi - lo + 1e-9), hi + 0.12 * (hi - lo + 1e-9))
     fig.suptitle("Per-state extrapolation: each block state's energy against its own variance\n"
-                 "linear fit over [v, 2v] (shaded), v = the state's variance at the last iteration ([0, 2e-4] if v < 0), "
-                 "final stretch only; marker at 0 = extrapolated energy, error bar = half the difference from a quadratic fit",
-                 x=0.01, ha="left", fontsize=10, color=INK)
-    fig.tight_layout(rect=(0, 0, 1, 0.86 if nr == 1 else 0.94))
+                 "linear fit over the run's final stretch inside [v, 2v] (shaded), v = the state's variance at the last "
+                 "iteration ([0, 2e-4] if v < 0)\nmarker at 0 = extrapolated energy, error bar = half the difference from a "
+                 "quadratic fit", x=0.01, ha="left", fontsize=10, color=INK)
+    fig.tight_layout(rect=(0, 0, 1, 0.80 if nr == 1 else 0.925))
     return fig, rows
 
 
@@ -1285,15 +1285,15 @@ def kets_main():
             ent = [("true (exact replay)", tl, tv, "o", "-"),
                    ("corrected", (np.array(h["lam_corr"][:k + 1]) - f) * 1e3, np.array(h["var_corr"][:k + 1]), "^", "--"),
                    ("raw", (np.array(h["lam"][:k + 1]) - f) * 1e3, np.array(h["var"][:k + 1]), "v", ":")]
-            fig, prow = state_extrapolation(ent, refs, names, f"PP 1e-5, {title}, D = {dname}", grid=True)
-            fig.texts[0].set_text(fig.texts[0].get_text() + f"\nnew kets, D = {dname}; Pauli propagation up to iteration {k}"
+            fig, prow = state_extrapolation(ent, refs, names, f"{title}, {dname}", grid=True)
+            fig.texts[0].set_text(fig.texts[0].get_text() + f"\nnew kets, Pauli propagation 10⁻⁵, D = {dname}; up to iteration {k}"
                                   + (", the last before a truncation-corrected variance turns negative" if stop is not None
                                      else " (the end; no corrected variance turns negative)"))
             fig.savefig(os.path.join(OUT, f"n2_{r_}_kets{suf}_pp_c1e-5_extrap.png"), dpi=170)
             allrows += [(f"{dname}: {r[0]}",) + tuple(r[1:]) for r in prow]
             true_ent.append((f"{dname}, true", tl, tv, mk, ls))
         if len(true_ent) > 1:                         # the true energies of every D on one figure
-            fig, _ = state_extrapolation(true_ent, refs, names, f"PP 1e-5, {title}, true")
+            fig, _ = state_extrapolation(true_ent, refs, names, f"{title}, true")
             fig.texts[0].set_text(fig.texts[0].get_text() + "\nnew kets; true energies (exact replay) of the Pauli-"
                                   "propagation runs with each ranking operator D, each up to its stop signal or its end")
             fig.savefig(os.path.join(OUT, f"n2_{r_}_kets_pp_c1e-5_extrap_true.png"), dpi=170)
