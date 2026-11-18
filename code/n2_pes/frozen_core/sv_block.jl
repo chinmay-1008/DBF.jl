@@ -35,6 +35,10 @@
 #            + c (Z_H + Z_Hb - Z_H Z_Hb): the <y^x|[D,O]|y> proxy restricted
 #            to the block (generalises 'onebody').  The block is checked to be
 #            D's top eigenspace.
+#     dz     as d1c, with D built from the block's kets the same way (../zblock.jl): Z on
+#            every qubit no ket flips, plus one- and two-qubit Z terms on the qubits the kets
+#            flip, chosen so the kets are exactly D's top eigenspace (gap 2).  Works for any
+#            block, --kets included; for |0>, |a>, |b> it finds an operator of D1c's shape.
 #
 # --s2-penalty λ runs the flow on H + λ S^2 (as in sv_dbf.jl): cost, gradient,
 # angles and the Ky Fan target are of H + λ S^2, so a spin-S level moves up by
@@ -51,12 +55,13 @@
 # --kets replaces the block {|0>, |a>, |b>} by any determinants: comma-separated, "ref" for |0>,
 # otherwise the qubits to flip in the vacuum frame joined by dots (alpha 0-7, beta 8-15; an occupied
 # qubit becomes a hole, a virtual one a particle), e.g. --kets ref,4.5,4.7 = |0>, HOMO -> LUMO alpha
-# and HOMO -> the other 1pi_g alpha.  Each must keep n_alpha and n_beta.  Only with --rank exact.
+# and HOMO -> the other 1pi_g alpha.  Each must keep n_alpha and n_beta.  Only with --rank exact or dz.
 #
 #     julia -t 8 --project=../../integrals sv_block.jl <point dir> <basis> <label>
-#         [--homo n_alpha-1] [--lumo n_alpha] [--rank exact] [--c 1.0] [--s2-penalty 0] [--kets ...]
+#         [--homo n_alpha-1] [--lumo n_alpha] [--rank exact|d1c|dz] [--c 1.0] [--s2-penalty 0] [--kets ...]
 #         [--max-rots 50] [--max-iter 200] [--grad-thresh 1e-6]
 include(joinpath(@__DIR__, "sv_dbf.jl"))   # sector, S^2, rotate_W!, μ; its main() does not run
+include(joinpath(@__DIR__, "..", "zblock.jl"))   # z_block_operator: the Z operator of any block (--rank dz)
 
 function parse_block_cli(args)
     opts = Dict("homo" => "", "lumo" => "", "kets" => "", "rank" => "exact", "c" => "1.0", "s2-penalty" => "0", "max-rots" => "50",
@@ -201,7 +206,7 @@ end
 function block_main(args)
     dir, basis, label, opts = parse_block_cli(args)
     rank = opts["rank"]
-    rank in ("exact", "d1c") || error("--rank must be exact or d1c")
+    rank in ("exact", "d1c", "dz") || error("--rank must be exact, d1c or dz")
     cpar = parse(Float64, opts["c"])
     max_rots, max_iter = parse(Int, opts["max-rots"]), parse(Int, opts["max-iter"])
     gthresh = parse(Float64, opts["grad-thresh"])
@@ -227,7 +232,7 @@ function block_main(args)
     S = UInt64[0, bit(qH) | bit(qL), bit(qHb) | bit(qLb)]
     knames = ["|0>", "|a>", "|b>"]
     if !isempty(opts["kets"])                  # any determinants instead (see the header)
-        rank == "exact" || error("--kets needs --rank exact (the 1c operator is built for |0>, |a>, |b>)")
+        rank in ("exact", "dz") || error("--kets needs --rank exact or dz (the 1c operator is built for |0>, |a>, |b>)")
         S, knames = UInt64[], String[]
         for k in split(opts["kets"], ",")
             y = k == "ref" ? UInt64(0) : reduce(|, (bit(parse(Int, q)) for q in split(k, ".")); init=UInt64(0))
@@ -308,15 +313,23 @@ function block_main(args)
     Φg = embed_levels(glev, states, pos)
     grecs, gbest = report_levels(glev, Φg, λ, e_fci, S, V0; names=knames)
 
-    # eigenvalues of the 1c operator, for --rank d1c
+    # eigenvalues of D on the sector states: the 1c operator (--rank d1c) or the block's own Z operator (dz)
     zq(b, q) = (b >> q) & 1 == 0 ? 1.0 : -1.0
     act = (qH, qL, qHb, qLb)
-    dval(b) = sum(zq(b, q) for q in 0:N-1 if !(q in act)) + zq(b, qH) * zq(b, qL) + zq(b, qHb) * zq(b, qLb) +
-              cpar * (zq(b, qH) + zq(b, qHb) - zq(b, qH) * zq(b, qHb))
+    if rank == "dz"
+        zr = z_block_operator(S, N)
+        zr === nothing && error("no one- and two-qubit Z operator has exactly these kets as its top eigenspace")
+        zterms, zA = zr
+        @printf("D = Z on every other qubit %s\n", z_terms_string(zterms, zA))
+        dval = b -> z_value(zterms, b)
+    else
+        dval = b -> sum(zq(b, q) for q in 0:N-1 if !(q in act)) + zq(b, qH) * zq(b, qL) + zq(b, qHb) * zq(b, qLb) +
+                    cpar * (zq(b, qH) + zq(b, qHb) - zq(b, qH) * zq(b, qHb))
+    end
     dvec = dval.(states)
     dtop = dvec[kS[1]]
-    rank == "d1c" && !(all(dvec[kS] .== dtop) && count(dvec .>= dtop - 1e-12) == nS) &&
-        error("the block is not the top eigenspace of the 1c operator (c = $cpar)")
+    rank in ("d1c", "dz") && !(all(dvec[kS] .== dtop) && count(dvec .>= dtop - 1e-12) == nS) &&
+        error("the block is not the top eigenspace of D (rank $rank)")
 
     # flow
     W = Matrix{Float64}(I, D, D)

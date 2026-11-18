@@ -645,6 +645,58 @@ As a baseline with no flow, the same rule is applied to the plain diagonal ⟨y|
 - The run's own energies end up far below E_FCI while the true states end up far above it, so they can't rank anything.
 - A block run needs about 10⁻⁵ to behave, and at 2.3 Å even that holds for only about 50 iterations. So a block run won't give a cheap screen either.
 
+### Kets or operator? The block's own Z operator
+
+The new-kets Pauli-propagation runs above changed two things at once: the kets, and the operator that ranks the rotations. D1c only works for |0⟩, |a⟩, |b⟩, so those runs ranked by the block's exact gradient. That ranking is the same as using D = the projector onto the block.
+
+**A Z operator for any kets, built like D1c** (`n2_pes/zblock.jl`, `--rank dz` in both `sv_block.jl` and `run_block_pp.jl`):
+- **The construction.** Z on every qubit no ket flips, plus one- and two-qubit Z terms on the qubits the kets flip.
+- **How the terms are chosen.** They put the kets exactly at the top, at least 2 above every other pattern, which is the cost of flipping any other qubit. The builder searches whole-number coefficients from −2 to 2 and keeps the operator with the fewest terms.
+
+| block | the part on the qubits the kets flip |
+|---|---|
+| old: \|0⟩, \|a⟩, \|b⟩ (D1c) | Z₄Z₅ + Z₁₂Z₁₃ + Z₄ + Z₁₂ − Z₄Z₁₂ |
+| old, found by the builder | Z₄Z₅ + Z₁₂Z₁₃ + Z₅ + Z₁₃ − Z₅Z₁₃ (D1c's shape) |
+| 1.1 Å new: \|0⟩, 4→5, 4→7 | −Z₄ + Z₅ + Z₇ + Z₄Z₅ + Z₄Z₇ − Z₅Z₇ |
+| 2.3 Å new: \|0⟩, 3,4→5,6, 3→5 | −Z₃ + Z₄ + Z₃Z₄ + Z₃Z₅ + Z₄Z₆ |
+
+In each case the pair term Z_iZ_j makes the excitation i→j free, as Z_H Z_L does in D1c. The other terms balance the kets to the same height.
+
+**A note on "D_S".** The D_S of the Pauli-propagation runs above (`--rank ds`) is the block projector written out in Z strings. That form needs three- and four-qubit terms: at 1.1 Å it is Σ Z_k + ¼(the dz terms) + ¾ Z₄Z₅Z₇ + const. An exact projector has to be flat on every other pattern; DBF only needs the kets on top, so dz drops those terms.
+
+**Exact greedy runs** (no truncation), against the 3 lowest levels:
+
+![Exact greedy runs: kets against the operator that ranks the rotations](n2_pes/frozen_core/sv_results/plots/n2_kets_vs_ranking_exact.png)
+
+| exact, H | D1c | Z operator (dz) | projector |
+|---|---|---|---|
+| 1.1 Å, old kets (200 it.) | +0.021, +0.028, +50.25 | +0.021, +0.028, +50.25 | +0.019, +0.022, +50.25 |
+| 1.1 Å, new kets (200 it.) | — | +0.141, +0.545, +1.651 (F 0.990) | +0.140, +0.412, +1.371 (F 0.992) |
+| 2.3 Å, old kets (200 it.) | +3.33, +1.74, +77.0 | +3.36, +1.52, +76.9 | +1.56, +0.84, +111.5 |
+| 2.3 Å, new kets (500 it.) | — | +0.013, +0.041, +0.004 (F 0.997) | +0.009, +0.031, +0.004 (F 0.997) |
+
+(mHa; the sorted block energies minus the 3 lowest levels.)
+
+- **The builder generalises D1c.** On the old kets, its operator gives the same numbers as D1c.
+- **Without truncation the operator barely matters; the kets decide where the flow ends.** With the new kets the Z operator lands where the projector does, slightly more slowly. With the old kets every operator stalls at the same wrong third state (+50 mHa at 1.1 Å).
+- **Why the kets decide.** With D = the projector, the continuous flow is imaginary-time evolution of the block, e^(−sH) applied to the starting kets. It can only reach levels the kets already overlap. The 3×3 overlap matrix ⟨target|ket⟩ has rank 2 for the old kets at both geometries: one singular value is exactly 0. It has rank 3 for the new kets.
+
+**Pauli propagation, 10⁻⁵** (true energies from the exact replay; 1.1 Å, 200 iterations):
+
+![Pauli propagation at 10⁻⁵: kets against the ranking operator](n2_pes/frozen_core/sv_results/plots/n2_kets_vs_ranking.png)
+
+| 1.1 Å, PP 10⁻⁵ | largest F | error from the 3 lowest levels at iteration 200 (mHa) |
+|---|---|---|
+| old kets, D1c | 0.667 | +0.14, +0.15, +50.4 |
+| old kets, D_S | 0.667 | +0.10, +0.12, +50.4 |
+| old kets, projector | 0.667 | +0.23, +0.21, +50.5 |
+| new kets, D_S | **0.997** | **+1.2, +2.3, +3.0** (still falling) |
+| new kets, projector | 0.992 | +2.6, +5.2, +6.2 (lowest +1.6, +3.6, +4.0 at iteration 118) |
+
+- **Fidelity comes from the kets.** All three operators leave the old kets at 2/3.
+- **Under truncation the operator does matter.** With the new kets, D_S beats the projector: the energies are 2× better, they are still improving at iteration 200, and the run never trips its stop signal. The projector run is best at iteration 118 and then drifts up.
+- **Still to run.** The 2.3 Å runs and Pauli propagation with dz.
+
 ## 12. Scaling up: the 1×100 Heisenberg chain
 
 **System.** Open spin-½ chain, $H = J\sum_i \mathbf S_i\cdot\mathbf S_{i+1}$, $N = 100$, $J = 1$. Energies are in units of $J$ and errors in mJ ($10^{-3} J$). At 100 qubits nothing can be checked exactly, so the references come from DMRG (ITensors, bond dimension up to 400, $S_z$ conserved):

@@ -1273,6 +1273,129 @@ def kets_main():
               "series | state | last | extrapolated ± | v | points")
         for r in xrows + prow:
             print(f"  {r[0]:<20} {r[1]:<18} {r[2]:+9.4f} {r[3]:+9.4f} ± {r[4]:.4f}   v {r[5]:.2e}  {r[6]} pts")
+    fig, erows = exact_ranking_figure()
+    fig.savefig(os.path.join(OUT, "n2_kets_vs_ranking_exact.png"), dpi=170)
+    print("exact runs, kets x D: R | kets | D | iterations | F at the end | errors at the end vs the 3 lowest levels "
+          "(mHa) | <S^2>")
+    for r in erows:
+        print(f"  {r[0]} {r[1]:<4} {r[2]:<11} {r[3]:>4}  {r[4]:.3f}  [{', '.join(f'{x:+.3f}' for x in r[5])}]  "
+              f"[{', '.join(f'{x:.2f}' for x in r[6])}]")
+    fig, rows = kets_ranking_figure()
+    fig.savefig(os.path.join(OUT, "n2_kets_vs_ranking.png"), dpi=170)
+    print("kets x ranking, 1e-5: R | kets | ranking | largest F | F > 0.9 from | best iteration | errors there vs the "
+          "3 lowest levels (mHa) | at the end | stop signal")
+    for r in rows:
+        print(f"  {r[0]} {r[1]:<4} {r[2]:<6} {r[3]:.3f}  {str(r[4]):>4}  {r[5]:>4}  [{', '.join(f'{x:+.2f}' for x in r[6])}]  "
+              f"[{', '.join(f'{x:+.1f}' for x in r[7])}]  {r[8]}")
+
+
+RANKINGS = [("old", "", "D1c", INK, "-"), ("old", "_ds", "D_S", INK, (0, (5, 2))), ("old", "_rexact", "exact", INK, ":"),
+            ("new", "_ds", "D_S", SERIES[0], "-"), ("new", "", "exact", SERIES[0], (0, (5, 2)))]
+
+
+def kets_ranking_figure():
+    """kets x ranking at cutoff 1e-5, bare H, from the exact replays: F against iteration (top) and the sum of the
+    true block energies minus the sum of the 3 lowest levels (bottom, log), one column per bond length.  Colour =
+    kets (black old |0>, |a>, |b>; blue new), line style = ranking (D1c, D_S built from the kets, exact gradient).
+    Returns (fig, rows), rows = (R, kets, ranking, largest F, first iteration F > 0.9, best iteration (lowest
+    true block sum), errors there against the 3 lowest levels (mHa), same at the end, stop-signal iteration)."""
+    fig, axes = plt.subplots(2, 2, figsize=(11, 6.8), sharex="col")
+    rows, lo = [], np.inf
+    for c_, (R, tag, _, _) in enumerate(KETS):
+        for kets, suf, rank, col, ls in RANKINGS:
+            lab = f"uno_{R}_blockpp_c1e-5" + (f"_{tag}" if kets == "new" else "") + suf
+            pp, rep = load(lab), load(lab + "_replay1") or load(lab + "_replay")
+            if pp is None or rep is None or "fid" not in rep["rows"][0]:
+                continue
+            f = rep["E_FCI"]
+            tg = np.sort([(t["E"] - f) * 1e3 for t in rep["fid_targets"]])[:3]
+            it = np.array([r["iter"] for r in rep["rows"]])
+            F = np.array([r["fid"] for r in rep["rows"]])
+            lam = np.sort((np.array([r["lam"] for r in rep["rows"]]) - f) * 1e3, axis=1)
+            err = lam - tg
+            gap = err.sum(axis=1)
+            name = ("old kets" if kets == "old" else "new kets") + f", {rank}"
+            axes[0, c_].plot(it, F, color=col, ls=ls, lw=1.5, label=name)
+            axes[1, c_].plot(it, np.maximum(gap, 1e-3), color=col, ls=ls, lw=1.5, label=name)
+            lo = min(lo, max(gap.min(), 1e-3))
+            b = int(np.argmin(gap))
+            hit = it[F > 0.9]
+            rows.append((R, kets, rank, F.max(), int(hit[0]) if len(hit) else None, int(it[b]), err[b], err[-1], pp_stop(pp)))
+        axes[0, c_].set_title(f"{R.rstrip('0')} Å", fontsize=10, color=INK, loc="left")
+        axes[1, c_].set_xlabel("iteration (50 rotations each)")
+        axes[1, c_].set_xlim(0, 200 if R == "1.10" else 500)
+    for ax in axes[0]:
+        ax.axhline(0.9, color=MUTED, lw=0.9, ls=(0, (4, 2)), zorder=1)
+        ax.set_ylim(0, 1.02)
+    hi = max(ax.get_ylim()[1] for ax in axes[1])
+    for ax in axes[1]:
+        ax.set_yscale("log")
+        ax.set_ylim(lo / 1.5, hi)
+    for ax in axes.flat:
+        ax.tick_params(labelsize=7.5)
+        style(ax)
+    axes[0, 0].set_ylabel("fidelity F with the 3 lowest levels")
+    axes[1, 0].set_ylabel("Σ block energies − Σ 3 lowest levels (mHa)")
+    axes[1, 0].legend(fontsize=7.5, loc="upper right")
+    fig.suptitle("Pauli propagation, cutoff 10⁻⁵, H: which matters, the kets or the ranking?\n"
+                 "colour = kets (black: old |0⟩, |a⟩, |b⟩; blue: new), line = ranking (D1c, D_S built from the kets, "
+                 "exact gradient); true energies (exact replay)", x=0.01, ha="left", fontsize=10, color=INK)
+    fig.subplots_adjust(left=0.08, right=0.985, bottom=0.08, top=0.88, hspace=0.12, wspace=0.12)
+    return fig, rows
+
+
+LOW3 = {"1.10": [0.0, 297.174, 297.174], "2.30": [0.0, 2.842, 8.995]}     # the 3 lowest levels, mHa above S0
+EXACT_RANKINGS = [("old", "block1c_d1c", "D1c", INK, "-"), ("old", "block1c_dz", "Z operator", INK, (0, (5, 2))),
+                  ("old", "block1c_exact", "projector", INK, ":"),
+                  ("new", "block_{tag}_dz", "Z operator", SERIES[0], (0, (5, 2))), ("new", "block_{tag}", "projector", SERIES[0], ":")]
+
+
+def exact_ranking_figure():
+    """kets x D for the exact greedy runs (sv_block.jl), bare H: F against iteration (top, where the run recorded it)
+    and the sum of the sorted block energies minus the sum of the 3 lowest levels (bottom, log).  Colour = kets
+    (black old |0>, |a>, |b>; blue new), line = D (D1c; the block's Z operator, --rank dz; the block projector,
+    --rank exact).  Returns (fig, rows), rows = (R, kets, D, iterations, F at the end, errors at the end against
+    the 3 lowest levels (mHa), <S^2> at the end)."""
+    fig, axes = plt.subplots(2, 2, figsize=(11, 6.8), sharex="col")
+    rows, lo = [], np.inf
+    for c_, (R, tag, _, _) in enumerate(KETS):
+        for kets, lab, name, col, ls in EXACT_RANKINGS:
+            d = load(f"uno_{R}_" + lab.format(tag=tag))
+            if d is None:
+                continue
+            h, f = d["history"], d["E_FCI"]
+            lam = np.sort((np.array(h["lam"]) - f) * 1e3, axis=1)
+            err = lam - np.array(LOW3[R])
+            gap = err.sum(axis=1)
+            it = np.arange(len(gap))
+            nm = ("old kets" if kets == "old" else "new kets") + ", " + name
+            if "fid" in h:
+                axes[0, c_].plot(it, h["fid"], color=col, ls=ls, lw=1.5, label=nm)
+            axes[1, c_].plot(it, np.maximum(gap, 1e-3), color=col, ls=ls, lw=1.5, label=nm)
+            lo = min(lo, max(gap.min(), 1e-3))
+            rows.append((R, kets, name, len(gap) - 1, h["fid"][-1] if "fid" in h else float("nan"), err[-1],
+                         np.array(h["S2"][-1])))
+        axes[0, c_].set_title(f"{R.rstrip('0')} Å", fontsize=10, color=INK, loc="left")
+        axes[1, c_].set_xlabel("iteration (50 rotations each)")
+        axes[1, c_].set_xlim(0, 200 if R == "1.10" else 500)
+    for ax in axes[0]:
+        ax.axhline(0.9, color=MUTED, lw=0.9, ls=(0, (4, 2)), zorder=1)
+        ax.set_ylim(0, 1.02)
+    hi = max(ax.get_ylim()[1] for ax in axes[1])
+    for ax in axes[1]:
+        ax.set_yscale("log")
+        ax.set_ylim(lo / 1.5, hi)
+    for ax in axes.flat:
+        ax.tick_params(labelsize=7.5)
+        style(ax)
+    axes[0, 0].set_ylabel("fidelity F with the 3 lowest levels")
+    axes[1, 0].set_ylabel("Σ block energies − Σ 3 lowest levels (mHa)")
+    axes[1, 0].legend(fontsize=7.5, loc="upper right")
+    fig.suptitle("Exact greedy block DBF (no truncation), H: the kets against the operator D that ranks the rotations\n"
+                 "colour = kets (black: old |0⟩, |a⟩, |b⟩; blue: new), line = D (D1c; the block's own Z operator; "
+                 "the block projector)", x=0.01, ha="left", fontsize=10, color=INK)
+    fig.subplots_adjust(left=0.08, right=0.985, bottom=0.08, top=0.88, hspace=0.12, wspace=0.12)
+    return fig, rows
 
 
 def fidelity_main():

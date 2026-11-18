@@ -28,7 +28,7 @@ cp -R "$SRC/src" "$SRC/ext" "$SRC/LICENSE" "$DST/"
 awk '/^\[sources\]/{skip=1; next} skip && /^\[/{skip=0} !skip' "$SRC/Project.toml" > "$DST/Project.toml"
 
 cp "$SRC/code/integrals/"{Project.toml,Manifest.toml} "$DST/code/integrals/"
-cp "$SRC/code/n2_pes/"{Project.toml,Manifest.toml,run_block_pp.jl} "$DST/code/n2_pes/"
+cp "$SRC/code/n2_pes/"{Project.toml,Manifest.toml,run_block_pp.jl,zblock.jl} "$DST/code/n2_pes/"
 cp "$FC/"{replay_block.jl,sv_block.jl,sv_dbf.jl} "$DST/code/n2_pes/frozen_core/"
 
 for R in ${POINTS:-2.30}; do

@@ -43,18 +43,31 @@
 #      = g(x)) and an odd number of Y's (a real rotation), as in sv_block.jl; the signs
 #      come from O at the start of the iteration.  Candidates are taken in order of g.
 #
-# --rank exact also works with the default block.  The run JSON stores the block as
+#  1''. ranking --rank ds: swap 1 with a Z operator built from the kets, D_S, in place of D1c:
+#      D_S = sum_{q not flipped by any ket} Z_q + 2 sum_{y in S} prod_{q in A} (1 + s_q(y) Z_q)/2,
+#      A the qubits some ket flips, s_q(y) = -1 if y flips q, +1 otherwise.  On the block it is
+#      (N - |A|) + 2; flipping a qubit outside A, or reaching a pattern on A that is not a ket,
+#      lowers it by at least 2, so the block is D_S's top eigenspace (checked), as for D1c.
+#      2^|A| Z strings per ket on A (1.1 A new kets: A = 4, 5, 7).
+#
+#  1'''. ranking --rank dz: swap 1 with the block's own Z operator built as D1c is (zblock.jl):
+#      Z on every qubit no ket flips, plus one- and two-qubit Z terms on the qubits the kets flip,
+#      chosen so the kets are exactly D's top eigenspace.  The same D as frozen_core/sv_block.jl
+#      --rank dz.  (ds above is the block projector written in Z strings, with up to |A|-qubit terms.)
+#
+# --rank exact, ds and dz also work with the default block.  The run JSON stores the block as
 # "kets" (vacuum-frame bits) for replay_block.jl.
 #
 #     julia --project=. run_block_pp.jl <point dir> <basis> <label>
 #         [--coeff 1e-5] [--grad 1e-6] [--max-iter 200] [--max-rots 50]
 #         [--conv 1e-5] [--c 1.0] [--s2-penalty 0] [--save-every 50] [--outdir frozen_core/sv_results]
-#         [--kets ref,4.5,4.7] [--rank d1c|exact]   (default d1c; exact with --kets)
+#         [--kets ref,4.5,4.7] [--rank d1c|exact|ds|dz]   (default d1c; exact with --kets)
 #     The result <outdir>/<label>.json is also written every --save-every iterations (0: only at
 #     the end) with "finished": false; the final write has "finished": true.
 #     e.g. julia --project=. run_block_pp.jl frozen_core/data_unocore/R_1.10 uno uno_1.10_blockpp_c1e-5
 using DBF, PauliOperators, JLD2, JSON, Printf, LinearAlgebra
 using DBF: commutator_clipped, matvec
+include(joinpath(@__DIR__, "zblock.jl"))   # z_block_operator: the Z operator of any block (--rank dz)
 
 const N_Q = 16
 const NORB = 8
@@ -325,6 +338,23 @@ function d1c_operator(N, qH, qL, qHb, qLb, cpar)
     return D
 end
 
+# swap 1'': the Z operator D_S of any block (see the header)
+function ds_operator(N, kets, w=2.0)
+    ys = [UInt64(k.v) for k in kets]
+    A = [q for q in 0:N-1 if any((y >> q) & 1 == 1 for y in ys)]
+    D = PauliSum(N)
+    for q in 0:N-1
+        q in A && continue
+        D += Pauli(N, Z=[q + 1])
+    end
+    for y in ys, mask in 0:(1 << length(A))-1
+        qs = [A[j+1] for j in 0:length(A)-1 if (mask >> j) & 1 == 1]
+        sgn = prod((((y >> q) & 1 == 1) ? -1.0 : 1.0 for q in qs); init=1.0)
+        D += (w * sgn / 2^length(A)) * Pauli(N, Z=[q + 1 for q in qs])
+    end
+    return D, A
+end
+
 # ---------------------------------------------------------------- the flow
 function dbf_block(Oin, kets::Vector{Ket{N}}, D; operator_truncation, gradient_truncation, max_iter, max_rots_per_grad,
                    conv_thresh, grad_thresh=1e-6, e_ref=0.0, verbose=1, groups=nothing, on_iter=nothing) where N
@@ -438,18 +468,33 @@ function main(args)
         allunique(kets) || error("--kets lists a determinant twice")
     end
     rank = isempty(opts["rank"]) ? (isempty(opts["kets"]) ? "d1c" : "exact") : opts["rank"]
-    rank in ("d1c", "exact") || error("--rank must be d1c or exact")
-    (rank == "d1c" && !isempty(opts["kets"])) && error("--kets needs --rank exact (D1c's top eigenspace is |0>, |a>, |b>)")
+    rank in ("d1c", "exact", "ds", "dz") || error("--rank must be d1c, exact, ds or dz")
+    (rank == "d1c" && !isempty(opts["kets"])) && error("--kets needs --rank exact, ds or dz (D1c's top eigenspace is |0>, |a>, |b>)")
     opts["rank"] = rank
     cpar = parse(Float64, opts["c"])
     D, dtop = nothing, NaN
-    if rank == "d1c"
-        D = d1c_operator(N_Q, qH, qL, qHb, qLb, cpar)
-        # the block must be D's top eigenspace: check the block kets and every single and double flip
+    if rank in ("d1c", "ds", "dz")
+        if rank == "d1c"
+            D = d1c_operator(N_Q, qH, qL, qHb, qLb, cpar)
+        elseif rank == "ds"
+            D, A = ds_operator(N_Q, kets)
+            @printf(" D_S: %d Z strings; qubits the kets flip: %s\n", length(D), join(A, ", "))
+        else
+            zr = z_block_operator([UInt64(k.v) for k in kets], N_Q)
+            zr === nothing && error("no one- and two-qubit Z operator has exactly these kets as its top eigenspace")
+            zterms, zA = zr
+            D = PauliSum(N_Q)
+            for (m, x) in zterms
+                D += x * Pauli(N_Q, Z=[q + 1 for q in 0:N_Q-1 if (m >> q) & 1 == 1])
+            end
+            @printf(" D = Z on every other qubit %s\n", z_terms_string(zterms, zA))
+        end
+        # the block must be D's top eigenspace: check the block kets and every single and double flip of each
         dtop = real(expectation_value(D, kets[1]))
         all(abs(real(expectation_value(D, k)) - dtop) < 1e-12 for k in kets) || error("block kets differ in D")
-        others = [bitk(q) for q in 0:N_Q-1]
-        append!(others, [bitk(q1, q2) for q1 in 0:N_Q-1 for q2 in q1+1:N_Q-1])
+        flips = [bitk(q) for q in 0:N_Q-1]
+        append!(flips, [bitk(q1, q2) for q1 in 0:N_Q-1 for q2 in q1+1:N_Q-1])
+        others = unique([Ket{N_Q}(k.v ⊻ f.v) for k in kets for f in flips])
         filter!(k -> !(k in kets), others)
         maximum(real(expectation_value(D, k)) for k in others) < dtop - 1e-9 || error("block is not D's top eigenspace")
     end
@@ -462,8 +507,9 @@ function main(args)
         @printf(" R = %.2f %s  %d Pauli terms  E_FCI = %.10f  block = |0>, |%s>, |%s>  D top value %.1f\n",
                 meta["R_angstrom"], basis, length(H), e_fci, string(kets[2].v, base=2), string(kets[3].v, base=2), dtop)
     else
-        @printf(" R = %.2f %s  %d Pauli terms  E_FCI = %.10f  block = %s  ranking: exact\n",
-                meta["R_angstrom"], basis, length(H), e_fci, join(knames, ", "))
+        @printf(" R = %.2f %s  %d Pauli terms  E_FCI = %.10f  block = %s  ranking: %s%s\n",
+                meta["R_angstrom"], basis, length(H), e_fci, join(knames, ", "), rank,
+                rank in ("ds", "dz") ? @sprintf(" (D top value %.1f)", dtop) : "")
     end
     @printf(" operator cutoff %s, gradient cutoff %s, %s rotations per gradient, max %s iterations; energies in mHa above E_FCI\n",
             opts["coeff"], opts["grad"], opts["max-rots"], opts["max-iter"])
