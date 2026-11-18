@@ -406,17 +406,31 @@ def compare_zoom(greedy, flow, title, windows, rights):
 NEG_WINDOW = 2e-4      # Ha²; fit window [0, NEG_WINDOW] for a series whose last variance is negative
 
 
+TAIL_TOL = 0.05        # a point of the final stretch may sit up to 5 % below v (noise) without ending it
+
+
 def window_fit(x, y, factor=2.0):
     """linear fit of y against x over the window [v, factor v], v = the last x (the run's final variance).
     If v <= 0 (a truncation-corrected variance can turn negative) the window is [0, NEG_WINDOW] instead,
-    negative points left out.  E0 = the linear intercept; uncertainty = half its difference from a quadratic
-    fit over the same window.  Returns None when the window holds fewer than 3 points."""
+    negative points left out.  Only the final stretch of the run counts: walking back from the last iteration,
+    points are taken while x stays in the window (down to (1 - TAIL_TOL) v, for noise; with v <= 0, negative
+    points are skipped) and the walk stops at the first point outside it.  So a run that comes down, turns and
+    passes the same variances again is fitted on its last pass only.  For a run whose variance falls steadily
+    this is every point in the window.  E0 = the linear intercept; uncertainty = half its difference from a
+    quadratic fit over the same points.  Returns None when fewer than 3 points are taken."""
     v = x[-1]
     if v > 0:
         lo, hi = v, factor * v
     else:
         lo, hi = 0.0, NEG_WINDOW
-    sel = (x >= lo) & (x <= hi)
+    sel = np.zeros(len(x), dtype=bool)
+    for j in range(len(x) - 1, -1, -1):
+        if v <= 0 and x[j] < 0:
+            continue
+        if lo * (1 - TAIL_TOL) <= x[j] <= hi:
+            sel[j] = True
+        else:
+            break
     k = int(sel.sum())
     if k < 3:
         return None
@@ -485,8 +499,8 @@ def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
             ax.set_xlim(0, X)
             ax.set_ylim(lo - 0.08 * (hi - lo + 1e-9), hi + 0.12 * (hi - lo + 1e-9))
     fig.suptitle("Per-state extrapolation: each block state's energy against its own variance\n"
-                 "linear fit over [v, 2v] (shaded), v = the state's variance at the last iteration ([0, 2e-4] if v < 0); "
-                 "marker at 0 = extrapolated energy, error bar = half the difference from a quadratic fit",
+                 "linear fit over [v, 2v] (shaded), v = the state's variance at the last iteration ([0, 2e-4] if v < 0), "
+                 "final stretch only; marker at 0 = extrapolated energy, error bar = half the difference from a quadratic fit",
                  x=0.01, ha="left", fontsize=10, color=INK)
     fig.tight_layout(rect=(0, 0, 1, 0.86 if nr == 1 else 0.94))
     return fig, rows

@@ -219,7 +219,7 @@ def extrap(runs, refs, N):
         ax.set_ylim(Y[0] - pad, Y[1] + pad)
     skipped = [c for c in runs if c not in cuts]
     fig.suptitle(f"Per-state extrapolation, N = {N}: each state's energy against its own variance, linear fit over [v, 2v] "
-                 "(tinted), v = its last variance\nfilled = corrected for truncation, hollow = raw; marker at 0 = "
+                 "(tinted), v = its last variance, final stretch only\nfilled = corrected for truncation, hollow = raw; marker at 0 = "
                  "extrapolated energy, error bar = half the difference from a quadratic fit;\ngrey = within 1% of the state's exact energy; "
                  "all panels share x and y"
                  + (f"\ncutoff {', '.join(skipped)} left out: its corrected variance turned negative (truncation "

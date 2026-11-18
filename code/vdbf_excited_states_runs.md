@@ -183,6 +183,8 @@ Inside the block $\bar H\phi_i = \lambda_i \phi_i$ exactly, so only the coupling
 
 Near convergence the energy error of each state is proportional to its own variance (if $\phi = \sqrt{1-\epsilon^2}\,|\Psi\rangle + \epsilon\,|\chi\rangle$, both are of order $\epsilon^2$). So each state is extrapolated on its own: energy against its own variance, fitted with a straight line over the window $[v, 2v]$, where $v$ is that state's variance at the last iteration, and read off at zero variance. The uncertainty is half the difference from a quadratic fit over the same window.
 
+Only the final stretch of the run counts. Starting from the last iteration and going back, points are taken while the variance stays in the window, and the first point outside it ends the stretch. A point may sit up to 5% below $v$, to allow for noise. A run whose variance falls steadily is unaffected: its final stretch is every point in the window. A run whose variance comes down, turns and passes the same values again is fitted on its last pass only, instead of mixing points from both sides of the turn.
+
 ![Per-state extrapolation, exact greedy, 1.1 Å](n2_pes/frozen_core/sv_results/plots/n2_110_extrap_exact.png)
 
 | state | error at the last iteration | extrapolated error |
@@ -375,12 +377,12 @@ Extrapolated over $[v, 2v]$, in mHa from exact:
 | S0 | true | −0.014 ± 0.013 | −0.019 ± 0.025 | −0.011 ± 0.015 |
 | | corrected | −0.187 ± 0.001 | −0.144 ± 0.005 | −0.141 ± 0.006 |
 | | raw | +0.860 ± 0.073 | +0.257 ± 0.004 | +1.665 ± 0.035 |
-| ³Πg | true | −0.013 ± 0.013 | −0.018 ± 0.021 | −0.014 ± 0.028 |
+| ³Πg | true | −0.013 ± 0.013 | −0.018 ± 0.021 | −0.014 ± 0.027 |
 | | corrected | −0.083 ± 0.026 | −0.070 ± 0.007 | −0.065 ± 0.002 |
-| | raw | +0.863 ± 0.116 | +0.174 ± 0.076 | −0.018 ± 0.220 |
+| | raw | +0.863 ± 0.116 | +0.173 ± 0.075 | −0.018 ± 0.220 |
 | ¹Πg | true | −0.042 ± 0.097 | −0.017 ± 0.039 | −0.033 ± 0.055 |
-| | corrected | −0.443 ± 0.001 * | −0.270 ± 0.015 | −0.227 ± 0.001 |
-| | raw | +0.760 ± 0.036 | +1.884 ± 0.120 | +1.663 ± 0.184 |
+| | corrected | −0.443 ± 0.001 * | −0.270 ± 0.014 | −0.227 ± 0.001 |
+| | raw | +0.760 ± 0.036 | +1.887 ± 0.122 | +1.663 ± 0.184 |
 
 \* The corrected variance turned negative, so this fit uses the $[0, 0.2\times10^{-3}]$ Ha² window, as in section 8.
 
@@ -440,22 +442,20 @@ Extrapolated, in mHa from each run's own target ("no window" means fewer than 3 
 
 | run | series | S0 | T1 | third state |
 |---|---|---|---|---|
-| bare H | true | no window | +24 ± 746 | −228 ± 1668 |
-| | corrected | +78 ± 431 | +81 ± 147 | −56 ± 212 |
-| λ = 0.02 | true | no window | 0 ± 3047 | no window |
-| | corrected | +26.3 ± 1.3 | −57 ± 48 | −309 ± 301 |
-| λ = 0.05 | true | −416 ± 2829 | no window | no window |
-| | corrected | +0.003 ± 0.36 * | +76 ± 75 | −90 ± 228 |
-
-\* The corrected variance turned negative, so this fit uses the $[0, 0.2\times10^{-3}]$ Ha² window.
+| bare H | true | +122 ± 45 | +218 ± 1055 | +64 ± 757 |
+| | corrected | +40 ± 240 | +155 ± 295 | +3 ± 260 |
+| λ = 0.02 | true | +53 ± 110 | −37 ± 11 | +50 ± 159 |
+| | corrected | +26.2 ± 2.0 | +63 ± 283 | +221 ± 192 |
+| λ = 0.05 | true | −7 ± 216 | +174 ± 861 | +161 ± 7 |
+| | corrected | no window | +11 (3 points, no error bar) | −8 ± 27 |
 
 - **The extrapolation does not work at 2.3 Å.**
   - The window is set by the variance at the last iteration. In these runs the variance grows after iteration 100–150, so the last point sits near the largest variance of the whole run.
-  - So the window often holds fewer than 3 points. Where it holds more, they come from different stretches of the run, and the error bars are tens to thousands of mHa.
+  - The fit uses the final stretch of each run, where energy and variance are growing together, so the lines say nothing about zero variance. The error bars are tens to a thousand mHa.
 - **Why.** Extrapolation assumes the run moves down a line towards zero variance. Here the true points turn around after their best iteration and move back up: energy and variance grow together (top rows).
-- **Two corrected values look good but are not.**
-  - λ = 0.02, S0: +26.3 ± 1.3 is a tight fit, but to the corrected estimate, which by iteration 500 is 46 mHa below the true circuit.
-  - λ = 0.05, S0: +0.003 ± 0.36 comes from the fallback window after the corrected variance went negative. The circuit itself is 44 mHa off.
+- **Tight error bars here do not mean good values.**
+  - λ = 0.02, S0: +26.2 ± 2.0 is a tight fit, but to the corrected estimate, which by iteration 500 is 46 mHa below the true circuit.
+  - λ = 0.05, third state: +161 ± 7 is tight too, and 161 mHa off.
 
 **So:** at 2.3 Å the penalty helps the truncated runs as well: S0 is 2–3× closer and stays spin-clean. But cutoff 10⁻⁵ is far too coarse for the stretched bond, with or without the penalty. The best errors are tens of mHa, against 0.01 mHa without truncation and 0.1–0.2 mHa at 1.1 Å with the same cutoff.
 
@@ -612,18 +612,18 @@ As a baseline with no flow, the same rule is applied to the plain diagonal ⟨y|
 |---|---|---|---|
 | 1.1 Å, exact greedy (200 it.) | +0.140 → **−0.002 ± 0.007** | ³Πg +0.413 → **−0.055 ± 0.016** | ³Πg +1.371 → −0.54 ± 0.26 |
 | 2.3 Å, exact greedy (500 it.) | +0.009 → **+0.004** | T1 +0.031 → **−0.002 ± 0.002** | quintet +0.004 → **−0.001** |
-| 1.1 Å, PP 10⁻⁵, true (to it. 181) | +2.27 → **+0.14 ± 0.09** | ³Πg +4.79 → no usable fit | ³Πg +5.29 → no usable fit |
-| 2.3 Å, PP 10⁻⁵, true (to it. 54) | +3.60 → +1.6 ± 9.6 | T1 +3.32 → +1.8 ± 1.6 | quintet +3.69 → −2.3 ± 2.4 |
+| 1.1 Å, PP 10⁻⁵, true (to it. 181) | +2.27 → −0.5 ± 3.0 | ³Πg +4.79 → −1.2 ± 1.2 | ³Πg +5.29 → −2.3 ± 9.0 |
+| 2.3 Å, PP 10⁻⁵, true (to it. 54) | +3.60 → no window | T1 +3.32 → +1.4 (3 points) | quintet +3.69 → −2.3 ± 2.4 |
 
 (Linear fit over [v, 2v] of each state's energy against its own variance, as in section 6. The two ³Πg are the two components of the pair.)
 
 - **The exact runs extrapolate cleanly.** Every state lands within 0.06 mHa, except the second ³Πg at −0.5 ± 0.3 mHa; that one is still 1.4 mHa off at iteration 200.
-- **With Pauli propagation at 10⁻⁵ only S0 at 1.1 Å extrapolates well:** +0.14 ± 0.09 mHa from the true energies.
+- **With Pauli propagation at 10⁻⁵ no state extrapolates reliably.** The fits use the final stretch of the run (section 6), and the error bars are 1–9 mHa, as large as the errors themselves.
 - **The ³Πg pair stalls.** It sits 4–5 mHa above its level while the true variance stops falling.
   - The true block variance is lowest at iteration 48 (2.0×10⁻²) and is 3.1×10⁻² at iteration 181.
   - At iteration 181 the run itself reports 6.6×10⁻³.
-  - The [v, 2v] window then reaches back to the early, steep part of the trajectory, so the line means nothing.
-- **At 2.3 Å the true energies at the stop are 3.3–3.7 mHa off and scattered.** The fits have error bars of 2–10 mHa. The true block variance is lowest at iteration 57, right next to the stop signal.
+  - Fitting the whole [v, 2v] window instead mixes the early, steep descent with the late stall. That gave −24 and −35 mHa, and for S0 an apparently good +0.14 ± 0.09 that was luck.
+- **At 2.3 Å the true energies at the stop are 3.3–3.7 mHa off and scattered.** The final stretch is too short for S0 and T1, and the quintet's fit has a 2.4 mHa error bar. The true block variance is lowest at iteration 57, right next to the stop signal.
 - **The run's own numbers are further off than the truth.**
   - Raw S0 is +15 mHa at 1.1 Å, against a true +2.3. A corrected ³Πg is −14 mHa.
   - At 2.3 Å the corrected variances are already negative, so that row has no fit.
@@ -834,8 +834,8 @@ A run at cutoff $10^{-4}$ is left out. From about iteration 120 on, its truncati
 | state | corrected | raw |
 |---|---|---|
 | S0 | −11 ± 41 (0.02%) | +63 ± 63 (0.14%) |
-| T, $M_s = 0$ | −102 ± 30 (0.23%) | −98 ± 69 (0.22%) |
-| T, $M_s = +1$ | −22 ± 28 (0.05%) | +58 ± 56 (0.13%) |
+| T, $M_s = 0$ | −102 ± 29 (0.23%) | −98 ± 68 (0.22%) |
+| T, $M_s = +1$ | −22 ± 28 (0.05%) | +58 ± 57 (0.13%) |
 
 - **Energy against variance is a straight line** over the last 300 iterations, as in ground-state vDBF, so the extrapolation is well defined.
 - **The errors shrink by about 10×.** All six extrapolated values are within 0.25% of DMRG. S0 and T($M_s = +1$) land within their error bars.
