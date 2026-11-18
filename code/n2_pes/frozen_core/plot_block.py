@@ -1236,43 +1236,57 @@ def pp_stop(pp):
     return neg[0] - 1 if neg else None
 
 
+PP_VARIANTS = [("", "projector", "o", "-"), ("_ds", "D_S", "s", "--"), ("_dz", "Z operator (dz)", "^", ":")]
+
+
 def kets_main():
-    """for the new kets: the Pauli-propagation zoom (as n2_110_pp_compare_zoom.png) and the per-state extrapolation
-    of the exact greedy run and of the Pauli-propagation run (as n2_110_pp_c1e-6_extrap.png), per bond length.
-    The Pauli-propagation series stop at pp_stop: past it the 2.3 A run drifts away (truncation)."""
+    """for the new kets: per bond length, the per-state extrapolation of the exact greedy run, and for each ranking
+    operator D of the Pauli-propagation runs at 1e-5 (PP_VARIANTS: projector, D_S, dz) the zoom (as
+    n2_110_pp_compare_zoom.png) and the per-state extrapolation of the true, corrected and raw energies (as
+    n2_110_pp_c1e-6_extrap.png), plus the true energies of all D on one figure.  The Pauli-propagation series stop
+    at pp_stop when a truncation-corrected variance turns negative: past it the run drifts away (truncation)."""
     os.makedirs(OUT, exist_ok=True)
     for R, tag, title, names in KETS:
         g = load(f"uno_{R}_block_{tag}")
-        pp = load(f"uno_{R}_blockpp_c1e-5_{tag}")
-        rep = load(f"uno_{R}_blockpp_c1e-5_{tag}_replay")
-        if g is None or pp is None:
+        if g is None:
             continue
         lam_g, vs_g, refs, _, s2g, var_g = kets_greedy(g, names)
-        stop = pp_stop(pp)
         r_ = R.replace(".", "")
-        note = (f"circle: iteration {stop}, the run's own stop signal" if stop is not None else None)
-        pp_zoom((lam_g, vs_g, refs, names, s2g), [("cutoff 1e-5", pp, rep, "-")], f"{title}, new kets", [stop],
-                note, true_x="true").savefig(os.path.join(OUT, f"n2_{r_}_kets_pp_zoom.png"), dpi=170)
-        ent = [("exact greedy", lam_g, var_g, "o", "-")]
-        fig, xrows = state_extrapolation(ent, refs, names, f"{title}, new kets, exact")
+        fig, xrows = state_extrapolation([("exact greedy", lam_g, var_g, "o", "-")], refs, names, f"{title}, new kets, exact")
         fig.savefig(os.path.join(OUT, f"n2_{r_}_kets_extrap_exact.png"), dpi=170)
-        k = len(pp["history"]["lam"]) - 1 if stop is None else stop
-        h, f = pp["history"], pp["E_FCI"]
-        ent = []
-        if rep is not None:
+        allrows, true_ent = list(xrows), []
+        for suf, dname, mk, ls in PP_VARIANTS:
+            pp = load(f"uno_{R}_blockpp_c1e-5_{tag}{suf}")
+            rep = load(f"uno_{R}_blockpp_c1e-5_{tag}{suf}_replay")
+            if pp is None or rep is None:
+                continue
+            stop = pp_stop(pp)
+            note = f"D = {dname}" + (f"; circle: iteration {stop}, the run's own stop signal" if stop is not None else "")
+            pp_zoom((lam_g, vs_g, refs, names, s2g), [("cutoff 1e-5", pp, rep, "-")], f"{title}, new kets, {dname}",
+                    [stop], note, true_x="true").savefig(os.path.join(OUT, f"n2_{r_}_kets{suf}_pp_zoom.png"), dpi=170)
+            k = len(pp["history"]["lam"]) - 1 if stop is None else stop
+            h, f = pp["history"], pp["E_FCI"]
             rows = [r for r in rep["rows"] if r["iter"] <= k]
-            ent.append(("true (exact replay)", (np.array([r["lam"] for r in rows]) - f) * 1e3,
-                        np.array([r["var"] for r in rows]), "o", "-"))
-        ent += [("corrected", (np.array(h["lam_corr"][:k + 1]) - f) * 1e3, np.array(h["var_corr"][:k + 1]), "^", "--"),
-                ("raw", (np.array(h["lam"][:k + 1]) - f) * 1e3, np.array(h["var"][:k + 1]), "v", ":")]
-        fig, prow = state_extrapolation(ent, refs, names, f"PP 1e-5, {title}", grid=True)
-        fig.texts[0].set_text(fig.texts[0].get_text() + f"\nnew kets; Pauli propagation up to iteration {k}, the last "
-                              "before a truncation-corrected variance turns negative")
-        fig.savefig(os.path.join(OUT, f"n2_{r_}_kets_pp_c1e-5_extrap.png"), dpi=170)
-        print(f"{title}, new kets: stop at iteration {k}; per-state extrapolation over [v, 2v] (mHa vs exact): "
-              "series | state | last | extrapolated ± | v | points")
-        for r in xrows + prow:
-            print(f"  {r[0]:<20} {r[1]:<18} {r[2]:+9.4f} {r[3]:+9.4f} ± {r[4]:.4f}   v {r[5]:.2e}  {r[6]} pts")
+            tl, tv = (np.array([r["lam"] for r in rows]) - f) * 1e3, np.array([r["var"] for r in rows])
+            ent = [("true (exact replay)", tl, tv, "o", "-"),
+                   ("corrected", (np.array(h["lam_corr"][:k + 1]) - f) * 1e3, np.array(h["var_corr"][:k + 1]), "^", "--"),
+                   ("raw", (np.array(h["lam"][:k + 1]) - f) * 1e3, np.array(h["var"][:k + 1]), "v", ":")]
+            fig, prow = state_extrapolation(ent, refs, names, f"PP 1e-5, {title}, D = {dname}", grid=True)
+            fig.texts[0].set_text(fig.texts[0].get_text() + f"\nnew kets, D = {dname}; Pauli propagation up to iteration {k}"
+                                  + (", the last before a truncation-corrected variance turns negative" if stop is not None
+                                     else " (the end; no corrected variance turns negative)"))
+            fig.savefig(os.path.join(OUT, f"n2_{r_}_kets{suf}_pp_c1e-5_extrap.png"), dpi=170)
+            allrows += [(f"{dname}: {r[0]}",) + tuple(r[1:]) for r in prow]
+            true_ent.append((f"{dname}, true", tl, tv, mk, ls))
+        if len(true_ent) > 1:                         # the true energies of every D on one figure
+            fig, _ = state_extrapolation(true_ent, refs, names, f"PP 1e-5, {title}, true")
+            fig.texts[0].set_text(fig.texts[0].get_text() + "\nnew kets; true energies (exact replay) of the Pauli-"
+                                  "propagation runs with each ranking operator D, each up to its stop signal or its end")
+            fig.savefig(os.path.join(OUT, f"n2_{r_}_kets_pp_c1e-5_extrap_true.png"), dpi=170)
+        print(f"{title}, new kets: per-state extrapolation over [v, 2v] (mHa vs exact): series | state | last | "
+              "extrapolated ± | v | points")
+        for r in allrows:
+            print(f"  {r[0]:<34} {r[1]:<18} {r[2]:+9.4f} {r[3]:+9.4f} ± {r[4]:.4f}   v {r[5]:.2e}  {r[6]} pts")
     fig, erows = exact_ranking_figure()
     fig.savefig(os.path.join(OUT, "n2_kets_vs_ranking_exact.png"), dpi=170)
     print("exact runs, kets x D: R | kets | D | iterations | F at the end | errors at the end vs the 3 lowest levels "
