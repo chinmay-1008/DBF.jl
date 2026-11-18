@@ -523,6 +523,46 @@ Same exact greedy runs, with kets chosen from the sectors (and spins) of the 3 l
   - Each new ket (one α excitation) is half triplet and half singlet, so the flow also has to separate the spins.
   - With λ = 0.05 one ¹Πg ends 0.8 mHa below its exact level, because it still holds ⟨S²⟩ = 0.05 of triplet.
 
+### Can a loose vDBF pick the kets?
+
+The kets above came from the exact levels, which bigger systems won't have. The idea tested here is to pick them with a cheap, loose vDBF run first (`n2_pes/screen_kets.jl`):
+
+1. A full-diagonalising flow (the step of `dbf_diag`: D = diag O) runs on H with a loose cutoff, 10⁻³ or 10⁻⁴.
+2. Each determinant y gets a dressed energy ⟨y|O|y⟩, a rough energy of the state the flow maps onto y.
+3. The 3 lowest are the kets, skipping the α↔β mirror of a ket already picked (the spin trap). The flow never leaves a sector, so if the energies were right, the sectors would be too.
+
+As a baseline with no flow, the same rule is applied to the plain diagonal ⟨y|H|y⟩. The runs are with and without an electron-number penalty κ[(N_α − 5)² + (N_β − 5)²], κ = 1 Ha. The penalty changes no 10-electron level; it stops single Pauli rotations from mixing in other electron numbers.
+
+| | sectors picked (right answer) | lowest dressed energy (exact: 0) |
+|---|---|---|
+| **2.3 Å** | (0, 3, 0: S0, T1, quintet) | |
+| plain diagonal, no flow | 0, 9, 9 ✗ | +327 |
+| 10⁻³ | 9, 0, 3 ✗ | −11 |
+| 10⁻³, penalty | 0, 0, 0 ✗ | +167 |
+| 10⁻⁴ | 0, 3, 3 ✗ | +243 |
+| 10⁻⁴, penalty | 9, 9, 0 ✗ | +195 |
+| **1.1 Å** | (0, 6, 6: S0, ³Πg ×2) | |
+| plain diagonal, no flow | 0, 6, 6 ✓ (\|0⟩, 4→5, 4→7) | +157 |
+| 10⁻³ | 0, 5, 3 ✗ | −115 |
+| 10⁻³, penalty | 0, 6, 6 ✓ (\|0⟩, β 4→7, β 4→5) | −32 |
+| 10⁻⁴ | 0, 6, 6 ✓ (\|0⟩, 4→7, 4→5) | +144 |
+| 10⁻⁴, penalty | 0, 3, 3 ✗ | −1 |
+
+(Energies in mHa above E_FCI; each run is 25,000–50,000 rotations, 15 s to 3 min.)
+
+- **No: with this flow the screen doesn't work.**
+  - At 2.3 Å it never finds the right sectors.
+  - At 1.1 Å it gets them right in 2 runs out of 4, and the answer flips with the cutoff and the penalty. The plain diagonal alone already gets 1.1 Å right.
+- **Why: the energies are much too rough.**
+  - The flow works on all 2¹⁶ states, every electron number, not just the low end. After 50,000 rotations it is still far from diagonal.
+  - The dressed energies are 30–250 mHa off. The levels to tell apart are 3–9 mHa apart at 2.3 Å and 50 mHa apart at 1.1 Å (³Πg against ¹Πg).
+  - Tightening the cutoff from 10⁻³ to 10⁻⁴ doesn't help. The limit is the slow flow, not the truncation.
+- **Pitfalls met on the way**, fixed in `screen_kets.jl`:
+  - `dbf_diag` takes angles in (0, π). Angles above π/2 swap two determinants' labels. The cost is the same, but the dressed energies end up on the wrong determinants, so the angle is taken in (−π/2, π/2].
+  - `dbf_diag` stops when truncation makes the same generator come back.
+  - Without the penalty, energies can come out below E_FCI. That is truncation error or other electron numbers mixed in.
+- **What would target the low end instead:** a loose block run with spare kets. For example, start with 6 candidates (the lowest plain-diagonal determinants of the lowest sectors) and keep the 3 that come out lowest. That needs `--kets` in `run_block_pp.jl`, the same change needed to move the Pauli-propagation runs to the new kets.
+
 ## 12. Scaling up: the 1×100 Heisenberg chain
 
 **System.** Open spin-½ chain, $H = J\sum_i \mathbf S_i\cdot\mathbf S_{i+1}$, $N = 100$, $J = 1$. Energies are in units of $J$ and errors in mJ ($10^{-3} J$). At 100 qubits nothing can be checked exactly, so the references come from DMRG (ITensors, bond dimension up to 400, $S_z$ conserved):
