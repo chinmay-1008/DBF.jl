@@ -1,6 +1,7 @@
 """Plots for the sv_block.jl runs (idea 1c, exact block DBF on frozen-core N2).
 
     python plot_block.py            # from frozen_core/; writes sv_results/plots/*.png
+    python plot_block.py --kets     # only the new kets' zoom and per-state extrapolation figures (n2_*_kets_*.png)
     python plot_block.py --fidelity # only n2_fidelity.png (every N2 block run) and n2_fidelity_kets.png and n2_fidelity_kets_pp.png (old vs new kets, exact and Pauli propagation)
 
 1. energies_vs_variance.png  the block eigenvalues against the block variance V_S of H
@@ -539,27 +540,47 @@ def pp_energies(greedy, pp, rep, title):
     return fig
 
 
-def pp_zoom(greedy, pps, title):
+def pp_zoom(greedy, pps, title, stops=None, note=None, true_x="run"):
     """per state, zoomed on the exact energy: each truncated run's corrected (solid) and raw (thin) eigenvalues
-    and its true energies (dots), plus the exact greedy run (grey).  pps: [(name, pp, rep, linestyle)]"""
-    lam_g, vs_g, refs, names, _ = run_data(greedy)
+    and its true energies (dots), plus the exact greedy run (grey).  pps: [(name, pp, rep, linestyle)].
+    greedy: a run JSON (run_data) or run_data's tuple (kets_greedy).  stops: per run, an iteration to mark on the
+    corrected curve (the last one before its corrected variance turns negative); the y range then follows the
+    errors there instead of at the end, and everything after it is drawn faded.  true_x: "run" puts the true
+    energies at the run's own V_S, "true" at the true V_S of H from the replay."""
+    lam_g, vs_g, refs, names, _ = run_data(greedy) if isinstance(greedy, dict) else greedy
     nS = lam_g.shape[1]
+    stops = stops or [None] * len(pps)
     fig, axes = plt.subplots(1, nS, figsize=(11, 3.6), squeeze=False)
     ws = []
     for i in range(nS):
         ax = axes[0, i]
         errs = [abs(lam_g[-1, i] - refs[i])]
         lo_x = vs_g.min()
-        for name, pp, rep, ls in pps:
+        for (name, pp, rep, ls), stop in zip(pps, stops):
             vs, raw, cor = pp_series(pp)
             xt, tru = replay_series(rep, pp)
-            ax.plot(vs, cor[:, i] - refs[i], ls=ls, color=SERIES[i], lw=1.6, zorder=3, label=f"{name}, corrected")
-            ax.plot(vs, raw[:, i] - refs[i], ls=ls, color=SERIES[i], lw=0.8, alpha=0.45, zorder=2, label=f"{name}, raw")
+            k = len(vs) - 1 if stop is None else stop
+            after = " (faded: after the stop)" if stop is not None else ""
+            ax.plot(vs[:k + 1], cor[:k + 1, i] - refs[i], ls=ls, color=SERIES[i], lw=1.6, zorder=3, label=f"{name}, corrected")
+            ax.plot(vs[:k + 1], raw[:k + 1, i] - refs[i], ls=ls, color=SERIES[i], lw=0.8, alpha=0.45, zorder=2,
+                    label=f"{name}, raw")
+            if k < len(vs) - 1:
+                ax.plot(vs[k:], cor[k:, i] - refs[i], ls=ls, color=SERIES[i], lw=1.0, alpha=0.2, zorder=2)
+                ax.plot(vs[k:], raw[k:, i] - refs[i], ls=ls, color=SERIES[i], lw=0.6, alpha=0.12, zorder=2)
             if tru is not None:
-                ax.plot(xt, tru[:, i] - refs[i], "o", color=SERIES[i], ms=3, mec="none", zorder=4,
-                        label=f"{name}, true (replay)")
-                errs.append(abs(tru[-1, i] - refs[i]))
-            errs += [abs(cor[-1, i] - refs[i]), abs(raw[-1, i] - refs[i])]
+                it = np.array([r["iter"] for r in rep["rows"]])
+                if true_x == "true":
+                    xt = np.array([r.get("VS_H", r["VS"]) for r in rep["rows"]])
+                m = it <= k
+                ax.plot(xt[m], tru[m, i] - refs[i], "o", color=SERIES[i], ms=3, mec="none", zorder=4,
+                        label=f"{name}, true (replay" + (", at its true $V_S$)" if true_x == "true" else ")"))
+                if (~m).any():
+                    ax.plot(xt[~m], tru[~m, i] - refs[i], "o", color=SERIES[i], ms=2.2, mec="none", alpha=0.2, zorder=2)
+                errs.append(abs(tru[m][-1, i] - refs[i]))
+            if stop is not None:
+                ax.plot(vs[stop], cor[stop, i] - refs[i], "o", ms=7, mfc="none", mec=INK, mew=1.1, zorder=6,
+                        label=f"{name}: iteration {stop}, last before the corrected variance < 0{after}")
+            errs += [abs(cor[k, i] - refs[i]), abs(raw[k, i] - refs[i])]
             lo_x = min(lo_x, vs.min())
         ax.plot(vs_g, lam_g[:, i] - refs[i], "-", color=MUTED, lw=1.2, zorder=2, label="exact greedy (no truncation)")
         ax.axhline(0, color=INK, lw=1, ls="--", zorder=1)
@@ -579,7 +600,7 @@ def pp_zoom(greedy, pps, title):
         ax.set_ylim(-0.5 * W, 1.2 * W)
     axes[0, -1].legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=7.5)
     fig.suptitle("Zoom on each state: error from that state's exact energy, Pauli propagation against the exact greedy run\n"
-                 "starts on the right, converges to the left (x axis cut at V_S = 0.1)",
+                 "starts on the right, converges to the left (x axis cut at V_S = 0.1)" + (f"; {note}" if note else ""),
                  x=0.01, ha="left", fontsize=10, color=INK)
     fig.tight_layout(rect=(0, 0, 1, 0.86))
     return fig
@@ -1183,10 +1204,74 @@ def kets_pp_figure():
         style(ax)
     axes[0].set_ylabel("fidelity F with the 3 lowest levels")
     fig.suptitle("Pauli propagation, cutoff 10⁻⁵, H: the old kets (black) against the new kets (blue)\n"
-                 "F of the true circuit (exact replay every 5 iterations); dashed grey: 0.9", x=0.01, ha="left",
+                 "F of the true circuit (exact replay; old kets every 5 iterations, new kets every iteration); dashed grey: 0.9", x=0.01, ha="left",
                  fontsize=10, color=INK)
     fig.subplots_adjust(left=0.07, right=0.985, bottom=0.13, top=0.82, wspace=0.08)
     return fig, rows
+
+
+# ---------------------------------------------------------------- the new kets (sv_block.jl / run_block_pp.jl --kets)
+KETS = [("1.10", "k45_47", "1.1 Å", ["S0", "³Πg 297.17 (1st)", "³Πg 297.17 (2nd)"]),
+        ("2.30", "k3456_35", "2.3 Å", ["S0", "T1 2.84", "quintet 9.00"])]
+
+
+def kets_greedy(d, names):
+    """run_data's tuple for an sv_block.jl --kets run.  sv_block lists the block states coset by coset; here they
+    are put in order of their target level, the order of the Pauli-propagation runs' sorted eigenvalues.
+    Returns (lam, V_S of H, refs, names, <S^2>, var), lam and refs in mHa above FCI."""
+    h, f = d["history"], d["E_FCI"]
+    t = np.array([(x["E"] - f) * 1e3 for x in d["targets"]])
+    order = np.argsort(t, kind="stable")
+    lam = ((np.array(h["lam"]) - f) * 1e3)[:, order]
+    var = np.array(h["var"])[:, order]
+    vs = np.array(h.get("VS_H", h["VS"]))
+    keep = vs > 1e-14
+    return lam[keep], vs[keep], t[order], names, np.array(h["S2"][-1])[order], var[keep]
+
+
+def pp_stop(pp):
+    """the last iteration before any truncation-corrected state variance turns negative (None if none does)"""
+    neg = [i for i, v in enumerate(pp["history"]["var_corr"]) if min(v) < 0]
+    return neg[0] - 1 if neg else None
+
+
+def kets_main():
+    """for the new kets: the Pauli-propagation zoom (as n2_110_pp_compare_zoom.png) and the per-state extrapolation
+    of the exact greedy run and of the Pauli-propagation run (as n2_110_pp_c1e-6_extrap.png), per bond length.
+    The Pauli-propagation series stop at pp_stop: past it the 2.3 A run drifts away (truncation)."""
+    os.makedirs(OUT, exist_ok=True)
+    for R, tag, title, names in KETS:
+        g = load(f"uno_{R}_block_{tag}")
+        pp = load(f"uno_{R}_blockpp_c1e-5_{tag}")
+        rep = load(f"uno_{R}_blockpp_c1e-5_{tag}_replay")
+        if g is None or pp is None:
+            continue
+        lam_g, vs_g, refs, _, s2g, var_g = kets_greedy(g, names)
+        stop = pp_stop(pp)
+        r_ = R.replace(".", "")
+        note = (f"circle: iteration {stop}, the run's own stop signal" if stop is not None else None)
+        pp_zoom((lam_g, vs_g, refs, names, s2g), [("cutoff 1e-5", pp, rep, "-")], f"{title}, new kets", [stop],
+                note, true_x="true").savefig(os.path.join(OUT, f"n2_{r_}_kets_pp_zoom.png"), dpi=170)
+        ent = [("exact greedy", lam_g, var_g, "o", "-")]
+        fig, xrows = state_extrapolation(ent, refs, names, f"{title}, new kets, exact")
+        fig.savefig(os.path.join(OUT, f"n2_{r_}_kets_extrap_exact.png"), dpi=170)
+        k = len(pp["history"]["lam"]) - 1 if stop is None else stop
+        h, f = pp["history"], pp["E_FCI"]
+        ent = []
+        if rep is not None:
+            rows = [r for r in rep["rows"] if r["iter"] <= k]
+            ent.append(("true (exact replay)", (np.array([r["lam"] for r in rows]) - f) * 1e3,
+                        np.array([r["var"] for r in rows]), "o", "-"))
+        ent += [("corrected", (np.array(h["lam_corr"][:k + 1]) - f) * 1e3, np.array(h["var_corr"][:k + 1]), "^", "--"),
+                ("raw", (np.array(h["lam"][:k + 1]) - f) * 1e3, np.array(h["var"][:k + 1]), "v", ":")]
+        fig, prow = state_extrapolation(ent, refs, names, f"PP 1e-5, {title}", grid=True)
+        fig.texts[0].set_text(fig.texts[0].get_text() + f"\nnew kets; Pauli propagation up to iteration {k}, the last "
+                              "before a truncation-corrected variance turns negative")
+        fig.savefig(os.path.join(OUT, f"n2_{r_}_kets_pp_c1e-5_extrap.png"), dpi=170)
+        print(f"{title}, new kets: stop at iteration {k}; per-state extrapolation over [v, 2v] (mHa vs exact): "
+              "series | state | last | extrapolated ± | v | points")
+        for r in xrows + prow:
+            print(f"  {r[0]:<20} {r[1]:<18} {r[2]:+9.4f} {r[3]:+9.4f} ± {r[4]:.4f}   v {r[5]:.2e}  {r[6]} pts")
 
 
 def fidelity_main():
@@ -1216,6 +1301,8 @@ def fidelity_main():
 if __name__ == "__main__":
     if "--fidelity" in sys.argv:
         fidelity_main()
+    elif "--kets" in sys.argv:
+        kets_main()
     elif "--penalty" in sys.argv:
         os.makedirs(OUT, exist_ok=True)
         (fi, fv), prow = penalty_figures(penalty_runs())

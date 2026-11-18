@@ -575,21 +575,60 @@ As a baseline with no flow, the same rule is applied to the plain diagonal ⟨y|
 | run (H, 10⁻⁵) | F > 0.9 from iteration | largest F | true error at the best point (mHa) | true error at the end (mHa) |
 |---|---|---|---|---|
 | 1.1 Å, old kets | never | 0.667 | — | S0 +0.14, ³Πg +0.15, third state on ¹Πg |
-| 1.1 Å, **new kets** | 40 | **0.992** | S0 +1.5, ³Πg +3.6, ³Πg +4.0 (iteration 115) | +2.6, +5.2, +6.2 (F 0.984) |
+| 1.1 Å, **new kets** | 40 | **0.992** | S0 +1.6, ³Πg +3.6, ³Πg +4.0 (iteration 118) | +2.6, +5.2, +6.2 (F 0.984) |
 | 2.3 Å, old kets | never | 0.23 | S0 +59 (iteration 150) | S0 +97 (F 0.09) |
-| 2.3 Å, **new kets** | 15 | **0.975** | S0 +3.4, T1 +3.2, quintet +3.9 (iteration 50) | +106, +120, +139 (F 0.21) |
+| 2.3 Å, **new kets** | 15 | **0.975** | S0 +3.5, T1 +3.2, quintet +3.9 (iteration 48) | +106, +120, +139 (F 0.21) |
 
-(True energies from the exact replay, every 5 iterations; the best point is where the true block sum is lowest. 1.1 Å: 200 iterations, 16 min; 2.3 Å: 500 iterations, 39 min.)
+(True energies from the exact replay, every iteration; the best point is where the true block sum is lowest. 1.1 Å: 200 iterations, 16 min; 2.3 Å: 500 iterations, 39 min.)
 
 - **The new kets give the right subspace with Pauli propagation too.** F reaches 0.99 at 1.1 Å and 0.975 at 2.3 Å. With the old kets it stays at 0.667 and below 0.23.
 - **The energies are a few mHa off, set by the truncation.**
-  - At the best point the errors are 1.5–4 mHa at 1.1 Å and 3–4 mHa at 2.3 Å.
+  - At the best point the errors are 1.6–4 mHa at 1.1 Å and 3–4 mHa at 2.3 Å.
   - The exact flow with the same kets gets 0.1–1.4 mHa at 1.1 Å (iteration 200) and 0.01–0.03 mHa at 2.3 Å (iteration 500).
 - **At 2.3 Å the run then drifts away.**
   - After about iteration 60, the truncation errors take over. From iteration 74 the run's own energies fall below E_FCI, while the true ones rise.
   - It ends 106–139 mHa off with F = 0.21. The old-kets run drifts in the same way.
-  - At 1.1 Å the drift is slow: S0 goes from 1.5 mHa off at iteration 115 to 2.6 at 200.
+  - At 1.1 Å the drift is slow: S0 goes from 1.6 mHa off at iteration 118 to 2.6 at 200.
 - **A possible stop signal.** The run's truncation-corrected variance first goes negative at iteration 55 at 2.3 Å, which is right at the best point. At 1.1 Å it happens at iteration 182. The run can see this sign itself, without an exact answer. It is checked on these two runs only.
+
+**Zoom and per-state extrapolation with the new kets.** These are the figures of sections 6 and 8, redrawn for the new kets: the exact greedy runs and the Pauli-propagation runs at 10⁻⁵ (bare H).
+- **Where the Pauli-propagation series stop.** They stop at the run's own stop signal: the last iteration before a truncation-corrected variance turns negative (1.1 Å: 181; 2.3 Å: 54). In the zoom, what comes after is faded.
+- **Where the true energies sit.** In the zoom they are placed at their true V_S from the replay, not at the run's own V_S. At 2.3 Å the run's own V_S turns back once it drifts, and the dots would loop.
+- **Replay.** Both runs are replayed every iteration.
+
+![1.1 Å, new kets: zoom on each state, Pauli propagation against the exact greedy run](n2_pes/frozen_core/sv_results/plots/n2_110_kets_pp_zoom.png)
+
+![2.3 Å, new kets: zoom on each state](n2_pes/frozen_core/sv_results/plots/n2_230_kets_pp_zoom.png)
+
+![1.1 Å, new kets, exact greedy: per-state extrapolation](n2_pes/frozen_core/sv_results/plots/n2_110_kets_extrap_exact.png)
+
+![2.3 Å, new kets, exact greedy: per-state extrapolation](n2_pes/frozen_core/sv_results/plots/n2_230_kets_extrap_exact.png)
+
+![1.1 Å, new kets, Pauli propagation 10⁻⁵: per-state extrapolation of the true, corrected and raw energies](n2_pes/frozen_core/sv_results/plots/n2_110_kets_pp_c1e-5_extrap.png)
+
+![2.3 Å, new kets, Pauli propagation 10⁻⁵: per-state extrapolation](n2_pes/frozen_core/sv_results/plots/n2_230_kets_pp_c1e-5_extrap.png)
+
+| new kets, error from exact (mHa) | S0: last → extrapolated | 2nd state | 3rd state |
+|---|---|---|---|
+| 1.1 Å, exact greedy (200 it.) | +0.140 → **−0.002 ± 0.007** | ³Πg +0.413 → **−0.055 ± 0.016** | ³Πg +1.371 → −0.54 ± 0.26 |
+| 2.3 Å, exact greedy (500 it.) | +0.009 → **+0.004** | T1 +0.031 → **−0.002 ± 0.002** | quintet +0.004 → **−0.001** |
+| 1.1 Å, PP 10⁻⁵, true (to it. 181) | +2.27 → **+0.14 ± 0.09** | ³Πg +4.79 → no usable fit | ³Πg +5.29 → no usable fit |
+| 2.3 Å, PP 10⁻⁵, true (to it. 54) | +3.60 → +1.6 ± 9.6 | T1 +3.32 → +1.8 ± 1.6 | quintet +3.69 → −2.3 ± 2.4 |
+
+(Linear fit over [v, 2v] of each state's energy against its own variance, as in section 6. The two ³Πg are the two components of the pair.)
+
+- **The exact runs extrapolate cleanly.** Every state lands within 0.06 mHa, except the second ³Πg at −0.5 ± 0.3 mHa; that one is still 1.4 mHa off at iteration 200.
+- **With Pauli propagation at 10⁻⁵ only S0 at 1.1 Å extrapolates well:** +0.14 ± 0.09 mHa from the true energies.
+- **The ³Πg pair stalls.** It sits 4–5 mHa above its level while the true variance stops falling.
+  - The true block variance is lowest at iteration 48 (2.0×10⁻²) and is 3.1×10⁻² at iteration 181.
+  - At iteration 181 the run itself reports 6.6×10⁻³.
+  - The [v, 2v] window then reaches back to the early, steep part of the trajectory, so the line means nothing.
+- **At 2.3 Å the true energies at the stop are 3.3–3.7 mHa off and scattered.** The fits have error bars of 2–10 mHa. The true block variance is lowest at iteration 57, right next to the stop signal.
+- **The run's own numbers are further off than the truth.**
+  - Raw S0 is +15 mHa at 1.1 Å, against a true +2.3. A corrected ³Πg is −14 mHa.
+  - At 2.3 Å the corrected variances are already negative, so that row has no fit.
+  - With the new kets the truncation correction doesn't track the true energies at 10⁻⁵.
+- **Takeaway: with the new kets, usable energies need a tighter cutoff than 10⁻⁵.**
 
 **Spare kets at a loose cutoff (the screen idea).**
 - **The candidates.** For each geometry I took the 2 lowest plain-diagonal determinants of each of the 4 sectors, skipping α↔β mirrors. That gives 8 kets that include every sector, chosen without the exact answer.
