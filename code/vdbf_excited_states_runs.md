@@ -459,7 +459,70 @@ Extrapolated, in mHa from each run's own target ("no window" means fewer than 3 
 
 **So:** at 2.3 Å the penalty helps the truncated runs as well: S0 is 2–3× closer and stays spin-clean. But cutoff 10⁻⁵ is far too coarse for the stretched bond, with or without the penalty. The best errors are tens of mHa, against 0.01 mHa without truncation and 0.1–0.2 mHa at 1.1 Å with the same cutoff.
 
-A tighter cutoff is the obvious next step. At 1.1 Å, going from 10⁻⁵ to 10⁻⁶ multiplied the operator size by 6 and the run time by 5. At 2.3 Å that would mean about 25–30 million Pauli terms and about 13 hours per run. That is close to this machine's 32 GB of memory.
+### With Pauli propagation (2.3 Å, cutoff 10⁻⁶)
+
+The same three runs at a 10× smaller cutoff: old kets, D1c, 500 iterations each, every iteration replayed exactly.
+- **Where they ran.** They do not fit in this laptop's 32 GB, so they ran side by side on one Big Red 200 node (`n2_pes/cluster_block`).
+- **Cost.**
+
+| run | time | peak memory | Pauli terms at the end |
+|---|---|---|---|
+| bare H | 21.0 h | 34 GB | 23 M |
+| λ = 0.02 | 28.6 h | 43 GB | 33 M |
+| λ = 0.05 | 21.1 h | 38 GB | 25 M |
+
+![Pauli propagation at 2.3 Å, cutoff 10⁻⁶, with and without the S² penalty: true energy, corrected estimate and ⟨S²⟩ against iteration](n2_pes/frozen_core/sv_results/plots/n2_230_pp_c1e-6_s2pen.png)
+
+True energy of the circuit, in mHa from each run's own target (the same targets as at 10⁻⁵), with 10⁻⁵'s best for comparison:
+
+| | S0 | T1 | third state | ⟨S²⟩ at iteration 500 | 10⁻⁵, best |
+|---|---|---|---|---|---|
+| bare H, iteration 500 | +6.9 | +4.5 | +127 | 2.63, 2.77, 2.48 | +57, +148, +229 |
+| **λ = 0.02, iteration 500** | **+1.51** | **+1.88** | **+1.66** | 0.00, 2.00, 2.00 | +32, +30, +38 |
+| λ = 0.05, iteration 500 | +4.3 | +26.7 | +5.4 | 0.01, 1.95, 1.99 | +17, +134, +127 |
+
+- **λ = 0.02 converges at 10⁻⁶.**
+  - All three states are within 1.5–1.9 mHa of their targets, about 20× closer than at 10⁻⁵.
+  - The spins are exact: ⟨S²⟩ = 0.00, 2.00, 2.00.
+  - Each state is at its best at iteration 500 and still improving. There is no drift.
+- **Bare H still fails.**
+  - S0 and T1 get within 7 and 5 mHa, but they are spin-mixed (⟨S²⟩ 2.6 and 2.8): the quintet 9 mHa up mixes in, as at 10⁻⁵.
+  - The third state stays near 150 mHa and never finds the septet.
+- **λ = 0.05 has not settled.**
+  - S0 and the third state are 4–5 mHa off.
+  - The second state switches between a triplet and a singlet several times (bottom row, ⟨S²⟩ between 0 and 2). It is 27 mHa off at iteration 500, still falling.
+- **The corrected estimate now tracks the truth.** For λ = 0.02 at iteration 500 it is +1.5, +3.0, +1.9 against the true +1.5, +1.9, +1.7. At 10⁻⁵ the two were tens of mHa apart.
+
+**Extrapolating in the variance** (the same fit as above, one figure per run):
+
+![2.3 Å, cutoff 10⁻⁶, λ = 0.02: per-state extrapolation, true / corrected / raw](n2_pes/frozen_core/sv_results/plots/n2_230_pp_c1e-6_s2pen0.02_extrap.png)
+
+![2.3 Å, cutoff 10⁻⁶, bare H: per-state extrapolation](n2_pes/frozen_core/sv_results/plots/n2_230_pp_c1e-6_extrap.png)
+
+![2.3 Å, cutoff 10⁻⁶, λ = 0.05: per-state extrapolation](n2_pes/frozen_core/sv_results/plots/n2_230_pp_c1e-6_s2pen0.05_extrap.png)
+
+Extrapolated, in mHa from each run's own target:
+
+| run | series | S0 | T1 | third state |
+|---|---|---|---|---|
+| bare H | true | +3.7 ± 1.9 (spin-mixed) | +0.4 ± 0.7 (spin-mixed) | +133 ± 8 |
+| **λ = 0.02** | **true** | **+0.35 ± 0.27** | **+0.11 ± 0.40** | **+0.31 ± 0.21** |
+| | corrected | +0.61 ± 0.12 | +1.25 ± 0.22 | +0.90 ± 0.05 |
+| | raw | −0.29 ± 0.10 | +2.1 ± 0.9 | +2.6 ± 0.7 |
+| λ = 0.05 | true | −72 ± 39 | +17 ± 65 | −262 ± 581 |
+
+- **For λ = 0.02 the extrapolation works.**
+  - The true points lie on a straight line over the final stretch (130–150 points per state).
+  - All three extrapolate to within 0.4 mHa of their targets, within their error bars.
+  - This is the first 2.3 Å Pauli-propagation run where they do.
+- **The run's own series are biased by about 1 mHa.** The corrected series extrapolates to +0.6 to +1.3 mHa, with error bars that are too small to cover it. The raw series is off by up to 2.6 mHa.
+- **The other two runs do not extrapolate.**
+  - Bare H's states are spin-mixed, so a good-looking T1 number means little.
+  - λ = 0.05 is still swapping states, so the fit runs over a moving target.
+
+**So:** at 2.3 Å the cutoff was the main problem. At 10⁻⁶, with λ = 0.02, the old kets and D1c give all three targets of H + 0.02 S² within 2 mHa directly, and within 0.4 mHa after extrapolation. At 10⁻⁵ too, λ = 0.02 was the only run that reached all three targets.
+
+The targets here are the run's own: S0, T1 and, because the penalty pushes the septet up, a triplet at 120.6 mHa. They are not the 3 lowest levels of H (S0, T1, quintet); the old kets can't reach the quintet (section 11).
 
 ## 11. Does the block span the right states?
 
@@ -473,18 +536,19 @@ $$F = \|P_{\rm low}\, P_{\rm block}\|^2 / 3 .$$
 
 ![Fidelity of the block with the 3 lowest exact levels, all N₂ runs](n2_pes/frozen_core/sv_results/plots/n2_fidelity.png)
 
-| run | 3 lowest levels (mHa above S0) | cap | exact greedy | Pauli prop. 10⁻⁵ (end / best) |
-|---|---|---|---|---|
-| 1.1 Å, H | S0, ³Πg 297.17 ×2 | 1 | 0.667 | 0.667 / 0.667 |
-| 1.1 Å, H + 0.02 S² | S0, ³Πg 297.17 ×2 | 1 | 0.667 | 0.667 / 0.667 |
-| 1.1 Å, H + 0.05 S² | S0, ¹Πg 347.38 ×2 | 1 | 0.667 | 0.667 / 0.667 |
-| 2.3 Å, H | S0, T1 2.84, quintet 8.99 | 0.667 | 0.657 | 0.091 / 0.228 |
-| 2.3 Å, H + 0.02 S² | S0, T1 2.84, quintet 8.99 | 0.667 | 0.667 | 0.527 / 0.595 |
-| 2.3 Å, H + 0.05 S² | S0, T1 2.84, triplet 120.61 ×2 | 1 | **0.999** | 0.507 / 0.625 |
+| run | 3 lowest levels (mHa above S0) | cap | exact greedy | Pauli prop. 10⁻⁵ (end / best) | Pauli prop. 10⁻⁶ (end) |
+|---|---|---|---|---|---|
+| 1.1 Å, H | S0, ³Πg 297.17 ×2 | 1 | 0.667 | 0.667 / 0.667 | 0.667 |
+| 1.1 Å, H + 0.02 S² | S0, ³Πg 297.17 ×2 | 1 | 0.667 | 0.667 / 0.667 | — |
+| 1.1 Å, H + 0.05 S² | S0, ¹Πg 347.38 ×2 | 1 | 0.667 | 0.667 / 0.667 | — |
+| 2.3 Å, H | S0, T1 2.84, quintet 8.99 | 0.667 | 0.657 | 0.091 / 0.228 | 0.639 |
+| 2.3 Å, H + 0.02 S² | S0, T1 2.84, quintet 8.99 | 0.667 | 0.667 | 0.527 / 0.595 | 0.666 |
+| 2.3 Å, H + 0.05 S² | S0, T1 2.84, triplet 120.61 ×2 | 1 | **0.999** | 0.507 / 0.625 | **0.971** |
 
-(×2: two degenerate levels; the block needs only one of them. 1.1 Å at cutoff 10⁻⁶: 0.667. The 2.3 Å exact run with λ = 0.02 is new; the others are the runs of sections 6 and 10.)
+(×2: two degenerate levels; the block needs only one of them. The 2.3 Å exact run with λ = 0.02 is new; the others are the runs of sections 6 and 10. The 2.3 Å 10⁻⁶ circuits are the Big Red 200 runs of section 10, replayed here.)
 
 - **Only one run passes: 2.3 Å with λ = 0.05, without truncation.** The penalty pushes the quintet above the second triplet, so the 3 lowest levels of H + 0.05 S² are the ones our kets can reach.
+- **At 10⁻⁶ the 2.3 Å circuits reach their caps.** λ = 0.05 gets to 0.971, close to passing, although its second state is still 27 mHa off (section 10). λ = 0.02 sits at its cap of 2/3: its third block state is on the triplet at 120.6 mHa, while the third-lowest level of H + 0.02 S² is the quintet, which the old kets can't reach.
 - **2.3 Å, bare H and λ = 0.02: wrong sectors.**
   - The 3 lowest levels are S0 and the quintet, both in the |0⟩ sector, and T1, in the |a⟩, |b⟩ sector. Our kets are split 1 + 2, the other way round.
   - So F stays at or below 2/3 however long the flow runs. In both runs the third block state ends on the triplet at 120.6 mHa instead of the quintet.

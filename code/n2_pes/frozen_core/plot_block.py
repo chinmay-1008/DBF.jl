@@ -849,8 +849,11 @@ def pp_penalty_trajectories(runs, refs, names):
 
 
 # ---------------------------------------------------------------- Pauli propagation on H + λ S^2 at 2.3 A
-def pp_penalty_230():
-    """2.3 A, Pauli propagation at cutoff 1e-5, bare H against H + λ S^2, against iteration.  The three block
+CUT_TXT = {"1e-5": "10⁻⁵", "1e-6": "10⁻⁶"}
+
+
+def pp_penalty_230(cut="1e-5"):
+    """2.3 A, Pauli propagation at cutoff `cut` (1e-5 or 1e-6), bare H against H + λ S^2, against iteration.  The three block
     states are kept in the run's own energy order (with the penalty that order is S0 < T1 < triplet).
     Rows: the true energy of H of the circuit's states (exact replay), the run's corrected estimate (penalty runs:
     eigenvalue of H + λS² minus λS(S+1) of the target, S(S+1) = 0, 2, 2), and the circuit's <S^2>.
@@ -859,8 +862,8 @@ def pp_penalty_230():
     corrected error at the end, <S^2> at the end), errors from the run's own target level."""
     runs = []
     for l in ("0", "0.02", "0.05"):
-        lab = "uno_2.30_blockpp_c1e-5" + ("" if l == "0" else f"_s2pen{l}")
-        pp, rep = load(lab), load(lab + "_replay")
+        lab = f"uno_2.30_blockpp_c{cut}" + ("" if l == "0" else f"_s2pen{l}")
+        pp, rep = load(lab), load(lab + "_replay1") or load(lab + "_replay")
         if pp is None or rep is None:
             continue
         lam, f, rr = float(l), pp["E_FCI"], rep["rows"]
@@ -926,7 +929,7 @@ def pp_penalty_230():
     axes[1, 0].set_ylabel("corrected estimate\n(mHa above exact S0)")
     axes[2, 0].set_ylabel("true ⟨S²⟩")
     axes[0, 0].legend(fontsize=7.5, loc="upper right")
-    fig.suptitle("2.3 Å, Pauli propagation at cutoff 10⁻⁵, without and with the S² penalty, against iteration\n"
+    fig.suptitle(f"2.3 Å, Pauli propagation at cutoff {CUT_TXT[cut]}, without and with the S² penalty, against iteration\n"
                  "top: true energy of the circuit's block states (exact replay); middle: the run's corrected estimate; "
                  "bottom: the circuit's ⟨S²⟩ (septet = 12, off scale); exact levels dashed",
                  x=0.01, ha="left", fontsize=10, color=INK)
@@ -934,8 +937,8 @@ def pp_penalty_230():
     return fig, rows
 
 
-def pp230_extrapolation():
-    """2.3 A, cutoff 1e-5: the per-state [v, 2v] extrapolation (state_extrapolation, one row per series) for each
+def pp230_extrapolation(cut="1e-5"):
+    """2.3 A, cutoff `cut`: the per-state [v, 2v] extrapolation (state_extrapolation, one row per series) for each
     run.  True = H energy and H variance of the circuit's block states (exact replay); corrected and raw =
     eigenvalue of H + λS² minus λS(S+1) of the target (0, 2, 2), with the run's variances of H + λS².
     States in the run's energy order, errors from each run's own targets.  Returns [(λ string, fig, rows)]."""
@@ -945,8 +948,8 @@ def pp230_extrapolation():
         tg[key] = (np.array([t["E"] for t in d["targets"]]) - d["E_FCI"]) * 1e3
     out = []
     for l in ("0", "0.02", "0.05"):
-        lab = "uno_2.30_blockpp_c1e-5" + ("" if l == "0" else f"_s2pen{l}")
-        pp, rep = load(lab), load(lab + "_replay")
+        lab = f"uno_2.30_blockpp_c{cut}" + ("" if l == "0" else f"_s2pen{l}")
+        pp, rep = load(lab), load(lab + "_replay1") or load(lab + "_replay")
         if pp is None or rep is None:
             continue
         lam, f, h, rr = float(l), pp["E_FCI"], pp["history"], rep["rows"]
@@ -958,6 +961,7 @@ def pp230_extrapolation():
         name = "bare H" if l == "0" else f"λ = {l}"
         fig, rows = state_extrapolation(ent, tg["0" if l == "0" else "pen"], ["S0", "T1", "third"],
                                         f"2.3 Å, {name}", grid=True)
+        fig.texts[0].set_text(fig.texts[0].get_text() + f"\nPauli propagation, cutoff {CUT_TXT[cut]}, {name}")
         out.append((l, fig, rows))
     return out
 
@@ -1499,19 +1503,22 @@ if __name__ == "__main__":
             print("PP 1e-5 extrapolation over [v, 2v] (mHa vs exact): run | series | state | last | extrapolated ± | v | pts")
             for r in xrows:
                 print(f"  {r[0]:<8} {r[1]:<20} {r[2]:<4} {r[3]:+9.4f} {r[4]:+9.4f} ± {r[5]:.4f}  {r[6]:.2e} {r[7]}")
-        fig, rows230 = pp_penalty_230()
-        if fig is not None:
-            fig.savefig(os.path.join(OUT, "n2_230_pp_s2pen.png"), dpi=170)
-            print("2.3 Å PP 1e-5 (mHa from the run's own target): run | state | best true (iteration) | true at the end"
-                  " | corrected at the end | <S^2> at the end")
-            for r in rows230:
-                print(f"  {r[0]:<8} {r[1]}  {r[2]:+8.2f} ({r[3]:3d})  {r[4]:+8.2f}  {r[5]:+8.2f}  {r[6]:.2f}")
-        print("2.3 Å PP 1e-5 extrapolation over [v, 2v] (mHa vs target): run | series | state | last | extrapolated ± | v | pts")
-        for l, fig, rows in pp230_extrapolation():
-            fig.savefig(os.path.join(OUT, f"n2_230_pp_c1e-5{'' if l == '0' else '_s2pen' + l}_extrap.png"), dpi=170)
-            plt.close(fig)
-            for r in rows:
-                print(f"  {l:<5} {r[0]:<20} {r[1]:<6} {r[2]:+9.3f} {r[3]:+9.3f} ± {r[4]:.3f}  {r[5]:.2e} {r[6]}")
+        for cut in ("1e-5", "1e-6"):                 # 2.3 A: the same figures at each cutoff
+            fig, rows230 = pp_penalty_230(cut)
+            if fig is not None:
+                fig.savefig(os.path.join(OUT, "n2_230_pp_s2pen.png" if cut == "1e-5" else f"n2_230_pp_c{cut}_s2pen.png"),
+                            dpi=170)
+                print(f"2.3 Å PP {cut} (mHa from the run's own target): run | state | best true (iteration) | true at "
+                      "the end | corrected at the end | <S^2> at the end")
+                for r in rows230:
+                    print(f"  {r[0]:<8} {r[1]}  {r[2]:+8.2f} ({r[3]:3d})  {r[4]:+8.2f}  {r[5]:+8.2f}  {r[6]:.2f}")
+            print(f"2.3 Å PP {cut} extrapolation over [v, 2v] (mHa vs target): run | series | state | last | "
+                  "extrapolated ± | v | pts")
+            for l, fig, rows in pp230_extrapolation(cut):
+                fig.savefig(os.path.join(OUT, f"n2_230_pp_c{cut}{'' if l == '0' else '_s2pen' + l}_extrap.png"), dpi=170)
+                plt.close(fig)
+                for r in rows:
+                    print(f"  {l:<5} {r[0]:<20} {r[1]:<6} {r[2]:+9.3f} {r[3]:+9.3f} ± {r[4]:.3f}  {r[5]:.2e} {r[6]}")
         print("λ | slot | state | <S^2> | last err (mHa) | stays below 1.6 / 0.1 / 0.03 mHa from iteration")
         for r in prow:
             print(f"  {r[0]:<5} {r[1]} {r[2]:<16} {r[3]:6.3f}  {r[4]:.2e}   {r[5]} / {r[6]} / {r[7]}")

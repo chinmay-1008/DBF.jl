@@ -78,7 +78,15 @@ DBF.jl/       made by stage.sh; laid out as in the repo
 
 ## Resources
 
-These are estimates from the local 10⁻⁵ runs; nothing has run at 10⁻⁶ yet.
+**Measured (job 9069990, November 2026).** All three runs finished their 500 iterations, and each replay took about 5 min.
+
+| run | time | peak memory | Pauli terms at the end |
+|---|---|---|---|
+| bare H | 21.0 h | 34 GB | 23 M |
+| λ = 0.02 | 28.6 h | 43 GB | 33 M |
+| λ = 0.05 | 21.1 h | 38 GB | 25 M |
+
+`HEAP=50G` would be enough. The estimates written before the runs:
 - **Terms:** the 10⁻⁵ runs ended at 3.6M (bare H), 3.9M (λ = 0.02) and 6.6M (λ = 0.05) terms. At 1.1 Å, going from 10⁻⁵ to 10⁻⁶ gave 6× the terms, so expect roughly 20–40M.
 - **Memory:** each run gets `--heap-size-hint=70G`, and three of those fit a 256 GB node. The peaks in `maxrss.txt` show whether that can be lowered (`HEAP=40G sbatch block.slurm`).
 - **Time:** the 10⁻⁵ runs took 1.7, 2.7 and 3.0 h for 500 iterations on a laptop. At 1.1 Å, 10⁻⁶ took 5× longer, so expect about 8–15 h per run on a laptop, and probably more on the cluster's slower cores. That fits in 48 h with some margin.
