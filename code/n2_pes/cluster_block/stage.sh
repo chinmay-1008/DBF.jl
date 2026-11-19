@@ -39,17 +39,25 @@ for R in ${POINTS:-2.30}; do
         cp "$FC/$d/$f" "$DST/code/n2_pes/frozen_core/$d/"
     done
 done
-# reference for setup.sh's check: the first 3 iterations of the local bare-H run at 1e-5
-LOCALRUN=$FC/sv_results/uno_2.30_blockpp_c1e-5.json
-if [ -f "$LOCALRUN" ]; then
-    python3 - "$LOCALRUN" "$DST/check_reference.json" <<'EOF'
+# references for setup.sh's checks: the first 3 iterations of local 2.3 A runs at 1e-5, each with the options it
+# ran with (old kets with D1c; the new kets with the projector, D_S and dz), so the cluster reproduces each code path
+mkdir -p "$DST/checks"
+for L in uno_2.30_blockpp_c1e-5 uno_2.30_blockpp_c1e-5_k3456_35 uno_2.30_blockpp_c1e-5_k3456_35_ds \
+         uno_2.30_blockpp_c1e-5_k3456_35_dz; do
+    if [ -f "$FC/sv_results/$L.json" ]; then
+        python3 - "$FC/sv_results/$L.json" "$DST/checks/$L.json" <<'EOF'
 import json, sys
 r, n = json.load(open(sys.argv[1])), 3
 k = sum(r["rots_per_iter"][:n + 1])
-json.dump({"from": r["label"], "iterations": n, "lam": r["history"]["lam"][:n + 1],
+o = r["settings"]
+args = [a for key in ("kets", "rank") if o.get(key) for a in (f"--{key}", o[key])]
+if float(o.get("s2-penalty", "0")) != 0:
+    args += ["--s2-penalty", o["s2-penalty"]]
+json.dump({"from": r["label"], "iterations": n, "args": args, "lam": r["history"]["lam"][:n + 1],
            "generators": r["generators"][:k], "angles": r["angles"][:k]}, open(sys.argv[2], "w"))
 EOF
-else
-    echo "no $LOCALRUN: setup.sh's reproduction check will be skipped"
-fi
+    else
+        echo "no local $L.json: its reproduction check is skipped"
+    fi
+done
 echo "staged R = ${POINTS:-2.30} in $DST ($(du -sh "$DST" | cut -f1))"

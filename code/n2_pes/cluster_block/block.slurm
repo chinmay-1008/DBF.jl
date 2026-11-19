@@ -19,16 +19,19 @@
 #
 #     mkdir -p slurm_logs && sbatch block.slurm
 #     COEFF=1e-6 LAMBDAS="0.02" sbatch block.slurm     # settings pass through (sbatch exports the environment)
+#     KETS=ref,3.4.5.6,3.5 KTAG=k3456_35 RUNS="0/exact 0/ds 0/dz" sbatch -J n2kets block.slurm   # the new kets
 
 hostname
 module reset
 cd "$SLURM_SUBMIT_DIR"
 BUNDLE=$SLURM_SUBMIT_DIR
 source config.sh
-echo "job $SLURM_JOB_ID: R $R, cutoff $COEFF, $MAX_ITER iterations, λ = $LAMBDAS, heap $HEAP per run, env $DBF_ENV"
+RUNS=${RUNS:-$LAMBDAS}
+echo "job $SLURM_JOB_ID: R $R, cutoff $COEFF, $MAX_ITER iterations, runs $RUNS, kets ${KETS:-old (|0>, |a>, |b>)},"\
+     "heap $HEAP per run, run limit ${RUN_LIMIT:-none}, env $DBF_ENV"
 pids=()
-for lam in $LAMBDAS; do
-    bash run_one.sh "$lam" > "slurm_logs/run_${lam}_$SLURM_JOB_ID.log" 2>&1 &
+for spec in $RUNS; do
+    bash run_one.sh "$spec" > "slurm_logs/run_${KTAG:+${KTAG}_}${spec//\//_}_$SLURM_JOB_ID.log" 2>&1 &
     pids+=($!)
 done
 fail=0

@@ -20,6 +20,15 @@ COEFF=${COEFF:-1e-6}                # operator cutoff, CoeffTruncation
 MAX_ITER=${MAX_ITER:-500}           # as in the local 2.3 A runs at 1e-5
 SAVE_EVERY=${SAVE_EVERY:-50}        # the run JSON is also written every SAVE_EVERY iterations
 LAMBDAS=${LAMBDAS:-"0 0.02 0.05"}   # S^2 penalties, one run each (0 = bare H); block.slurm runs them side by side
+# Other kets (run_block_pp.jl --kets) and ranking operators (--rank).  RUNS lists the runs block.slurm starts
+# side by side, each "λ" or "λ/rank"; empty = one run per λ in LAMBDAS with the default ranking.  KTAG goes
+# into the labels, as in the local runs: uno_<R>_blockpp_c<COEFF>_<KTAG>[_<rank>].  For the 2.3 A new kets:
+#     KETS=ref,3.4.5.6,3.5 KTAG=k3456_35 RUNS="0/exact 0/ds 0/dz"
+KETS=${KETS:-}
+KTAG=${KTAG:-}
+RUNS=${RUNS:-}
 HEAP=${HEAP:-70G}                   # Julia --heap-size-hint per run: 3 x 70G fits a 256 GB node
+RUN_LIMIT=${RUN_LIMIT:-46h}         # a run still going after this is stopped (its last save is kept) and replayed,
+                                    # inside block.slurm's 48 h; empty = no limit; needs GNU timeout
 REPLAY_THREADS=${REPLAY_THREADS:-4}
 EXTRA_ARGS=${EXTRA_ARGS:-}          # passed through to run_block_pp.jl
