@@ -738,7 +738,67 @@ The largest pair coefficients of D_S sit on the pairs that a ket flips together 
 - **Fidelity comes from the kets.** All three operators leave the old kets at 2/3.
 - **Under truncation the operator does matter.** With the new kets, D_S beats the projector: the energies are 2× better, they are still improving at iteration 200, and the run never trips its stop signal. The projector run is best at iteration 118 and then drifts up.
 - **dz is steady but slower than D_S.** Like D_S it improves through iteration 200 with no drift and never trips the stop signal. Its errors at iteration 200 are about twice D_S's, close to the projector run at its best. In the exact runs, too, dz was a little slower than the projector.
-- **Still to run.** The 2.3 Å runs.
+
+**2.3 Å, Pauli propagation at 10⁻⁵** (500 iterations; true energies from the exact replay):
+
+| 2.3 Å, PP 10⁻⁵ | largest F | best point: error from the 3 lowest levels (mHa) | at iteration 500 | stop signal |
+|---|---|---|---|---|
+| old kets, D1c | 0.23 | +59, +158, +241 (it. 149) | +97, +194, +258 | none |
+| old kets, D_S | 0.33 | +53, +137, +141 (it. 500) | +53, +137, +141 | none |
+| old kets, projector | 0.64 | +20, +35, +78 (it. 159) | +159, +203, +263 | 75 |
+| new kets, D_S | 0.90 | +4.8, +2.9, +8.0 (it. 126) | +51, +52, +63 | 268 |
+| new kets, Z operator (dz) | 0.86 | +5.9, +3.5, +13.0 (it. 95) | +66, +95, +113 | 255 |
+| new kets, projector | **0.975** | **+3.5, +3.2, +3.9** (it. 48) | +106, +120, +140 | 54 |
+
+(Run times: projector 39 min, D_S 4.4 h, dz 6.7 h. The Z-operator runs keep many more Pauli strings.)
+
+- **The old kets fail at 2.3 Å with every operator.** F stays at 0.64 or below, and the errors are tens of mHa or more.
+- **With the new kets, every operator drifts at 2.3 Å.** Each run gets within 3–13 mHa of the levels and then drifts up by 50–140 mHa by iteration 500.
+  - D_S and dz drift more slowly than the projector, but they never get as close: the projector's best point is the best of the three.
+  - So at 2.3 Å the operator changes when the drift starts, not whether it happens. The cutoff 10⁻⁵ is too loose here for every D tried.
+- **The stop signal comes too late for D_S and dz.** It fires at iterations 268 and 255, long after their best points (126 and 95). For the projector it fired at 54, right at its best point (48).
+- **The run's own V_S is a weak alternative.** For D_S it is lowest at iteration 129, next to the best point at 126. For the projector it is lowest at 115, against a best point of 48, so it does not work in general.
+
+**Per-state extrapolation for each operator** (the figures of sections 6 and 8 for each D; each series up to the run's stop signal, or its end if there is none):
+
+| new kets, true energies, error from exact (mHa) | S0: last → extrapolated | 2nd state | 3rd state |
+|---|---|---|---|
+| 1.1 Å, projector (to it. 181) | +2.27 → −0.5 ± 3.0 | ³Πg +4.79 → −1.2 ± 1.2 | ³Πg +5.29 → −2.3 ± 9.0 |
+| 1.1 Å, D_S (to it. 200) | +1.17 → **−0.15 ± 0.42** | ³Πg +2.31 → −2.3 ± 3.8 | ³Πg +2.95 → −9.8 ± 18 |
+| 1.1 Å, dz (to it. 200) | +2.47 → −1.9 ± 1.7 | ³Πg +4.14 → −2.1 ± 1.9 | ³Πg +4.84 → −4.6 ± 5.0 |
+| 2.3 Å, projector (to it. 54) | +3.60 → no window | T1 +3.32 → +1.4 (3 points) | quintet +3.69 → −2.3 ± 2.4 |
+| 2.3 Å, D_S (to it. 268) | +11.7 → +5.7 ± 95 | T1 +10.1 → −0.0 ± 84 | quintet +18.5 → −1.8 ± 238 |
+| 2.3 Å, dz (to it. 255) | +18.1 → +8.8 ± 59 | T1 +19.9 → +11.8 (4 points) | quintet +66.8 → +42 (3 points) |
+
+- **1.1 Å: D_S gives the only usable extrapolation, and only for S0** (−0.15 ± 0.42 mHa). The ³Πg pair stalls at 2–5 mHa with every operator, so its fits are 2–18 mHa wide.
+- **2.3 Å: none of the extrapolations can be used.**
+  - D_S and dz are cut at their stop signals, and by then their true variances are rising again.
+  - So the final stretch the fit uses is the run moving backward. It has only 3–14 points, and the error bars are 59–238 mHa.
+
+![1.1 Å, new kets: true energies of every operator, per-state extrapolation](n2_pes/frozen_core/sv_results/plots/n2_110_kets_pp_c1e-5_extrap_true.png)
+
+![2.3 Å, new kets: true energies of every operator, per-state extrapolation](n2_pes/frozen_core/sv_results/plots/n2_230_kets_pp_c1e-5_extrap_true.png)
+
+![1.1 Å, new kets, D_S: zoom](n2_pes/frozen_core/sv_results/plots/n2_110_kets_ds_pp_zoom.png)
+
+![1.1 Å, new kets, D_S: per-state extrapolation of the true, corrected and raw energies](n2_pes/frozen_core/sv_results/plots/n2_110_kets_ds_pp_c1e-5_extrap.png)
+
+![1.1 Å, new kets, dz: zoom](n2_pes/frozen_core/sv_results/plots/n2_110_kets_dz_pp_zoom.png)
+
+![1.1 Å, new kets, dz: per-state extrapolation](n2_pes/frozen_core/sv_results/plots/n2_110_kets_dz_pp_c1e-5_extrap.png)
+
+![2.3 Å, new kets, D_S: zoom](n2_pes/frozen_core/sv_results/plots/n2_230_kets_ds_pp_zoom.png)
+
+![2.3 Å, new kets, D_S: per-state extrapolation](n2_pes/frozen_core/sv_results/plots/n2_230_kets_ds_pp_c1e-5_extrap.png)
+
+![2.3 Å, new kets, dz: zoom](n2_pes/frozen_core/sv_results/plots/n2_230_kets_dz_pp_zoom.png)
+
+![2.3 Å, new kets, dz: per-state extrapolation](n2_pes/frozen_core/sv_results/plots/n2_230_kets_dz_pp_c1e-5_extrap.png)
+
+**Takeaway.**
+- The kets decide which states the block can reach.
+- Under truncation the operator decides the path. At 1.1 Å, D_S is best. At 2.3 Å, no operator holds up at 10⁻⁵.
+- At 2.3 Å the next step is a tighter cutoff (10⁻⁶), not another operator.
 
 ## 12. Scaling up: the 1×100 Heisenberg chain
 

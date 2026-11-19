@@ -458,13 +458,18 @@ def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
         for name, lam, var, marker, ls in (entries[r_:r_ + 1] if grid else entries):
             x, y = var[1:, i], lam[1:, i] - refs[i]
             fit = window_fit(x, y, factor)
-            if fit is None:
-                ax.text(0.03, 0.96, f"{name}: fewer than 3 points in the window,\nno extrapolation", transform=ax.transAxes,
-                        ha="left", va="top", fontsize=7.5, color=MUTED)
+            if fit is None:                           # grid: a note; several series in one panel: a legend entry
+                msg = f"{name}: fewer than 3 points in the window, no extrapolation"
+                if grid:
+                    ax.text(0.03, 0.96, msg.replace(" window, ", " window,\n"), transform=ax.transAxes,
+                            ha="left", va="top", fontsize=7.5, color=MUTED)
                 rows.append((name, names[i], y[-1], float("nan"), float("nan"), x[-1], 0))
                 ok = x > 0                           # still show where the run went
+                if not ok.any() and not grid:
+                    ax.plot([], [], marker, color=SERIES[i], alpha=0.3, label=msg)
                 if ok.any():
-                    ax.plot(x[ok], y[ok], marker, color=SERIES[i], ms=2.5, mec="none", alpha=0.3)
+                    ax.plot(x[ok], y[ok], marker, color=SERIES[i], ms=2.5, mec="none", alpha=0.3,
+                            label=None if grid else msg)
                     ax.plot(x[-1], y[-1], marker, color=SERIES[i], ms=6, mec=INK, mew=0.6, zorder=5)
                     spare.append((min(y[ok].min(), 0), max(y[ok].max(), 0), 1.05 * x[ok].max()))
                 continue
@@ -1275,8 +1280,9 @@ def kets_main():
             if pp is None or rep is None:
                 continue
             stop = pp_stop(pp)
-            note = f"D = {dname}" + (f"; circle: iteration {stop}, the run's own stop signal" if stop is not None else "")
-            pp_zoom((lam_g, vs_g, refs, names, s2g), [("cutoff 1e-5", pp, rep, "-")], f"{title}, new kets, {dname}",
+            note = f"new kets, D = {dname}" + (f"; circle: iteration {stop}, the run's own stop signal" if stop is not None else "")
+            short = dname.split("(")[-1].rstrip(")")  # "Z operator (dz)" -> "dz": panel titles must not run together
+            pp_zoom((lam_g, vs_g, refs, names, s2g), [("cutoff 1e-5", pp, rep, "-")], f"{title}, {short}",
                     [stop], note, true_x="true").savefig(os.path.join(OUT, f"n2_{r_}_kets{suf}_pp_zoom.png"), dpi=170)
             k = len(pp["history"]["lam"]) - 1 if stop is None else stop
             h, f = pp["history"], pp["E_FCI"]
