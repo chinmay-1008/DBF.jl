@@ -34,7 +34,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, ".."))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "integrals"))
-from hubbard_uhf_integrals import determinant_energy, fci_energy, transform_integrals  # noqa: E402
+from hubbard_uhf_integrals import determinant_energy, transform_integrals  # noqa: E402
 from make_fc_integrals import NCORE, SHORT, frozen_core  # noqa: E402
 from n2_pes import LOCALIZATION_STARTS, fci_lowest, localize_block  # noqa: E402
 
@@ -110,7 +110,8 @@ def main():
             e_ref = determinant_energy(act, list(range(n_a)), list(range(n_b)))
             if abs(e_core + e_ref - e_det_full) > 1e-9:
                 raise RuntimeError(f"{basis}: E_core + E_ref(active) != full determinant energy")
-            e_fc = fci_energy(act, (n_a, n_b))
+            # lowest of a few Davidson roots (see make_fc_integrals.py)
+            e_fc = fci_lowest(act, (n_a, n_b))
             if g is None:
                 g = (e_core, e_fc)
             elif abs(e_core + e_fc - sum(g)) > 1e-8 or abs(e_core - g[0]) > 1e-9:

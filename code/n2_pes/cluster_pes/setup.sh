@@ -11,10 +11,10 @@ for env in DBF.jl/code/n2_pes DBF.jl/code/integrals; do
     "$JULIA" --project="$BUNDLE/$env" -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
 done
 "$JULIA" --project="$BUNDLE/DBF.jl/code/n2_pes" -e 'using DBF, PauliOperators, JLD2, JSON; println("ok: bundled vDBF environment")'
-# the DBF_ENV that run_task.slurm sets, if any: does it have what run_dbf_pes.jl uses?
-ENV_SLURM=$(sed -n 's/^export DBF_ENV=//p' "$BUNDLE/run_task.slurm")
-if [ -n "$ENV_SLURM" ]; then
-    echo "== run_task.slurm uses DBF_ENV=$ENV_SLURM"
+# the DBF_ENV from config.sh, if it is not the bundled copy: does it have what run_dbf_pes.jl uses?
+ENV_SLURM=$DBF_ENV
+if [ "$ENV_SLURM" != "$BUNDLE/DBF.jl/code/n2_pes" ]; then
+    echo "== config.sh: DBF_ENV=$ENV_SLURM"
     "$JULIA" --project="$ENV_SLURM" -e 'using Pkg; Pkg.instantiate()'
     "$JULIA" --project="$ENV_SLURM" -e '
         using DBF, PauliOperators, JLD2, Printf
@@ -28,7 +28,7 @@ if [ -n "$ENV_SLURM" ]; then
             k in kw || (ok = false; println("MISSING: dbf_groundstate keyword ", k))
         end
         println(ok ? "ok: DBF_ENV has everything run_dbf_pes.jl uses" :
-                     "DBF_ENV is not compatible: fix it, or comment out DBF_ENV in run_task.slurm to use the bundled copy")
+                     "DBF_ENV is not compatible: fix it, or set DBF_ENV in config.sh to the bundled copy")
         end'
 fi
 "$JULIA" --project="$BUNDLE/DBF.jl/code/integrals" -e 'using PauliOperators, JLD2, JSON, NPZ; println("ok: prepare/replay environment")'

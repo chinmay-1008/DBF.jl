@@ -1,0 +1,21 @@
+Input:  data/H6/R_1.00  (basis uno)
+System: H6 chain sto-3g, spacing 1.00 A, UHF natural orbitals, 6 orbitals, n_alpha = 3, n_beta = 3
+Building Hamiltonian from separate spin blocks...
+  -> System: 6 spatial orbitals (12 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 1815 Pauli terms.
+  1.242122 seconds (3.28 M allocations: 175.547 MiB, 1.97% gc time, 96.24% compilation time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =    -3.1352505752
+                        Python      =    -3.1352505752   (diff 7.55e-15)
+ E_UHF (with mu)                    =    -3.1369459347
+ Sector ED ground state (dim   400) =    -3.2360662799
+                        PySCF FCI   =    -3.2360662799   (diff -3.55e-15)
+ Clipped at 1e-8: 1815 -> 939 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote data/H6/R_1.00/hamiltonian_uno.jld2
+  3.723023 seconds (7.63 M allocations: 411.510 MiB, 4.21% gc time, 96.78% compilation time: 10% of which was recompilation)

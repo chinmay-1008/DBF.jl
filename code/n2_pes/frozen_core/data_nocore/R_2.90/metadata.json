@@ -27,7 +27,7 @@
  "E_nuc": 8.941270115544828,
  "E_core": -92.8211958840697,
  "E_UHF_with_mu": -23.55823202712996,
- "E_FCI_with_mu": -23.55876370559298,
+ "E_FCI_with_mu": -23.55876370560514,
  "E_FCI_full_electrons": -107.4386903198133,
  "bases": {
   "no": {
@@ -54,7 +54,7 @@
    ],
    "occupied_indexing": "0-based orbital index within each spin block (active space)",
    "reference_determinant_energy": -23.557539206927977,
-   "fci_energy": -23.55876370559298
+   "fci_energy": -23.55876370560514
   },
   "lno": {
    "files": {
@@ -80,7 +80,7 @@
    ],
    "occupied_indexing": "0-based orbital index within each spin block (active space)",
    "reference_determinant_energy": -23.557539206927984,
-   "fci_energy": -23.558763705578873
+   "fci_energy": -23.558763705605156
   }
  }
 }

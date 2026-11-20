@@ -1,0 +1,69 @@
+{
+ "model": "H10 chain sto-3g, spacing 2.00 A, UHF natural orbitals",
+ "R_angstrom": 2.0,
+ "n_atoms": 10,
+ "basis_set": "sto-3g",
+ "n_orbitals": 10,
+ "n_alpha": 5,
+ "n_beta": 5,
+ "constant": 5.103830202940715,
+ "constant_meaning": "nuclear repulsion",
+ "E_nuc": 5.103830202940715,
+ "mu": 0.0,
+ "energy_offset": 0.0,
+ "E_UHF_with_mu": -9.805595976952645,
+ "E_FCI_with_mu": -9.850066543562457,
+ "references": {
+  "E_RHF": -3.954499940084947,
+  "E_UHF": -4.70176577401193,
+  "S2_UHF": 4.534259583922814,
+  "E_FCI": -4.746236340621742,
+  "S2_FCI": 1.6375808482244807e-15,
+  "FCI_roots": [
+   -4.746236340621742,
+   -4.738325708919874,
+   -4.728681194511376
+  ]
+ },
+ "uno_occupations": [
+  1.4289271831259793,
+  1.3821189744910725,
+  1.303921318907224,
+  1.1967734717301568,
+  1.068256939014627,
+  0.9317430609853732,
+  0.8032265282698442,
+  0.6960786810927776,
+  0.6178810255089269,
+  0.5710728168740203
+ ],
+ "fci_dimension": 63504,
+ "bases": {
+  "uno": {
+   "files": {
+    "h1_alpha": "uno_h1_a.npy",
+    "h1_beta": "uno_h1_b.npy",
+    "eri_aa": "uno_eri_aa.npy",
+    "eri_bb": "uno_eri_bb.npy",
+    "eri_ab": "uno_eri_ab.npy"
+   },
+   "occupied_alpha": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "occupied_beta": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "occupied_indexing": "0-based orbital index within each spin block",
+   "reference_determinant_energy": -9.03480197385071,
+   "fci_energy": -9.850066543562457
+  }
+ }
+}

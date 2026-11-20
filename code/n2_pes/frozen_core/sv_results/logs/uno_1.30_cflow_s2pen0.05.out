@@ -1,0 +1,2 @@
+R = 1.30 uno, λ = 0.05: sector 4096, overlap of |0> with the ground state 0.8525, RK4 (ds 0.01, s <= 20) vs closed form 2.6e-07
+   s to reach E - FCI < 1.6e-3: 2.75   1e-4: 6.03   1e-6: 11.5   final E - FCI 2.70e-13

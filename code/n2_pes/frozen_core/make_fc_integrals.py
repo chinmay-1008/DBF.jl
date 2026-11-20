@@ -40,7 +40,9 @@ from pyscf import gto
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, "..", "data")
 sys.path.insert(0, os.path.join(HERE, "..", "..", "integrals"))
-from hubbard_uhf_integrals import determinant_energy, fci_energy  # noqa: E402
+sys.path.insert(0, os.path.join(HERE, ".."))
+from hubbard_uhf_integrals import determinant_energy  # noqa: E402
+from n2_pes import fci_lowest  # noqa: E402
 
 NCORE = 2
 GROUP = {"mo": "uhfcore", "lmo": "uhfcore", "no": "nocore", "lno": "nocore"}
@@ -100,7 +102,9 @@ def main():
             if abs(e_core + e_ref - e_ref_full) > 1e-9:
                 raise RuntimeError(f"R={R} {basis}: E_core + E_ref(active) = "
                                    f"{e_core + e_ref:.12f} != {e_ref_full:.12f}")
-            e_fci = fci_energy(act, (na, nb))
+            # lowest of a few Davidson roots: at long R the spin multiplets are
+            # within microhartrees and a single root can stop short of the minimum
+            e_fci = fci_lowest(act, (na, nb))
             g = groups.setdefault(GROUP[basis], {"E_core": e_core, "E_fci": e_fci, "bases": {}})
             if abs((e_core + e_fci) - (g["E_core"] + g["E_fci"])) > 1e-8:
                 raise RuntimeError(f"R={R} {basis}: frozen-core FCI differs within {GROUP[basis]}")

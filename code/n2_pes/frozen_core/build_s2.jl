@@ -71,39 +71,41 @@ function check_against_sv(S2, H, ref, O)
     return norm(A - B), A[1, 1]
 end
 
-dirs = isempty(ARGS) ? nothing : Set(ARGS)
-for (tree, bases) in TREES
-    root = joinpath(@__DIR__, tree)
-    isdir(root) || continue
-    for d in sort(filter(startswith("R_"), readdir(root))), b in bases
-        dirs === nothing || d in dirs || continue
-        dir = joinpath(root, d)
-        isfile(joinpath(dir, "hamiltonian_$(b).jld2")) || continue   # basis not built at this point
-        O = npzread(joinpath(dir, "$(b)_ab_overlap.npy"))
-        O[abs.(O) .< 1e-6] .= 0
-        h = load(joinpath(dir, "hamiltonian_$(b).jld2"))
-        n = h["n_orbitals"]
-        S2 = s2_paulisum(O, n)
-        maximum(abs ∘ imag, values(S2)) < 1e-12 || error("$d $b: S^2 has complex coefficients")
-        ref = h["reference_ket"]
-        e_ref = real(expectation_value(S2, ref))
-        occ_a = [p for p in 1:n if (ref.v >> (p - 1)) & 1 == 1]
-        occ_b = [p for p in 1:n if (ref.v >> (n + p - 1)) & 1 == 1]
-        sz = 0.5 * (length(occ_a) - length(occ_b))
-        # <S- S+> = sum over occupied beta q, empty alpha p of O_pq^2 (the active
-        # alpha orbitals do not span the active beta ones exactly, so this is
-        # not N_beta - sum_occ |O|^2)
-        virt_a = setdiff(1:n, occ_a)
-        e_det = sz^2 + sz + sum(abs2, O[virt_a, occ_b])
-        abs(e_ref - e_det) < 1e-10 || error("$d $b: <ref|S^2|ref> $e_ref != determinant formula $e_det")
-        diff, s00 = check_against_sv(S2, h["H"], UInt64(ref.v), O)
-        diff < 1e-10 || error("$d $b: S^2 sector matrix differs from sv_dbf.jl by $diff")
-        S2r = PauliSum(2n, Float64)
-        for (p, c) in S2
-            S2r[p] = real(c)
+if abspath(PROGRAM_FILE) == @__FILE__
+    dirs = isempty(ARGS) ? nothing : Set(ARGS)
+    for (tree, bases) in TREES
+        root = joinpath(@__DIR__, tree)
+        isdir(root) || continue
+        for d in sort(filter(startswith("R_"), readdir(root))), b in bases
+            dirs === nothing || d in dirs || continue
+            dir = joinpath(root, d)
+            isfile(joinpath(dir, "hamiltonian_$(b).jld2")) || continue   # basis not built at this point
+            O = npzread(joinpath(dir, "$(b)_ab_overlap.npy"))
+            O[abs.(O) .< 1e-6] .= 0
+            h = load(joinpath(dir, "hamiltonian_$(b).jld2"))
+            n = h["n_orbitals"]
+            S2 = s2_paulisum(O, n)
+            maximum(abs ∘ imag, values(S2)) < 1e-12 || error("$d $b: S^2 has complex coefficients")
+            ref = h["reference_ket"]
+            e_ref = real(expectation_value(S2, ref))
+            occ_a = [p for p in 1:n if (ref.v >> (p - 1)) & 1 == 1]
+            occ_b = [p for p in 1:n if (ref.v >> (n + p - 1)) & 1 == 1]
+            sz = 0.5 * (length(occ_a) - length(occ_b))
+            # <S- S+> = sum over occupied beta q, empty alpha p of O_pq^2 (the active
+            # alpha orbitals do not span the active beta ones exactly, so this is
+            # not N_beta - sum_occ |O|^2)
+            virt_a = setdiff(1:n, occ_a)
+            e_det = sz^2 + sz + sum(abs2, O[virt_a, occ_b])
+            abs(e_ref - e_det) < 1e-10 || error("$d $b: <ref|S^2|ref> $e_ref != determinant formula $e_det")
+            diff, s00 = check_against_sv(S2, h["H"], UInt64(ref.v), O)
+            diff < 1e-10 || error("$d $b: S^2 sector matrix differs from sv_dbf.jl by $diff")
+            S2r = PauliSum(2n, Float64)
+            for (p, c) in S2
+                S2r[p] = real(c)
+            end
+            jldsave(joinpath(dir, "s2_$(b).jld2"); S2=S2r)
+            @printf("%s %-3s  %4d Pauli terms   <ref|S^2|ref> = %.6f (determinant formula %.6f)   |S2 - sv S2|_sector = %.1e\n",
+                    d, b, length(S2r), e_ref, e_det, diff)
         end
-        jldsave(joinpath(dir, "s2_$(b).jld2"); S2=S2r)
-        @printf("%s %-3s  %4d Pauli terms   <ref|S^2|ref> = %.6f (determinant formula %.6f)   |S2 - sv S2|_sector = %.1e\n",
-                d, b, length(S2r), e_ref, e_det, diff)
     end
 end

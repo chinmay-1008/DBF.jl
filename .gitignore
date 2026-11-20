@@ -8,3 +8,7 @@
 # staged copy of the repo, rebuilt by code/n2_pes/cluster_pes/stage.sh
 /code/n2_pes/cluster_pes/DBF.jl/
 .DS_Store
+/code/n2_pes/cluster_pes/queue/
+/code/n2_pes/cluster_pes/queue_c*/
+/code/n2_pes/cluster_pes/slurm_logs/
+__pycache__/

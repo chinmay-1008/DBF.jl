@@ -1,0 +1,11 @@
+# Memory (GB) pool.py reserves per H-chain task, keyed H<n>_c<coeff>; the 1.00 A
+# spacing gets half (pool.py halves R <= 1.2).  Rough guesses from the local runs
+# (H6 at 2.0 A, 1e-5: 0.64M terms; N2 16 qubits, 1e-6: 11M terms, 22 GB peak):
+# Pauli counts grow several-fold per two atoms.  A task killed for memory is
+# retried with twice the reservation, up to the node.
+H10_c1e-4    8
+H10_c1e-5   24
+H10_c1e-6   96
+H12_c1e-4   16
+H12_c1e-5   64
+H12_c1e-6  200

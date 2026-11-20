@@ -1,0 +1,1 @@
+R = 1.80 uno, λ = 0.05: 369 steps; gradients to reach E - FCI < 1.6e-3: 31  1e-4: 51  1e-6: 83;  after 200: -4.83e-13  final -8.53e-13;  dirs per step ~85

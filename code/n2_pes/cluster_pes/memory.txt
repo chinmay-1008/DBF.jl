@@ -1,0 +1,29 @@
+# Memory pool.py reserves for each vDBF task, in GB (variant, GB).  A task
+# starts only when its reservation fits next to the running ones; a running
+# task counts as max(reservation, its current resident memory).  R <= 1.2 A
+# gets half (UHF = RHF there and the runs converge early).  Julia's
+# --heap-size-hint is set to 85% of the reservation.
+#
+# At 2.3 A, coeff 1e-6, on a laptop: uno_s2pen 11M terms, 22 GB peak; lno_s2pen
+# 29M terms; lmo_s2pen 24M; lno_prep 23M; lno_bare 3.4M.  At coeff 1e-5 the
+# delocalized bases (mo, no) were 1.5-2x the localized ones, and uno_s2pen
+# reached 20M terms at 2.1 A.  A task killed for memory is retried once with
+# twice its reservation.
+#
+# Lowered after the first cluster tasks (1e-6, peak resident memory with the heap
+# hint): lmo_bare 6.4 GB (2.1 A) and 8.1 GB (2.0 A); no_s2pen 16.5 GB (3.0 A);
+# mo_prep / no_prep 5.7-5.9 GB (2.8 A).  About 2-3x headroom for 1.6-2.1 A.
+mo_bare     20
+lmo_bare    16
+no_bare     20
+lno_bare    16
+uno_bare    24
+mo_s2pen    48
+lmo_s2pen   40
+no_s2pen    48
+lno_s2pen   40
+uno_s2pen   32
+mo_prep     48
+lmo_prep    40
+no_prep     48
+lno_prep    40

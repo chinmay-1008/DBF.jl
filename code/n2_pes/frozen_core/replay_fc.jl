@@ -64,7 +64,9 @@ function main_replay(args)
            if count_ones((b ⊻ ref) & amask) == meta["n_alpha"] && count_ones((b ⊻ ref) >> NORB) == meta["n_beta"]]
     F = eigen(Symmetric(Matrix(Hs[blk, blk])))
     Φ0 = zeros(length(states)); Φ0[blk] = F.vectors[:, 1]
-    abs(F.values[1] - e_fci) < 1e-8 || error("sector ground state is not FCI")
+    # 1e-6, not 1e-8: near dissociation the low states crowd within 1 mHa and PySCF's
+    # Davidson FCI stops a few 1e-8 above the exact value (LMO 3.00 A: 2.0e-8)
+    abs(F.values[1] - e_fci) < 1e-6 || error("sector ground state is not FCI")
 
     if length(args) >= 6
         λ, ckpt = parse(Float64, args[5]), args[6]
@@ -80,8 +82,16 @@ function main_replay(args)
     o = load(ckpt)["out"]
     gens, angs = o["generators"], o["angles"]
     niter = length(o["energies_per_grad"]) - 1
-    per = length(gens) ÷ niter
-    per * niter == length(gens) || error("rotations per iteration not constant")
+    # Rotations done by the end of each iteration: the last one can stop short of
+    # max_rots_per_grad, so find where energies_per_grad[k+1] sits in the
+    # per-rotation energies (energies[1] is the reference).
+    ends = [0]
+    for e in o["energies_per_grad"][2:end]
+        j = findnext(==(e), o["energies"], ends[end] + 1)
+        j === nothing && error("cannot place the iteration boundaries")
+        push!(ends, j - 1)
+    end
+    ends[end] == length(gens) || error("iteration boundaries do not cover all rotations")
     m = 0
     if prep != "none"
         pf = load(joinpath(dir, "prep_$(prep)_$(basis).jld2"))
@@ -98,12 +108,12 @@ function main_replay(args)
     # Convention check on the first iteration.  The wrong order or angle sign is
     # off by ~0.1 Ha; what is left is the first iteration's truncation, which
     # E - err accounts for to first order.
-    e1, _, s1, _ = measure(replay(gens, angs, m + per, states, pos))
+    e1, _, s1, _ = measure(replay(gens, angs, m + ends[2], states, pos))
     # A folded prep circuit was truncated, so DBF's operator is off by about the
     # folding error; take it out and allow 1e-3 instead of 1e-4
     dev = abs(e1 + λ * s1 + fold_err - (o["energies_per_grad"][2] - o["accumulated_error_per_grad"][2]))
-    @printf("%s: λ = %g, %d iterations x %d rotations; iteration-1 check |E_replay - (E - err)_dbf| = %.1e\n",
-            label, λ, niter, per, dev)
+    @printf("%s: λ = %g, %d iterations, %d rotations; iteration-1 check |E_replay - (E - err)_dbf| = %.1e\n",
+            label, λ, niter, ends[end], dev)
     dev < (prep == "none" ? 1e-4 : 1e-3) || error("replay does not reproduce DBF's first iteration")
 
     iters = filter(<=(niter), sort(unique(vcat([0, 1, 2, 5], collect(10:10:niter), [niter]))))
@@ -111,7 +121,7 @@ function main_replay(args)
     @printf("%5s %11s %10s %8s %8s | %11s %11s\n", "iter", "true E-FCI", "true var", "<S^2>", "fidelity",
             "DBF E-FCI", "DBF E-err")
     for it in iters
-        e, v, s2, f = measure(replay(gens, angs, m + it * per, states, pos))
+        e, v, s2, f = measure(replay(gens, angs, m + ends[it+1], states, pos))
         push!(rows, Dict("iter" => it, "E" => e, "var" => v, "S2" => s2, "fidelity" => f))
         E = o["energies_per_grad"][it+1]; err = o["accumulated_error_per_grad"][it+1]
         @printf("%5d %+11.3f %10.3e %8.4f %8.4f | %+11.3f %+11.3f\n", it, 1e3 * (e - e_fci), v, s2, f,

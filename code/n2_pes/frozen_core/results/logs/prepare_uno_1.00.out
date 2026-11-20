@@ -1,0 +1,23 @@
+Input:  data_unocore/R_1.00  (basis uno)
+System: N2 sto-3g R=1.00 A, frozen 1s core (unocore: 2 orbitals per spin), 8 orbitals, n_alpha = 5, n_beta = 5
+Building Hamiltonian from separate spin blocks...
+  -> System: 8 spatial orbitals (16 spin orbitals)
+  -> Processing 1-body terms (alpha & beta)...
+  -> Caching pair operators...
+  -> Processing 2-body terms (AA, BB)...
+  -> Processing 2-body terms (AB)...
+  -> Hamiltonian construction complete: 1177 Pauli terms.
+  0.779119 seconds (3.28 M allocations: 175.814 MiB, 1.93% gc time, 96.15% compilation time)
+ max |imag(coeff)|         = 0.000e+00
+------------------------------------------------
+ Reference determinant  <ref|H|ref> =  -107.4195324517
+                        Python      =  -107.4195324517   (diff 1.28e-13)
+ E_UHF (with mu)                    =  -107.4195324517
+ Sector ED ground state (dim  3136) =  -107.5489665040
+                        PySCF FCI   =  -107.5489665040   (diff 4.26e-14)
+ Clipped at 1e-8: 1177 -> 1177 terms, <ref|H|ref> shift 0.00e+00
+------------------------------------------------
+Wrote data_unocore/R_1.00/hamiltonian_uno.jld2
+  5.524011 seconds (7.67 M allocations: 1021.052 MiB, 2.41% gc time, 37.13% compilation time: 9% of which was recompilation)
+R_1.00 lno   669 Pauli terms   <ref|S^2|ref> = -0.000000 (determinant formula 0.000000)   |S2 - sv S2|_sector = 2.3e-13
+R_1.00 uno   345 Pauli terms   <ref|S^2|ref> = 0.000000 (determinant formula 0.000000)   |S2 - sv S2|_sector = 2.1e-13

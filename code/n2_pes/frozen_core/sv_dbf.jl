@@ -18,6 +18,7 @@
 # (a 2x2 minimisation on {|0>, |x>} of the current O), like dbf_groundstate's
 # max_rots_per_grad batches.  Ranking (--rank):
 #   onebody    |x| * O_x0^2   what P = I + sum_i Z_i gives: <x|[P,O]|0> = -2|x| O_x0
+#   twobody    (|x| + |x|(n-|x|)) O_x0^2   P = I + sum_i Z_i + sum_{i<j} Z_i Z_j
 #   projector  O_x0^2         what the exact projector P = |0><0| gives
 #
 # --s2-penalty λ runs the flow on H + λ S^2 instead of H (the singlet ground
@@ -208,7 +209,7 @@ end
 function main(args)
     dir, basis, label, opts = parse_cli(args)
     rank = opts["rank"]
-    rank in ("onebody", "projector") || error("--rank must be onebody or projector")
+    rank in ("onebody", "twobody", "projector") || error("--rank must be onebody, twobody or projector")
     max_rots, max_iter = parse(Int, opts["max-rots"]), parse(Int, opts["max-iter"])
     gthresh = parse(Float64, opts["grad-thresh"])
     λ = parse(Float64, opts["s2-penalty"])
@@ -299,7 +300,8 @@ function main(args)
             break
         end
         cand = [k for k in 2:D if abs(o[k]) > gthresh]
-        score = rank == "onebody" ? [flips[k] * o[k]^2 for k in cand] : [o[k]^2 for k in cand]
+        score = rank == "onebody" ? [flips[k] * o[k]^2 for k in cand] :
+                rank == "twobody" ? [(flips[k] + flips[k] * (N - flips[k])) * o[k]^2 for k in cand] : [o[k]^2 for k in cand]
         order = cand[sortperm(score; rev=true)][1:min(max_rots, length(cand))]
         for k in order
             x = states[k]

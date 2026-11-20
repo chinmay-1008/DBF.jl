@@ -1,0 +1,4 @@
+    H12 d=1.00 UHF: followed the RHF->UHF instability  E -6.2542174823 -> -6.2755621515
+H12 d=1.00: E_RHF -6.25421748  E_UHF -6.27556215 (<S^2> 0.911)  E_ref -6.24833503  E_FCI -6.45281586 (<S^2> 0.0000, dim 853776)  ref - FCI 204.5 mHa
+    H12 d=2.00 UHF: followed the RHF->UHF instability  E -4.7475832740 -> -5.6429036981
+H12 d=2.00: E_RHF -4.74758327  E_UHF -5.64290370 (<S^2> 5.431)  E_ref -4.71868455  E_FCI -5.69580201 (<S^2> 0.0000, dim 853776)  ref - FCI 977.1 mHa
