@@ -24,6 +24,8 @@ LAMBDAS=${LAMBDAS:-"0 0.02 0.05"}   # S^2 penalties, one run each (0 = bare H); 
 # side by side, each "λ" or "λ/rank"; empty = one run per λ in LAMBDAS with the default ranking.  KTAG goes
 # into the labels, as in the local runs: uno_<R>_blockpp_c<COEFF>_<KTAG>[_<rank>].  For the 2.3 A new kets:
 #     KETS=ref,3.4.5.6,3.5 KTAG=k3456_35 RUNS="0/exact 0/ds 0/dz"
+# and for the 1.1 A new kets (|0>, 4->5, 4->7; stage the point first: POINTS="1.10 2.30" bash stage.sh):
+#     R=1.10 KETS=ref,4.5,4.7 KTAG=k45_47 RUNS="0/exact 0/ds 0/dz"
 KETS=${KETS:-}
 KTAG=${KTAG:-}
 RUNS=${RUNS:-}

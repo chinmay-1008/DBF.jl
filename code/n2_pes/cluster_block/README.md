@@ -1,4 +1,4 @@
-# Block vDBF at 2.3 Å on Big Red 200
+# Block vDBF at 2.3 Å and 1.1 Å on Big Red 200
 
 This bundle runs the block vDBF with Pauli propagation (`run_block_pp.jl`) for N₂ at R = 2.30 Å, in the UNO basis, at operator cutoff **10⁻⁶**, for 500 iterations. It does three runs side by side on one node:
 
@@ -22,12 +22,23 @@ These are the runs of `code/vdbf_excited_states_runs.md` (section 10, "With Paul
 
 They ran as job 9093882 (results in `code/vdbf_excited_states_runs.md`, section 11, "The new kets at 2.3 Å, cutoff 10⁻⁶").
 
+**The new kets at 1.1 Å.** The same three runs at 1.1 Å, with that point's new kets (section 11: |0⟩, 4→5 and 4→7), cutoff 10⁻⁶, 500 iterations. Locally they were run only at 10⁻⁵, for 200 iterations.
+
+| Run | Ranking operator D | Label |
+|---|---|---|
+| projector | the block projector (exact gradient) | `uno_1.10_blockpp_c1e-6_k45_47` |
+| D_S | the projector written in Z strings | `uno_1.10_blockpp_c1e-6_k45_47_ds` |
+| dz | the block's 1- and 2-body Z operator | `uno_1.10_blockpp_c1e-6_k45_47_dz` |
+
+They were submitted as job 9104626 on 20 November 2026.
+
 ## Contents
 
 ```
 config.sh     settings: DBF_ENV (the Julia project for the runs), R, COEFF, MAX_ITER, SAVE_EVERY, LAMBDAS, KETS, KTAG, RUNS,
               HEAP, RUN_LIMIT (all overridable from the environment)
-stage.sh      LOCAL only: builds DBF.jl/ (block scripts, 2.3 Å inputs, the replay environment, a fallback copy of the package,
+stage.sh      LOCAL only: builds DBF.jl/ (block scripts, the inputs of each point in POINTS (default 2.30), the replay
+              environment, a fallback copy of the package,
               checks/: 3 iterations of each local 2.3 Å run at 1e-5, for setup.sh)
 setup.sh      on a login node: precompile the environments and check short runs against the local ones
 run_one.sh    one run and its replay: bash run_one.sh <λ> or <λ>/<rank>   (λ = 0 is bare H)
@@ -41,6 +52,7 @@ DBF.jl/       made by stage.sh; laid out as in the repo
    ```bash
    bash stage.sh
    ```
+   For the 1.1 Å runs, stage both points: `POINTS="1.10 2.30" bash stage.sh` (2.30 is still needed by `setup.sh`'s checks).
    It copies `hamiltonian_uno.jld2` and `s2_uno.jld2` as built locally, so the cluster runs start from the same H and S² as the local ones.
 
 2. **Copy the bundle to the cluster**, still from this folder. It goes in its own folder, next to the PES bundle (`v_DBF/n2_pes`), which is not touched:
@@ -74,6 +86,10 @@ DBF.jl/       made by stage.sh; laid out as in the repo
      mkdir -p slurm_logs && KETS=ref,3.4.5.6,3.5 KTAG=k3456_35 RUNS="0/exact 0/ds 0/dz" sbatch -J n2kets block.slurm
      ```
      For the projector alone (about 8 h of node time instead of 48 h), use `RUNS="0/exact"`.
+   - The new kets at 1.1 Å (job 9104626), staged with `POINTS="1.10 2.30"`:
+     ```bash
+     mkdir -p slurm_logs && R=1.10 KETS=ref,4.5,4.7 KTAG=k45_47 RUNS="0/exact 0/ds 0/dz" sbatch -J n2kets110 block.slurm
+     ```
 
    The job settings follow `../cluster_pes/node.slurm`: partition `general`, account `r01859`, one whole node, 48 h. A finished run is never rerun: resubmitting skips it.
 
@@ -97,7 +113,7 @@ DBF.jl/       made by stage.sh; laid out as in the repo
    rsync -av --include='*c1e-6*.json' --exclude='*' cshrikh@bigred200.uits.iu.edu:/N/u/cshrikh/BigRed200/v_DBF/n2_block/DBF.jl/code/n2_pes/frozen_core/sv_results/ sv_results/
    rsync -av cshrikh@bigred200.uits.iu.edu:/N/u/cshrikh/BigRed200/v_DBF/n2_block/DBF.jl/code/n2_pes/frozen_core/logs/ logs/
    ```
-   The labels contain `c1e-6`, so they sit next to the local `c1e-5` files without overwriting them. The local 1.1 Å runs at 1e-6 are not on the cluster, so they are not touched either.
+   The labels contain `c1e-6`, so they sit next to the local `c1e-5` files without overwriting them. The local old-kets 1.1 Å run at 1e-6 (`uno_1.10_blockpp_c1e-6`) is not on the cluster, so it is not touched either.
 
 ## Resources
 

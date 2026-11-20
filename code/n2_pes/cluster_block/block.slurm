@@ -20,6 +20,7 @@
 #     mkdir -p slurm_logs && sbatch block.slurm
 #     COEFF=1e-6 LAMBDAS="0.02" sbatch block.slurm     # settings pass through (sbatch exports the environment)
 #     KETS=ref,3.4.5.6,3.5 KTAG=k3456_35 RUNS="0/exact 0/ds 0/dz" sbatch -J n2kets block.slurm   # the new kets
+#     R=1.10 KETS=ref,4.5,4.7 KTAG=k45_47 RUNS="0/exact 0/ds 0/dz" sbatch -J n2kets110 block.slurm   # at 1.1 A
 
 hostname
 module reset
