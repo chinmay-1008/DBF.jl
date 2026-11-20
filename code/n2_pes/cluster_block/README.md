@@ -20,6 +20,8 @@ These are the runs of `code/vdbf_excited_states_runs.md` (section 10, "With Paul
 | D_S | the projector written in Z strings | `uno_2.30_blockpp_c1e-6_k3456_35_ds` |
 | dz | the block's 1- and 2-body Z operator | `uno_2.30_blockpp_c1e-6_k3456_35_dz` |
 
+They ran as job 9093882 (results in `code/vdbf_excited_states_runs.md`, section 11, "The new kets at 2.3 Å, cutoff 10⁻⁶").
+
 ## Contents
 
 ```
@@ -109,12 +111,15 @@ DBF.jl/       made by stage.sh; laid out as in the repo
 
 `HEAP=50G` would be enough.
 
-**The new kets, estimated.** At 1e-5 the local runs took 0.65 h (projector), 4.4 h (D_S) and 6.7 h (dz), ending at 2.6 M, 3.7 M and 5.9 M terms. The old-kets bare-H run took 12× longer at 1e-6 on the cluster (1.7 h → 21 h) and ended at 6.4× the terms. On that basis:
-- projector: about 8 h, 17 M terms, 25 GB;
-- D_S: about 55 h, 23 M terms, 35 GB;
-- dz: about 80 h, 37 M terms, 55 GB.
+**The new kets, measured (job 9093882, November 2026).** All three runs finished their 500 iterations; the job took 13.1 h, and each replay about 5 min.
 
-So D_S and dz will be stopped by `RUN_LIMIT`, probably around iterations 400 and 300. That is well past where the 1e-5 runs were best (iterations 48–126). The 3 × 70G heap hint fits.
+| run | time | peak memory | Pauli terms at the end |
+|---|---|---|---|
+| projector | 4.8 h | 6.0 GB | 7.3 M |
+| D_S | 12.2 h | 19 GB | 9.0 M |
+| dz | 13.0 h | 15 GB | 10.3 M |
+
+The estimates made before the job (8, 55 and 80 h; 25, 35 and 55 GB) were far too high: at 1e-6 these runs ended with only 1.7–2.8× the terms of the 1e-5 runs, not 6×.
 
 The estimates written before the old-kets runs:
 - **Terms:** the 10⁻⁵ runs ended at 3.6M (bare H), 3.9M (λ = 0.02) and 6.6M (λ = 0.05) terms. At 1.1 Å, going from 10⁻⁵ to 10⁻⁶ gave 6× the terms, so expect roughly 20–40M.

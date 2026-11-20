@@ -440,7 +440,7 @@ def window_fit(x, y, factor=2.0):
     return dict(e0=lin[1], half=half, sel=sel, lin=lin, v=v, k=k, lo=lo, hi=hi)
 
 
-def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
+def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0, legend_kw=None):
     """per state: energy against that state's own variance, fitted linearly over the window [v, 2v] with v the
     state's variance at the last iteration, and extrapolated to zero variance.
     entries: [(name, lam (iterations x states, mHa above FCI), var (iterations x states, Ha²), marker, linestyle)].
@@ -496,7 +496,7 @@ def state_extrapolation(entries, refs, names, title, grid=False, factor=2.0):
         if i == 0:
             ax.set_ylabel("energy − exact (mHa)")
         if ax.get_legend_handles_labels()[0]:
-            ax.legend(fontsize=7, loc="upper left")
+            ax.legend(fontsize=7, **(legend_kw or {"loc": "upper left"}))
     lims = core or spare                              # one x and y range for every panel
     if lims:
         lo, hi, X = min(l[0] for l in lims), max(l[1] for l in lims), max(l[2] for l in lims)
@@ -1263,11 +1263,12 @@ PP_VARIANTS = [("", "projector", "o", "-"), ("_ds", "D_S", "s", "--"), ("_dz", "
 
 
 def kets_main():
-    """for the new kets: per bond length, the per-state extrapolation of the exact greedy run, and for each ranking
-    operator D of the Pauli-propagation runs at 1e-5 (PP_VARIANTS: projector, D_S, dz) the zoom (as
-    n2_110_pp_compare_zoom.png) and the per-state extrapolation of the true, corrected and raw energies (as
-    n2_110_pp_c1e-6_extrap.png), plus the true energies of all D on one figure.  The Pauli-propagation series stop
-    at pp_stop when a truncation-corrected variance turns negative: past it the run drifts away (truncation)."""
+    """for the new kets: per bond length, the per-state extrapolation of the exact greedy run, and, at each cutoff
+    with runs (1e-5; 1e-6 at 2.3 A, from Big Red 200), for each ranking operator D of the Pauli-propagation runs
+    (PP_VARIANTS: projector, D_S, dz) the zoom (as n2_110_pp_compare_zoom.png) and the per-state extrapolation of
+    the true, corrected and raw energies (as n2_110_pp_c1e-6_extrap.png), plus the true energies of all D on one
+    figure.  The Pauli-propagation series stop at pp_stop when a truncation-corrected variance turns negative: at
+    1e-5 the run drifts away past it (truncation).  Then, at 2.3 A, kets_ranking_figure at both cutoffs."""
     os.makedirs(OUT, exist_ok=True)
     for R, tag, title, names in KETS:
         g = load(f"uno_{R}_block_{tag}")
@@ -1277,40 +1278,56 @@ def kets_main():
         r_ = R.replace(".", "")
         fig, xrows = state_extrapolation([("exact greedy", lam_g, var_g, "o", "-")], refs, names, f"{title}, new kets, exact")
         fig.savefig(os.path.join(OUT, f"n2_{r_}_kets_extrap_exact.png"), dpi=170)
-        allrows, true_ent = list(xrows), []
-        for suf, dname, mk, ls in PP_VARIANTS:
-            pp = load(f"uno_{R}_blockpp_c1e-5_{tag}{suf}")
-            rep = load(f"uno_{R}_blockpp_c1e-5_{tag}{suf}_replay")
-            if pp is None or rep is None:
-                continue
-            stop = pp_stop(pp)
-            note = f"new kets, D = {dname}" + (f"; circle: iteration {stop}, the run's own stop signal" if stop is not None else "")
-            short = dname.split("(")[-1].rstrip(")")  # "Z operator (dz)" -> "dz": panel titles must not run together
-            pp_zoom((lam_g, vs_g, refs, names, s2g), [("cutoff 1e-5", pp, rep, "-")], f"{title}, {short}",
-                    [stop], note, true_x="true").savefig(os.path.join(OUT, f"n2_{r_}_kets{suf}_pp_zoom.png"), dpi=170)
-            k = len(pp["history"]["lam"]) - 1 if stop is None else stop
-            h, f = pp["history"], pp["E_FCI"]
-            rows = [r for r in rep["rows"] if r["iter"] <= k]
-            tl, tv = (np.array([r["lam"] for r in rows]) - f) * 1e3, np.array([r["var"] for r in rows])
-            ent = [("true (exact replay)", tl, tv, "o", "-"),
-                   ("corrected", (np.array(h["lam_corr"][:k + 1]) - f) * 1e3, np.array(h["var_corr"][:k + 1]), "^", "--"),
-                   ("raw", (np.array(h["lam"][:k + 1]) - f) * 1e3, np.array(h["var"][:k + 1]), "v", ":")]
-            fig, prow = state_extrapolation(ent, refs, names, f"{title}, {dname}", grid=True)
-            fig.texts[0].set_text(fig.texts[0].get_text() + f"\nnew kets, Pauli propagation 10⁻⁵, D = {dname}; up to iteration {k}"
-                                  + (", the last before a truncation-corrected variance turns negative" if stop is not None
-                                     else " (the end; no corrected variance turns negative)"))
-            fig.savefig(os.path.join(OUT, f"n2_{r_}_kets{suf}_pp_c1e-5_extrap.png"), dpi=170)
-            allrows += [(f"{dname}: {r[0]}",) + tuple(r[1:]) for r in prow]
-            true_ent.append((f"{dname}, true", tl, tv, mk, ls))
-        if len(true_ent) > 1:                         # the true energies of every D on one figure
-            fig, _ = state_extrapolation(true_ent, refs, names, f"{title}, true")
-            fig.texts[0].set_text(fig.texts[0].get_text() + "\nnew kets; true energies (exact replay) of the Pauli-"
-                                  "propagation runs with each ranking operator D, each up to its stop signal or its end")
-            fig.savefig(os.path.join(OUT, f"n2_{r_}_kets_pp_c1e-5_extrap_true.png"), dpi=170)
+        allrows = list(xrows)
+        for cut in ("1e-5", "1e-6"):
+            true_ent = []
+            for suf, dname, mk, ls in PP_VARIANTS:
+                pp = load(f"uno_{R}_blockpp_c{cut}_{tag}{suf}")
+                rep = load(f"uno_{R}_blockpp_c{cut}_{tag}{suf}_replay")
+                if pp is None or rep is None:
+                    continue
+                stop = pp_stop(pp)
+                note = (f"new kets, D = {dname}" + ("" if cut == "1e-5" else f", cutoff {CUT_TXT[cut]}")
+                        + (f"; circle: iteration {stop}, the run's own stop signal" if stop is not None else ""))
+                short = dname.split("(")[-1].rstrip(")")  # "Z operator (dz)" -> "dz": panel titles must not run together
+                zname = f"n2_{r_}_kets{suf}_pp_zoom.png" if cut == "1e-5" else f"n2_{r_}_kets{suf}_pp_c{cut}_zoom.png"
+                pp_zoom((lam_g, vs_g, refs, names, s2g), [(f"cutoff {cut}", pp, rep, "-")], f"{title}, {short}",
+                        [stop], note, true_x="true").savefig(os.path.join(OUT, zname), dpi=170)
+                k = len(pp["history"]["lam"]) - 1 if stop is None else stop
+                h, f = pp["history"], pp["E_FCI"]
+                rows = [r for r in rep["rows"] if r["iter"] <= k]
+                tl, tv = (np.array([r["lam"] for r in rows]) - f) * 1e3, np.array([r["var"] for r in rows])
+                ent = [("true (exact replay)", tl, tv, "o", "-"),
+                       ("corrected", (np.array(h["lam_corr"][:k + 1]) - f) * 1e3, np.array(h["var_corr"][:k + 1]), "^", "--"),
+                       ("raw", (np.array(h["lam"][:k + 1]) - f) * 1e3, np.array(h["var"][:k + 1]), "v", ":")]
+                fig, prow = state_extrapolation(ent, refs, names, f"{title}, {dname}", grid=True)
+                fig.texts[0].set_text(fig.texts[0].get_text() + f"\nnew kets, Pauli propagation {CUT_TXT[cut]}, D = {dname}; "
+                                      f"up to iteration {k}"
+                                      + (", the last before a truncation-corrected variance turns negative" if stop is not None
+                                         else " (the end; no corrected variance turns negative)"))
+                fig.savefig(os.path.join(OUT, f"n2_{r_}_kets{suf}_pp_c{cut}_extrap.png"), dpi=170)
+                plt.close("all")
+                allrows += [(f"{cut} {dname}: {r[0]}",) + tuple(r[1:]) for r in prow]
+                true_ent.append((f"{dname}, true", tl, tv, mk, ls))
+            if len(true_ent) > 1:                     # the true energies of every D on one figure
+                fig, _ = state_extrapolation(true_ent, refs, names, f"{title}, true",  # 1e-6: upper left covers points
+                                             legend_kw=None if cut == "1e-5" else {"loc": "lower right", "bbox_to_anchor": (1, 0.25)})
+                fig.texts[0].set_text(fig.texts[0].get_text() + "\nnew kets; true energies (exact replay) of the Pauli-"
+                                      f"propagation runs at cutoff {CUT_TXT[cut]} with each ranking operator D, each up to "
+                                      "its stop signal or its end")
+                fig.savefig(os.path.join(OUT, f"n2_{r_}_kets_pp_c{cut}_extrap_true.png"), dpi=170)
+                plt.close(fig)
         print(f"{title}, new kets: per-state extrapolation over [v, 2v] (mHa vs exact): series | state | last | "
               "extrapolated ± | v | points")
         for r in allrows:
-            print(f"  {r[0]:<34} {r[1]:<18} {r[2]:+9.4f} {r[3]:+9.4f} ± {r[4]:.4f}   v {r[5]:.2e}  {r[6]} pts")
+            print(f"  {r[0]:<40} {r[1]:<18} {r[2]:+9.4f} {r[3]:+9.4f} ± {r[4]:.4f}   v {r[5]:.2e}  {r[6]} pts")
+    fig, crows = kets_ranking_figure([("2.30", "1e-5"), ("2.30", "1e-6")])
+    fig.savefig(os.path.join(OUT, "n2_230_kets_vs_ranking_cutoffs.png"), dpi=170)
+    print("2.3 Å, kets x ranking at 1e-5 and 1e-6: cutoff | kets | ranking | largest F | F > 0.9 from | best iteration | "
+          "errors there vs the 3 lowest levels (mHa) | at the end | stop signal")
+    for r in crows:
+        print(f"  {r[9]} {r[1]:<4} {r[2]:<11} {r[3]:.3f}  {str(r[4]):>4}  {r[5]:>4}  [{', '.join(f'{x:+.2f}' for x in r[6])}]  "
+              f"[{', '.join(f'{x:+.2f}' for x in r[7])}]  {r[8]}")
     fig, erows = exact_ranking_figure()
     fig.savefig(os.path.join(OUT, "n2_kets_vs_ranking_exact.png"), dpi=170)
     print("exact runs, kets x D: R | kets | D | iterations | F at the end | errors at the end vs the 3 lowest levels "
@@ -1333,17 +1350,22 @@ RANKINGS = [("old", "", "D1c", INK, "-"), ("old", "_ds", "D_S", INK, (0, (6, 2, 
             ("new", "", "projector", SERIES[0], ":")]
 
 
-def kets_ranking_figure():
-    """kets x ranking at cutoff 1e-5, bare H, from the exact replays: F against iteration (top) and the sum of the
-    true block energies minus the sum of the 3 lowest levels (bottom, log), one column per bond length.  Colour =
-    kets (black old |0>, |a>, |b>; blue new), line style = ranking (D1c, D_S built from the kets, exact gradient).
-    Returns (fig, rows), rows = (R, kets, ranking, largest F, first iteration F > 0.9, best iteration (lowest
-    true block sum), errors there against the 3 lowest levels (mHa), same at the end, stop-signal iteration)."""
-    fig, axes = plt.subplots(2, 2, figsize=(11, 6.8), sharex="col")
+def kets_ranking_figure(cols=None):
+    """kets x ranking, bare H, from the exact replays: F against iteration (top) and the sum of the true block
+    energies minus the sum of the 3 lowest levels (bottom, log), one column per (R, cutoff) in cols (default: each
+    bond length at 1e-5).  Colour = kets (black old |0>, |a>, |b>; blue new), line style = ranking (D1c, D_S built
+    from the kets, exact gradient).  Returns (fig, rows), rows = (R, kets, ranking, largest F, first iteration
+    F > 0.9, best iteration (lowest true block sum), errors there against the 3 lowest levels (mHa), same at the
+    end, stop-signal iteration, cutoff)."""
+    cols = cols or [(R, "1e-5") for R, _, _, _ in KETS]
+    tags = {R: tag for R, tag, _, _ in KETS}
+    cuts = sorted({c for _, c in cols})
+    fig, axes = plt.subplots(2, len(cols), figsize=(11, 6.8), sharex="col", squeeze=False)
     rows, lo = [], np.inf
-    for c_, (R, tag, _, _) in enumerate(KETS):
+    for c_, (R, cut) in enumerate(cols):
+        tag = tags[R]
         for kets, suf, rank, col, ls in RANKINGS:
-            lab = f"uno_{R}_blockpp_c1e-5" + (f"_{tag}" if kets == "new" else "") + suf
+            lab = f"uno_{R}_blockpp_c{cut}" + (f"_{tag}" if kets == "new" else "") + suf
             pp, rep = load(lab), load(lab + "_replay1") or load(lab + "_replay")
             if pp is None or rep is None or "fid" not in rep["rows"][0]:
                 continue
@@ -1360,8 +1382,10 @@ def kets_ranking_figure():
             lo = min(lo, max(gap.min(), 1e-3))
             b = int(np.argmin(gap))
             hit = it[F > 0.9]
-            rows.append((R, kets, rank, F.max(), int(hit[0]) if len(hit) else None, int(it[b]), err[b], err[-1], pp_stop(pp)))
-        axes[0, c_].set_title(f"{R.rstrip('0')} Å", fontsize=10, color=INK, loc="left")
+            rows.append((R, kets, rank, F.max(), int(hit[0]) if len(hit) else None, int(it[b]), err[b], err[-1], pp_stop(pp),
+                         cut))
+        axes[0, c_].set_title(f"{R.rstrip('0')} Å" + (f", cutoff {CUT_TXT[cut]}" if len(cuts) > 1 else ""), fontsize=10,
+                              color=INK, loc="left")
         axes[1, c_].set_xlabel("iteration (50 rotations each)")
         axes[1, c_].set_xlim(0, 200 if R == "1.10" else 500)
     for ax in axes[0]:
@@ -1376,11 +1400,16 @@ def kets_ranking_figure():
         style(ax)
     axes[0, 0].set_ylabel("fidelity F with the 3 lowest levels")
     axes[1, 0].set_ylabel("Σ block energies − Σ 3 lowest levels (mHa)")
-    axes[1, 0].legend(fontsize=7.5, loc="upper right")
-    fig.suptitle("Pauli propagation, cutoff 10⁻⁵, H: which matters, the kets or the ranking?\n"
+    if len(cuts) == 1:
+        axes[1, 0].legend(fontsize=7.5, loc="upper right")
+    else:                                             # one legend under the panels: inside, it would cover curves
+        fig.legend(*axes[1, 0].get_legend_handles_labels(), loc="lower center", ncol=6, fontsize=7.5, frameon=False)
+    head = (f"Pauli propagation, cutoff {CUT_TXT[cuts[0]]}, H: which matters, the kets or the ranking?" if len(cuts) == 1
+            else "Pauli propagation, H: does the tighter cutoff stop the drift?")
+    fig.suptitle(head + "\n"
                  "colour = kets (black: old |0⟩, |a⟩, |b⟩; blue: new), line = D (D1c; the block's Z operator; D_S, the "
                  "projector in Z strings; the projector = exact gradient); true energies (exact replay)", x=0.01, ha="left", fontsize=10, color=INK)
-    fig.subplots_adjust(left=0.08, right=0.985, bottom=0.08, top=0.88, hspace=0.12, wspace=0.12)
+    fig.subplots_adjust(left=0.08, right=0.985, bottom=0.08 if len(cuts) == 1 else 0.12, top=0.88, hspace=0.12, wspace=0.12)
     return fig, rows
 
 

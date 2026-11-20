@@ -862,7 +862,74 @@ The largest pair coefficients of D_S sit on the pairs that a ket flips together 
 **Takeaway.**
 - The kets decide which states the block can reach.
 - Under truncation the operator decides the path. At 1.1 Å, D_S is best. At 2.3 Å, no operator holds up at 10⁻⁵.
-- At 2.3 Å the next step is a tighter cutoff (10⁻⁶), not another operator.
+- At 2.3 Å the fix is a tighter cutoff, not another operator. At 10⁻⁶ (next subsection) every D converges, and the projector gets within 0.3 mHa.
+
+### The new kets at 2.3 Å, cutoff 10⁻⁶
+
+These are the three 2.3 Å runs of the table above (new kets, bare H, D = projector, D_S, dz, 500 iterations), at cutoff 10⁻⁶. They ran side by side on one Big Red 200 node (job 9093882, `n2_pes/cluster_block/`). Each was replayed exactly at every iteration.
+
+| run (10⁻⁶) | time | peak memory | Pauli terms at the end |
+|---|---|---|---|
+| projector | 4.8 h | 6 GB | 7.3 M |
+| D_S | 12.2 h | 19 GB | 9.0 M |
+| dz | 13.0 h | 15 GB | 10.3 M |
+
+![2.3 Å, Pauli propagation at 10⁻⁵ against 10⁻⁶: kets against the ranking operator](n2_pes/frozen_core/sv_results/plots/n2_230_kets_vs_ranking_cutoffs.png)
+
+| 2.3 Å, new kets | 10⁻⁵: best point | 10⁻⁵: iteration 500 | **10⁻⁶: iteration 500** | F at the end, 10⁻⁵ → 10⁻⁶ | stop signal, 10⁻⁶ |
+|---|---|---|---|---|---|
+| projector | +3.5, +3.2, +3.9 (it. 48) | +106, +120, +140 | **+0.16, +0.26, +0.16** | 0.21 → **0.995** | 145 |
+| D_S | +4.8, +2.9, +8.0 (it. 126) | +51, +52, +63 | +1.3, +0.8, +1.0 | 0.63 → 0.91 | none |
+| dz | +5.9, +3.5, +13.0 (it. 95) | +66, +95, +113 | +1.7, +0.8, +1.0 | 0.34 → 0.88 | none |
+
+(mHa: true error from S0, T1 and the quintet. For comparison, the old kets with D1c at 10⁻⁶ end at +6.9, +4.5, +138 with F = 0.64.)
+
+- **The tighter cutoff stops the drift.** No run drifts at 10⁻⁶. At iteration 500 all three are within 2 mHa, where at 10⁻⁵ they were 50–140 mHa off.
+- **The projector is now the best D, by far.**
+  - At iteration 500 it is within 0.3 mHa of all three levels, with F = 0.995, and S0 is spin-clean (⟨S²⟩ = 0.02).
+  - It is already within 0.8 mHa by iteration 100.
+  - The exact run with the same kets reaches 0.01–0.03 mHa.
+- **D_S and dz are slower.**
+  - At iteration 500 they are 0.8–1.7 mHa off and still falling slowly.
+  - Their F stays at 0.91 and 0.88: S0 still carries some spin contamination (⟨S²⟩ = 0.30 and 0.61).
+  - So with the drift gone, the most direct D wins at 2.3 Å. At 1.1 Å and 10⁻⁵, D_S was best.
+- **The stop signal fires for the projector at iteration 145, and never for D_S or dz.** For the projector it marks where the truncation starts to show, not a drift:
+  - from iteration 146 to the end, S0's corrected variance stays negative, and later the quintet's and T1's turn negative too;
+  - the true block variance levels off at about 5×10⁻⁴ from iteration ~200, while the run's own V_S keeps falling, to 2×10⁻⁵;
+  - the true energies still improve a little after 145: S0 +0.19 → +0.16, T1 +0.57 → +0.26, quintet +0.22 → +0.16 mHa.
+- **The run's own numbers track the truth better.** At iteration 500 the corrected energies are within about 0.5 mHa of the true ones for the projector and within 0.25 mHa for dz. D_S's corrected S0 is 1.4 mHa too low.
+
+**Per-state extrapolation at 10⁻⁶** (the projector up to its stop signal at 145; D_S and dz to the end):
+
+| new kets, 10⁻⁶, true energies, error from exact (mHa) | S0: last → extrapolated | T1 | quintet |
+|---|---|---|---|
+| projector (to it. 145) | +0.19 → **−0.03 ± 0.04** | +0.57 → +0.31 ± 0.04 | +0.22 → **−0.04 ± 0.02** |
+| D_S (to it. 500) | +1.31 → +1.9 ± 5.1 | +0.79 → +0.9 ± 32 | +1.05 → +0.16 ± 0.06 |
+| dz (to it. 500) | +1.68 → −0.23 ± 0.38 | +0.79 → −0.8 ± 1.7 | +1.03 → +0.22 ± 0.01 |
+
+- **Projector: S0 and the quintet extrapolate to within 0.04 mHa of exact**, from points 0.2 mHa off.
+- **Projector: T1 does not.** It extrapolates to +0.31 ± 0.04, above where the run itself gets by iteration 500 (+0.26). So its error bar is too small.
+- **D_S and dz: only the quintet's fits are tight**, and they miss exact by 0.2 mHa.
+  - The variances of S0 and T1 have nearly stopped falling, so up to hundreds of points pile up at the same variance in the window.
+  - The fits are then wide: ±0.4 to ±32 mHa.
+
+![2.3 Å, new kets, 10⁻⁶: true energies of every operator, per-state extrapolation](n2_pes/frozen_core/sv_results/plots/n2_230_kets_pp_c1e-6_extrap_true.png)
+
+![2.3 Å, new kets, projector, 10⁻⁶: zoom](n2_pes/frozen_core/sv_results/plots/n2_230_kets_pp_c1e-6_zoom.png)
+
+![2.3 Å, new kets, projector, 10⁻⁶: per-state extrapolation of the true, corrected and raw energies](n2_pes/frozen_core/sv_results/plots/n2_230_kets_pp_c1e-6_extrap.png)
+
+![2.3 Å, new kets, D_S, 10⁻⁶: zoom](n2_pes/frozen_core/sv_results/plots/n2_230_kets_ds_pp_c1e-6_zoom.png)
+
+![2.3 Å, new kets, D_S, 10⁻⁶: per-state extrapolation](n2_pes/frozen_core/sv_results/plots/n2_230_kets_ds_pp_c1e-6_extrap.png)
+
+![2.3 Å, new kets, dz, 10⁻⁶: zoom](n2_pes/frozen_core/sv_results/plots/n2_230_kets_dz_pp_c1e-6_zoom.png)
+
+![2.3 Å, new kets, dz, 10⁻⁶: per-state extrapolation](n2_pes/frozen_core/sv_results/plots/n2_230_kets_dz_pp_c1e-6_extrap.png)
+
+**Takeaway.**
+- At 2.3 Å the cutoff was the problem. At 10⁻⁶ the new kets converge with every D.
+- With the projector the block is within 0.3 mHa of S0, T1 and the quintet after 500 iterations, in 4.8 h and 6 GB. Its S0 and quintet extrapolate to within 0.04 mHa.
 
 ## 12. Scaling up: the 1×100 Heisenberg chain
 
