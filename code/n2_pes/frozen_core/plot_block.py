@@ -1264,11 +1264,11 @@ PP_VARIANTS = [("", "projector", "o", "-"), ("_ds", "D_S", "s", "--"), ("_dz", "
 
 def kets_main():
     """for the new kets: per bond length, the per-state extrapolation of the exact greedy run, and, at each cutoff
-    with runs (1e-5; 1e-6 at 2.3 A, from Big Red 200), for each ranking operator D of the Pauli-propagation runs
+    with runs (1e-5; 1e-6 from Big Red 200), for each ranking operator D of the Pauli-propagation runs
     (PP_VARIANTS: projector, D_S, dz) the zoom (as n2_110_pp_compare_zoom.png) and the per-state extrapolation of
     the true, corrected and raw energies (as n2_110_pp_c1e-6_extrap.png), plus the true energies of all D on one
     figure.  The Pauli-propagation series stop at pp_stop when a truncation-corrected variance turns negative: at
-    1e-5 the run drifts away past it (truncation).  Then, at 2.3 A, kets_ranking_figure at both cutoffs."""
+    1e-5 the run drifts away past it (truncation).  Then, per bond length, kets_ranking_figure at both cutoffs."""
     os.makedirs(OUT, exist_ok=True)
     for R, tag, title, names in KETS:
         g = load(f"uno_{R}_block_{tag}")
@@ -1310,8 +1310,10 @@ def kets_main():
                 allrows += [(f"{cut} {dname}: {r[0]}",) + tuple(r[1:]) for r in prow]
                 true_ent.append((f"{dname}, true", tl, tv, mk, ls))
             if len(true_ent) > 1:                     # the true energies of every D on one figure
-                fig, _ = state_extrapolation(true_ent, refs, names, f"{title}, true",  # 1e-6: upper left covers points
-                                             legend_kw=None if cut == "1e-5" else {"loc": "lower right", "bbox_to_anchor": (1, 0.25)})
+                # 1e-6: upper left covers points; at 2.3 A plain lower right crosses the zero line
+                lkw = (None if cut == "1e-5" else {"loc": "lower right"} if R == "1.10"
+                       else {"loc": "lower right", "bbox_to_anchor": (1, 0.25)})
+                fig, _ = state_extrapolation(true_ent, refs, names, f"{title}, true", legend_kw=lkw)
                 fig.texts[0].set_text(fig.texts[0].get_text() + "\nnew kets; true energies (exact replay) of the Pauli-"
                                       f"propagation runs at cutoff {CUT_TXT[cut]} with each ranking operator D, each up to "
                                       "its stop signal or its end")
@@ -1321,13 +1323,15 @@ def kets_main():
               "extrapolated ± | v | points")
         for r in allrows:
             print(f"  {r[0]:<40} {r[1]:<18} {r[2]:+9.4f} {r[3]:+9.4f} ± {r[4]:.4f}   v {r[5]:.2e}  {r[6]} pts")
-    fig, crows = kets_ranking_figure([("2.30", "1e-5"), ("2.30", "1e-6")])
-    fig.savefig(os.path.join(OUT, "n2_230_kets_vs_ranking_cutoffs.png"), dpi=170)
-    print("2.3 Å, kets x ranking at 1e-5 and 1e-6: cutoff | kets | ranking | largest F | F > 0.9 from | best iteration | "
-          "errors there vs the 3 lowest levels (mHa) | at the end | stop signal")
-    for r in crows:
-        print(f"  {r[9]} {r[1]:<4} {r[2]:<11} {r[3]:.3f}  {str(r[4]):>4}  {r[5]:>4}  [{', '.join(f'{x:+.2f}' for x in r[6])}]  "
-              f"[{', '.join(f'{x:+.2f}' for x in r[7])}]  {r[8]}")
+    for R, _, title, _ in KETS:
+        fig, crows = kets_ranking_figure([(R, "1e-5"), (R, "1e-6")])
+        fig.savefig(os.path.join(OUT, f"n2_{R.replace('.', '')}_kets_vs_ranking_cutoffs.png"), dpi=170)
+        plt.close(fig)
+        print(f"{title}, kets x ranking at 1e-5 and 1e-6: cutoff | kets | ranking | largest F | F > 0.9 from | best "
+              "iteration | errors there vs the 3 lowest levels (mHa) | at the end | stop signal")
+        for r in crows:
+            print(f"  {r[9]} {r[1]:<4} {r[2]:<11} {r[3]:.3f}  {str(r[4]):>4}  {r[5]:>4}  [{', '.join(f'{x:+.2f}' for x in r[6])}]  "
+                  f"[{', '.join(f'{x:+.2f}' for x in r[7])}]  {r[8]}")
     fig, erows = exact_ranking_figure()
     fig.savefig(os.path.join(OUT, "n2_kets_vs_ranking_exact.png"), dpi=170)
     print("exact runs, kets x D: R | kets | D | iterations | F at the end | errors at the end vs the 3 lowest levels "
@@ -1361,7 +1365,7 @@ def kets_ranking_figure(cols=None):
     tags = {R: tag for R, tag, _, _ in KETS}
     cuts = sorted({c for _, c in cols})
     fig, axes = plt.subplots(2, len(cols), figsize=(11, 6.8), sharex="col", squeeze=False)
-    rows, lo = [], np.inf
+    rows, lo, itmax = [], np.inf, 0
     for c_, (R, cut) in enumerate(cols):
         tag = tags[R]
         for kets, suf, rank, col, ls in RANKINGS:
@@ -1380,6 +1384,7 @@ def kets_ranking_figure(cols=None):
             axes[0, c_].plot(it, F, color=col, ls=ls, lw=1.5, label=name)
             axes[1, c_].plot(it, np.maximum(gap, 1e-3), color=col, ls=ls, lw=1.5, label=name)
             lo = min(lo, max(gap.min(), 1e-3))
+            itmax = max(itmax, int(it[-1]))
             b = int(np.argmin(gap))
             hit = it[F > 0.9]
             rows.append((R, kets, rank, F.max(), int(hit[0]) if len(hit) else None, int(it[b]), err[b], err[-1], pp_stop(pp),
@@ -1388,6 +1393,9 @@ def kets_ranking_figure(cols=None):
                               color=INK, loc="left")
         axes[1, c_].set_xlabel("iteration (50 rotations each)")
         axes[1, c_].set_xlim(0, 200 if R == "1.10" else 500)
+    if len(cuts) > 1:                                 # one bond length at several cutoffs: one x range for every panel
+        for ax in axes[1]:
+            ax.set_xlim(0, 100 * np.ceil(itmax / 100))
     for ax in axes[0]:
         ax.axhline(0.9, color=MUTED, lw=0.9, ls=(0, (4, 2)), zorder=1)
         ax.set_ylim(0, 1.02)

@@ -30,7 +30,7 @@ They ran as job 9093882 (results in `code/vdbf_excited_states_runs.md`, section 
 | D_S | the projector written in Z strings | `uno_1.10_blockpp_c1e-6_k45_47_ds` |
 | dz | the block's 1- and 2-body Z operator | `uno_1.10_blockpp_c1e-6_k45_47_dz` |
 
-They were submitted as job 9104626 on 20 November 2026.
+They ran as job 9104626 (results in `code/vdbf_excited_states_runs.md`, section 11, "The new kets at 1.1 Å, cutoff 10⁻⁶").
 
 ## Contents
 
@@ -86,7 +86,7 @@ DBF.jl/       made by stage.sh; laid out as in the repo
      mkdir -p slurm_logs && KETS=ref,3.4.5.6,3.5 KTAG=k3456_35 RUNS="0/exact 0/ds 0/dz" sbatch -J n2kets block.slurm
      ```
      For the projector alone (about 8 h of node time instead of 48 h), use `RUNS="0/exact"`.
-   - The new kets at 1.1 Å (job 9104626), staged with `POINTS="1.10 2.30"`:
+   - The new kets at 1.1 Å (job 9104626, done), staged with `POINTS="1.10 2.30"`:
      ```bash
      mkdir -p slurm_logs && R=1.10 KETS=ref,4.5,4.7 KTAG=k45_47 RUNS="0/exact 0/ds 0/dz" sbatch -J n2kets110 block.slurm
      ```
@@ -136,6 +136,16 @@ DBF.jl/       made by stage.sh; laid out as in the repo
 | dz | 13.0 h | 15 GB | 10.3 M |
 
 The estimates made before the job (8, 55 and 80 h; 25, 35 and 55 GB) were far too high: at 1e-6 these runs ended with only 1.7–2.8× the terms of the 1e-5 runs, not 6×.
+
+**The new kets at 1.1 Å, measured (job 9104626, November 2026).** All three runs finished their 500 iterations; the job took 15.9 h, and each replay about 5 min.
+
+| run | time | peak memory | Pauli terms at the end |
+|---|---|---|---|
+| projector | 7.1 h | 5.8 GB | 9.1 M |
+| D_S | 14.1 h | 20 GB | 11.6 M |
+| dz | 15.7 h | 20 GB | 12.5 M |
+
+About 1 h of each time is startup: the job started at 08:46, the runs at 08:54 (after `module reset`), and their first iterations about an hour after that (loading Julia). The 2.3 Å job started computing within a minute, so this looks like a slow file system that morning, not something in the bundle.
 
 The estimates written before the old-kets runs:
 - **Terms:** the 10⁻⁵ runs ended at 3.6M (bare H), 3.9M (λ = 0.02) and 6.6M (λ = 0.05) terms. At 1.1 Å, going from 10⁻⁵ to 10⁻⁶ gave 6× the terms, so expect roughly 20–40M.
